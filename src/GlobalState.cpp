@@ -5,6 +5,7 @@
 #include "Render.hpp"
 #include "DebugInfo.hpp"
 #include "Event.hpp"
+#include "PluginSystem.hpp"
 
 //Global game variables
 std::unique_ptr<NetworkClient> nc;
@@ -201,6 +202,7 @@ void PhysExec() {
 void GlobalState::Exec() {
     render = std::make_unique<Render>(900, 480, "AltCraft");
     isRunning = true;
+    initPluginSystem();
     InitEvents();
     GlobalState::SetState(State::MainMenu);
     while (isRunning) {
