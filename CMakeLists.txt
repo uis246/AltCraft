@@ -2,18 +2,34 @@ cmake_minimum_required(VERSION 3.5)
 project(AltCraft)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-option(USE_MMAP "Use mmap" ON)
-if(USE_MMAP)
-    add_definitions(-DUSE_MMAP=1)
-else()
-    add_definitions(-DUSE_MMAP=0)
-endif()
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 if (NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE Release)
 endif()
+
+option(CUSTOM_AC_CONFIG "Custom config" OFF)
+if(CUSTOM_AC_CONFIG)
+
+option(USE_MMAP "Use mmap" ON)
+if(USE_MMAP)
+    add_definitions(-DUSE_MMAP=1)
+else()
+    add_definitions(-DUSE_MMAP=0)
+endif()
+
+option(VERBOSE_PLUGIN_LOADING "Verbose plugin loading" ON)
+if(VERBOSE_PLUGIN_LOADING)
+    add_definitions(-DVERBOSE_PLUGIN_LOADING=1)
+else()
+    add_definitions(-DVERBOSE_PLUGIN_LOADING=0)
+endif()
+
+else()
+add_definitions(-DUSE_MMAP=1)
+add_definitions(-DVERBOSE_PLUGIN_LOADING=0)
+endif(CUSTOM_AC_CONFIG)
 
 ##########
 # SOURCES
@@ -81,6 +97,8 @@ target_include_directories(AltCraft PUBLIC ${OPENGL_INCLUDE_DIRS})
 find_package(ZLIB REQUIRED)
 target_link_libraries(AltCraft ${ZLIB_LIBRARIES})
 target_include_directories(AltCraft PUBLIC ${ZLIB_INCLUDE_DIRS})
+
+target_link_libraries(AltCraft "luajit-5.1")
 
 #################
 # COPY RESOURCES
