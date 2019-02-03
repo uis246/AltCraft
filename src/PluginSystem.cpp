@@ -58,14 +58,16 @@ static void loadLua(const fs::directory_entry &file, lua_State* lua){
     }
 }
 static void walkDir(const fs::directory_entry &dirEntry, void(*callback)(const fs::directory_entry &dirEntry, lua_State* lua), lua_State* lua){
-for (auto &file : fs::directory_iterator(dirEntry)) {
-    if(lua){
+if(lua){
+    for (auto &file : fs::directory_iterator(dirEntry)) {
         if(fs::is_directory(file)){
             walkDir(dirEntry, callback, lua);
         }else{
             callback(file, lua);
         }
-    }else{
+    }
+}else{
+    for (auto &file : fs::directory_iterator(dirEntry)) {
         if(fs::is_directory(file)){
             callback(file, nullptr);
         }
@@ -100,7 +102,7 @@ inline void unloadFile(void* ptr){
 
 std::vector<struct ACMod> PluginSystem::mods;
 std::map<std::string, size_t> PluginSystem::modids;
-static inline auto JSONGet(std::string a, nlohmann::json j){
+inline auto JSONGet(std::string a, nlohmann::json j){
 #if VERBOSE_JSON_PARSING
     auto ref=j[a];
     if(ref==nullptr){
