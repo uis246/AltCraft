@@ -28,7 +28,7 @@ extern "C"{
 #endif
 
 #ifdef __GNUC__
-#warning "NOT THREADSAFE"
+#warning NOT THREADSAFE
 #else
 #pragma message ("Warning: NOT THREADSAFE")
 #endif
@@ -135,6 +135,10 @@ void PluginSystem::loadPlugin(const fs::directory_entry &dirEntry, lua_State* lu
             acm.lua=lua;
         }
         walkDir(dirEntry, loadLua, acm.lua);
+        lua_getglobal(acm.lua, "UACPluginInit");
+        if(lua_pcall(acm.lua, 0, 0, 0)){
+            LOG(FATAL) << "Error while initializing plugin " << acm.name;
+        }
         acm.status=LUA;
     }else{
         acm.lua=nullptr;
