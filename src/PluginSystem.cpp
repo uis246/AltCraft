@@ -118,7 +118,6 @@ void PluginSystem::loadPlugin(const fs::directory_entry &dirEntry, lua_State* lu
     std::string info=dirEntry.path().string().append(SEPARATOR"acmod.info");
     size_t sz=fs::file_size(info);
     struct ACMod acm;
-    acm.status=0;
 
     void* inf=loadFile(info.c_str(), sz);
 
@@ -139,11 +138,11 @@ void PluginSystem::loadPlugin(const fs::directory_entry &dirEntry, lua_State* lu
         if(lua_pcall(acm.lua, 0, 0, 0)){
             LOG(FATAL) << "Error while initializing plugin " << acm.name;
         }
-        acm.status=LUA;
+        acm.status.lua=true;
     }else{
         acm.lua=nullptr;
     }
-    acm.status|=LOADED;
+    acm.status.loaded=true;
     modids.insert(std::pair<std::string, size_t>(modid, mods.size()));
     mods.push_back(acm);
 }
