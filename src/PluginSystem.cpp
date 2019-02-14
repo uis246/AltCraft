@@ -40,6 +40,22 @@ extern "C"{
 
 namespace fs = std::experimental::filesystem;
 
+//LUA API
+//AltCraft Lua API
+static int ACLA_log(lua_State* L){
+//    int lvl=luaL_checkinteger(L, 1);
+    const char* str=luaL_checkstring(L, 1);
+    LOG(INFO) << str;
+    return 0;
+}
+//Lua decls
+static const struct luaL_reg ACLA [] = {
+{"log", ACLA_log},
+{NULL, NULL}
+};
+//End of decls
+//End of LUA API
+
 // /pugin
 // /pugin/info.json
 // /pugin/src/*.lua
@@ -133,6 +149,7 @@ void PluginSystem::loadPlugin(const fs::directory_entry &dirEntry, lua_State* lu
         }else{
             acm.lua=lua;
         }
+        luaL_openlib(acm.lua, "ACLA", ACLA, 0);
         walkDir(dirEntry, loadLua, acm.lua);
         lua_getglobal(acm.lua, "UACPluginInit");
         if(lua_pcall(acm.lua, 0, 0, 0)){

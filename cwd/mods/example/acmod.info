@@ -1,0 +1,5 @@
+{
+	"name": "Example mod",
+	"modid": "example",
+	"type": "lua"
+}
