@@ -5,6 +5,7 @@
 #include "Render.hpp"
 #include "DebugInfo.hpp"
 #include "Event.hpp"
+#include "ModManager.hpp"
 
 //Global game variables
 std::unique_ptr<NetworkClient> nc;
@@ -208,6 +209,7 @@ void GlobalState::Exec() {
     render = std::make_unique<Render>(900, 480, "AltCraft");
     isRunning = true;
     InitEvents();
+    ModManager::initModSystem();
     GlobalState::SetState(State::MainMenu);
     while (isRunning) {
         render->Update();

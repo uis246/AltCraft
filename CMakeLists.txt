@@ -13,8 +13,8 @@ endif()
 # SOURCES
 ##########
 
-file(GLOB_RECURSE SOURCES "./src/*.cpp")
-file(GLOB_RECURSE HEADERS "./src/*.hpp")
+file(GLOB_RECURSE SOURCES "./src/*.cpp" "./src/*.c")
+file(GLOB_RECURSE HEADERS "./src/*.hpp" "./src/*.h")
 
 add_executable(AltCraft ${HEADERS} ${SOURCES})
 
@@ -75,6 +75,9 @@ target_include_directories(AltCraft PUBLIC ${OPENGL_INCLUDE_DIRS})
 find_package(ZLIB REQUIRED)
 target_link_libraries(AltCraft ${ZLIB_LIBRARIES})
 target_include_directories(AltCraft PUBLIC ${ZLIB_INCLUDE_DIRS})
+
+#Use luajit 5.1
+target_link_libraries(AltCraft "luajit-5.1")
 
 #################
 # COPY RESOURCES
