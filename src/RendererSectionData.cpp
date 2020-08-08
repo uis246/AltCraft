@@ -95,7 +95,7 @@ std::array<BlockId, 4096> SetBlockIdData(const SectionsData &sections) {
 	for (int y = 0; y < 16; y++) {
 		for (int z = 0; z < 16; z++) {
 			for (int x = 0; x < 16; x++) {
-				blockIdData[y * 256 + z * 16 + x] = sections.section.GetBlockId(Vector(x, y, z));
+				blockIdData[y * 256 + z * 16 + x] = sections.section->GetBlockId(Vector(x, y, z));
 			}
 		}
 	}
@@ -111,10 +111,10 @@ RendererSectionData ParseSection(const SectionsData &sections) {
 	std::array<bool[FaceDirection::none], 4096> blockVisibility = GetBlockVisibilityData(sections, blockIdData, idModels);
 	std::string textureName;
 
-	data.hash = sections.section.GetHash();
-	data.sectionPos = sections.section.GetPosition();
+	data.hash = sections.section->GetHash();
+	data.sectionPos = sections.section->GetPosition();
 
-	glm::mat4 baseOffset = glm::translate(glm::mat4(1.0), (sections.section.GetPosition() * 16).glm()), transform;
+	glm::mat4 baseOffset = glm::translate(glm::mat4(1.0), (sections.section->GetPosition() * 16).glm()), transform;
 
 	for (int y = 0; y < 16; y++) {
 		for (int z = 0; z < 16; z++) {
@@ -145,24 +145,24 @@ RendererSectionData ParseSection(const SectionsData &sections) {
 
 BlockId SectionsData::GetBlockId(const Vector &pos) const {
 	if (pos.x < 0)
-		return east.GetBlockId(Vector(15, pos.y, pos.z));
+		return east->GetBlockId(Vector(15, pos.y, pos.z));
 
 	if (pos.x > 15)
-		return west.GetBlockId(Vector(0, pos.y, pos.z));
+		return west->GetBlockId(Vector(0, pos.y, pos.z));
 
 	if (pos.y < 0)
-		return bottom.GetBlockId(Vector(pos.x, 15, pos.z));
+		return bottom->GetBlockId(Vector(pos.x, 15, pos.z));
 
 	if (pos.y > 15)
-		return top.GetBlockId(Vector(pos.x, 0, pos.z));
+		return top->GetBlockId(Vector(pos.x, 0, pos.z));
 
 	if (pos.z < 0)
-		return south.GetBlockId(Vector(pos.x, pos.y, 15));
+		return south->GetBlockId(Vector(pos.x, pos.y, 15));
 
 	if (pos.z > 15)
-		return north.GetBlockId(Vector(pos.x, pos.y, 0));
+		return north->GetBlockId(Vector(pos.x, pos.y, 0));
 
-	return section.GetBlockId(pos);
+	return section->GetBlockId(pos);
 }
 
 BlockLightness SectionsData::GetLight(const Vector &pos) const {
@@ -176,7 +176,7 @@ BlockLightness SectionsData::GetLight(const Vector &pos) const {
 		Vector(0,0,-1),
 	};
 
-	unsigned char self = section.GetBlockLight(pos);
+	unsigned char self = section->GetBlockLight(pos);
 
 	for (const Vector &dir : directions) {
 		Vector vec = pos + dir;
@@ -184,20 +184,20 @@ BlockLightness SectionsData::GetLight(const Vector &pos) const {
 
 		if (vec.x < 0 || vec.x > 15 || vec.y < 0 || vec.y > 15 || vec.z < 0 || vec.z > 15) {
 			if (vec.x < 0)
-				dirValue = east.GetBlockLight(Vector(15, vec.y, vec.z));
+				dirValue = east->GetBlockLight(Vector(15, vec.y, vec.z));
 			if (vec.x > 15)
-				dirValue = west.GetBlockLight(Vector(0, vec.y, vec.z));
+				dirValue = west->GetBlockLight(Vector(0, vec.y, vec.z));
 			if (vec.y < 0)
-				dirValue = bottom.GetBlockLight(Vector(vec.x, 15, vec.z));
+				dirValue = bottom->GetBlockLight(Vector(vec.x, 15, vec.z));
 			if (vec.y > 15)
-				dirValue = top.GetBlockLight(Vector(vec.x, 0, vec.z));
+				dirValue = top->GetBlockLight(Vector(vec.x, 0, vec.z));
 			if (vec.z < 0)
-				dirValue = south.GetBlockLight(Vector(vec.x, vec.y, 15));
+				dirValue = south->GetBlockLight(Vector(vec.x, vec.y, 15));
 			if (vec.z > 15)
-				dirValue = north.GetBlockLight(Vector(vec.x, vec.y, 0));
+				dirValue = north->GetBlockLight(Vector(vec.x, vec.y, 0));
 		}
 		else
-			dirValue = section.GetBlockLight(vec);
+			dirValue = section->GetBlockLight(vec);
 
 		dirValue = _max(self, dirValue);
 
@@ -228,7 +228,7 @@ BlockLightness SectionsData::GetSkyLight(const Vector &pos) const {
 		Vector(0,0,-1),
 	};
 
-	unsigned char self = section.GetBlockSkyLight(pos);
+	unsigned char self = section->GetBlockSkyLight(pos);
 
 	for (const Vector &dir : directions) {
 		Vector vec = pos + dir;
@@ -236,20 +236,20 @@ BlockLightness SectionsData::GetSkyLight(const Vector &pos) const {
 
 		if (vec.x < 0 || vec.x > 15 || vec.y < 0 || vec.y > 15 || vec.z < 0 || vec.z > 15) {
 			if (vec.x < 0)
-				dirValue = east.GetBlockSkyLight(Vector(15, vec.y, vec.z));
+				dirValue = east->GetBlockSkyLight(Vector(15, vec.y, vec.z));
 			if (vec.x > 15)
-				dirValue = west.GetBlockSkyLight(Vector(0, vec.y, vec.z));
+				dirValue = west->GetBlockSkyLight(Vector(0, vec.y, vec.z));
 			if (vec.y < 0)
-				dirValue = bottom.GetBlockSkyLight(Vector(vec.x, 15, vec.z));
+				dirValue = bottom->GetBlockSkyLight(Vector(vec.x, 15, vec.z));
 			if (vec.y > 15)
-				dirValue = top.GetBlockSkyLight(Vector(vec.x, 0, vec.z));
+				dirValue = top->GetBlockSkyLight(Vector(vec.x, 0, vec.z));
 			if (vec.z < 0)
-				dirValue = south.GetBlockSkyLight(Vector(vec.x, vec.y, 15));
+				dirValue = south->GetBlockSkyLight(Vector(vec.x, vec.y, 15));
 			if (vec.z > 15)
-				dirValue = north.GetBlockSkyLight(Vector(vec.x, vec.y, 0));
+				dirValue = north->GetBlockSkyLight(Vector(vec.x, vec.y, 0));
 		}
 		else
-			dirValue = section.GetBlockSkyLight(vec);
+			dirValue = section->GetBlockSkyLight(vec);
 
 		dirValue = _max(self, dirValue);
 

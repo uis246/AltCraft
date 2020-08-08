@@ -56,21 +56,21 @@ std::vector<Vector> World::GetSectionsList() const {
 	return sectionsList;
 }
 
-static Section fallbackSection;
+static std::shared_ptr<Section> fallbackSection = std::make_shared<Section>();
 
 const Section &World::GetSection(Vector position) const {
 
 	if (position.y > 16||position.y < 0)
-		return fallbackSection;
+		return *fallbackSection;
 
 	auto it = chunks.find(Vector2I32(position.x, position.z));
 
 	if (it == chunks.end())
-		return fallbackSection;
+		return *fallbackSection;
 
 	Section *sec=it->second->GetSection(position.y);
 	if (!sec)
-		return fallbackSection;
+		return *fallbackSection;
 
 	return *sec;
 }
@@ -111,7 +111,7 @@ void World::UpdatePhysics(float delta) {
 		int blockXEnd = pos.x + width + 0.5;
 		int blockYBegin = pos.y - 0.5;
 		int blockYEnd = pos.y + height + 0.5;
-		int blockZBegin = pos.z - width - 0.5;
+		int blockZBegin = pos.z - width - 1.0;
 		int blockZEnd = pos.z + width + 0.5;
 
 		AABB entityCollBox;
@@ -325,16 +325,35 @@ void World::SetBlockSkyLight(Vector pos, unsigned char light) {
 
 }
 
-const Section *World::GetSectionPtr(Vector position) const {
+const std::shared_ptr<Section> World::GetSectionSharedPtr(Vector position) const noexcept {
 	if (position.y < 0 || position.y > 15)
 		return nullptr;
 
 	auto it = chunks.find(Vector2I32(position.x, position.z));
 
 	if (it == chunks.end())
-        return nullptr;
+		return nullptr;
 
-	return it->second->GetSection(position.y);
+	return it->second->GetSectionShared(position.y);
+}
+
+const std::shared_ptr<Section> World::GetSectionSharedPtrNonNull(Vector position) const noexcept {
+	if (position.y < 0 || position.y > 15)
+		return fallbackSection;
+
+	auto it = chunks.find(Vector2I32(position.x, position.z));
+
+	if (it == chunks.end())
+		return fallbackSection;
+
+	std::shared_ptr<Section> toRet;
+	if (!(toRet = it->second->GetSectionShared(position.y)))
+		toRet = fallbackSection;
+	return toRet;
+}
+
+const Section *World::GetSectionPtr(Vector position) const noexcept {
+	return GetSectionSharedPtr(position).get();
 }
 
 Entity* World::GetEntityPtr(unsigned int EntityId) {

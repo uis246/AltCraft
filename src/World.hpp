@@ -98,7 +98,9 @@ public:
 
     void SetBlockSkyLight(Vector pos, unsigned char light);
 
-    const Section *GetSectionPtr(Vector position) const;
+	const std::shared_ptr<Section> GetSectionSharedPtr(Vector position) const noexcept;
+	const std::shared_ptr<Section> GetSectionSharedPtrNonNull(Vector position) const noexcept;
+	const Section *GetSectionPtr(Vector position) const noexcept;
 
 	unsigned char GetBlockLight(Vector pos) const;
 

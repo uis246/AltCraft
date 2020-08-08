@@ -57,13 +57,13 @@ void RendererWorld::ParseQueueUpdate() {
 			vec.y -= 4500;
 		}
 		
-		parsing[id].data.section = GetGameState()->GetWorld().GetSection(vec);
-		parsing[id].data.north = GetGameState()->GetWorld().GetSection(vec + Vector(0, 0, 1));
-		parsing[id].data.south = GetGameState()->GetWorld().GetSection(vec + Vector(0, 0, -1));
-		parsing[id].data.west = GetGameState()->GetWorld().GetSection(vec + Vector(1, 0, 0));
-		parsing[id].data.east = GetGameState()->GetWorld().GetSection(vec + Vector(-1, 0, 0));
-		parsing[id].data.bottom = GetGameState()->GetWorld().GetSection(vec + Vector(0, -1, 0));
-		parsing[id].data.top = GetGameState()->GetWorld().GetSection(vec + Vector(0, 1, 0));
+		parsing[id].data.section = GetGameState()->GetWorld().GetSectionSharedPtrNonNull(vec);
+		parsing[id].data.north = GetGameState()->GetWorld().GetSectionSharedPtrNonNull(vec + Vector(0, 0, 1));
+		parsing[id].data.south = GetGameState()->GetWorld().GetSectionSharedPtrNonNull(vec + Vector(0, 0, -1));
+		parsing[id].data.west = GetGameState()->GetWorld().GetSectionSharedPtrNonNull(vec + Vector(1, 0, 0));
+		parsing[id].data.east = GetGameState()->GetWorld().GetSectionSharedPtrNonNull(vec + Vector(-1, 0, 0));
+		parsing[id].data.bottom = GetGameState()->GetWorld().GetSectionSharedPtrNonNull(vec + Vector(0, -1, 0));
+		parsing[id].data.top = GetGameState()->GetWorld().GetSectionSharedPtrNonNull(vec + Vector(0, 1, 0));
 
 		parsing[id].parsing = true;
 
@@ -97,10 +97,11 @@ void RendererWorld::ParseQeueueRemoveUnnecessary() {
 		bool skip = false;
 
 		for (int i = 0; i < RendererWorld::parsingBufferSize; i++) {
-			if (parsing[i].data.section.GetHash() == section.GetHash()) {
-				skip = true;
-				break;
-			}
+			if (parsing[i].data.section)
+				if (parsing[i].data.section->GetHash() == section.GetHash()) {
+					skip = true;
+					break;
+				}
 		}
 		if (skip)
 			continue;

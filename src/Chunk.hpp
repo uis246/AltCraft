@@ -7,7 +7,7 @@
 
 class Chunk{
 	uint8_t biome[256];
-	std::unique_ptr<Section> sections[16];
+	std::shared_ptr<Section> sections[16];
 
 	const Vector2I32 pos;
 	const bool hasSkyLight;
@@ -19,12 +19,13 @@ public:
 	void ParseChunk(PacketChunkData *packet);
 	void ParseChunkData(PacketMultiBlockChange *packet);
 
-	void Unload();
+	void Unload() noexcept;
 
+	std::shared_ptr<Section> GetSectionShared(unsigned char height) const noexcept;
 	Section* GetSection(unsigned char height) const noexcept;
 
 	BlockId GetBlockId(Vector blockPos) const noexcept;
-	void SetBlockId(Vector blockPos, BlockId block);
+	void SetBlockId(Vector blockPos, BlockId block) noexcept;
 
 	Vector2I32 GetPosition() const noexcept;
 };

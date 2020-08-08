@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 
 #include <glm/mat4x4.hpp>
 
@@ -15,13 +16,13 @@ struct BlockLightness {
 };
 
 struct SectionsData {
-	Section section;
-	Section west;
-	Section east;
-	Section top;
-	Section bottom;
-	Section north;
-	Section south;
+	std::shared_ptr<Section> section;
+	std::shared_ptr<Section> west;
+	std::shared_ptr<Section> east;
+	std::shared_ptr<Section> top;
+	std::shared_ptr<Section> bottom;
+	std::shared_ptr<Section> north;
+	std::shared_ptr<Section> south;
 
 	BlockId GetBlockId(const Vector &pos) const;
 	

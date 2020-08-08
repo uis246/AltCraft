@@ -2,16 +2,22 @@
 
 #include <vector>
 #include <map>
+#include <memory>
 
 #include "Block.hpp"
 #include "Vector.hpp"
 
 class Section {
+	struct alignas(2048) light{
+		uint8_t block[2048];
+		uint8_t sky[];
+	};
     std::vector<long long> block;
-	unsigned char light[2048] = {};
-	unsigned char sky[2048] = {};
-    unsigned char bitsPerBlock = 0;
     std::vector<unsigned short> palette;
+	std::shared_ptr<light> lightData;
+
+	unsigned char bitsPerBlock = 0;
+	bool hasSkyLight = false;
 
 	Vector worldPosition;
     mutable size_t hash = 0;
@@ -39,4 +45,6 @@ public:
 	Vector GetPosition() const;
 
     size_t GetHash() const;
+
+//	void operator=(Section &sec) noexcept;
 };

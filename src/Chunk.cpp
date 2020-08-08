@@ -12,7 +12,7 @@ void Chunk::ParseChunk(PacketChunkData *packet) {
 	std::bitset<16> bitmask(static_cast<uint16_t>(packet->PrimaryBitMask));
 	for (unsigned char i = 0; i < 16; i++) {
 		if (bitmask[i]) {
-			std::unique_ptr<Section> *section = &sections[i];
+			std::shared_ptr<Section> *section = &sections[i];
 			if (!packet->GroundUpContinuous && !*section)
 				LOG(WARNING) << "Chunk updating empty section";
 
@@ -94,11 +94,15 @@ void Chunk::ParseChunkData(PacketMultiBlockChange *packet) {
 		PUSH_EVENT("ChunkChangedForce", sectionPos);
 }
 
-void Chunk::Unload() {
+void Chunk::Unload() noexcept {
 	for (int i = 0; i < 16; i++) {
 		if(sections[i])
 			PUSH_EVENT("ChunkDeleted", Vector(pos.x, i, pos.z));
 	}
+}
+
+std::shared_ptr<Section> Chunk::GetSectionShared(unsigned char height) const noexcept {
+	return sections[height];
 }
 
 Section* Chunk::GetSection(unsigned char height) const noexcept {
@@ -111,7 +115,7 @@ BlockId Chunk::GetBlockId(Vector blockPos) const noexcept {
 		return {0, 0};
 	return sectionPtr->GetBlockId(Vector(blockPos.x, blockPos.y % 16, blockPos.z));
 }
-void Chunk::SetBlockId(Vector blockPos, BlockId block) {
+void Chunk::SetBlockId(Vector blockPos, BlockId block) noexcept {
 	Vector sectionPos = Vector(pos.x, blockPos.y / 16, pos.z);
 	Section* sectionPtr = sections[sectionPos.y].get();
 	if (!sectionPtr) {
