@@ -2,8 +2,6 @@
 
 #include <vector>
 
-#include <SDL2/SDL_net.h>
-
 #include "Utility.hpp"
 #include "Vector.hpp"
 #include "Chat.hpp"
@@ -15,13 +13,22 @@ struct SlotDataType {
     //Nbt NBT;
 };
 
-class Stream {
-public:
-//	virtual ~Stream() {};
+struct Stream {
+        uint8_t *buffer;
+        size_t position, size;
 };
 
-class StreamInput : Stream {
-	virtual void ReadData(unsigned char *buffPtr, size_t buffLen) = 0;
+//class Stream {
+//protected:
+//	uint8_t *buffer;
+//	size_t position, size;
+//public:
+////	virtual ~Stream() {};
+//        uint8_t* GetBuffer() const noexcept;
+//        size_t GetSize() const noexcept;
+//};
+
+class StreamInput : public Stream {
 public:
 	virtual ~StreamInput() = default;
 	bool ReadBool();
@@ -46,23 +53,23 @@ public:
 	std::vector<unsigned char> ReadByteArray(size_t arrLength);
 };
 
-class StreamOutput : Stream {
-	virtual void WriteData(unsigned char *buffPtr, size_t buffLen) = 0;
+class StreamOutput : public Stream {
 public:
 	virtual ~StreamOutput() = default;
+	void WriteData(uint8_t *ptr, size_t size);
 	void WriteBool(bool value);
-	void WriteByte(signed char value);
-	void WriteUByte(unsigned char value);
-	void WriteShort(short value);
-	void WriteUShort(unsigned short value);
-	void WriteInt(int value);
-	void WriteLong(long long value);
+	void WriteByte(int8_t value);
+	void WriteUByte(uint8_t value);
+	void WriteShort(int16_t value);
+	void WriteUShort(uint16_t value);
+	void WriteInt(int32_t value);
+	void WriteLong(int64_t value);
 	void WriteFloat(float value);
 	void WriteDouble(double value);
 	void WriteString(const std::string &value);
 	void WriteChat(const Chat &value);
-	void WriteVarInt(int value);
-	void WriteVarLong(long long value);
+	void WriteVarInt(uint32_t value);
+	void WriteVarLong(uint64_t value);
 	void WriteEntityMetadata(const std::vector<unsigned char> &value);
 	void WriteSlot(const SlotDataType &value);
 	void WriteNbtTag(const std::vector<unsigned char> &value);
@@ -72,42 +79,19 @@ public:
 	void WriteByteArray(const std::vector<unsigned char> &value);
 };
 
-class StreamBuffer : public StreamInput, public StreamOutput {
-	std::vector<unsigned char> buffer;
-	unsigned char *bufferPtr;
-
-	void ReadData(unsigned char *buffPtr, size_t buffLen) override;
-	void WriteData(unsigned char *buffPtr, size_t buffLen) override;
-
+class StreamROBuffer : public StreamInput {
+	std::vector<unsigned char> bufferVector;
 public:
-	StreamBuffer(unsigned char *data, size_t dataLen);
-	StreamBuffer(size_t bufferLen);
+	StreamROBuffer(unsigned char *data, size_t size);
+	StreamROBuffer(size_t size);
 
-	std::vector<unsigned char> GetBuffer();
-    size_t GetReadedLength();
+	size_t GetReadedLength();
 };
 
-class StreamCounter : public StreamOutput {
-	void WriteData(unsigned char *buffPtr, size_t buffLen) override;
-
-	size_t size;
+class StreamWOBuffer : public StreamOutput {
+	std::vector<uint8_t> bufferVector;
 public:
-	StreamCounter(size_t initialSize = 0);
-	~StreamCounter();
+	StreamWOBuffer(size_t size, size_t offset = 0);
 
-	size_t GetCountedSize();
-};
-
-class StreamSocket : public StreamInput, public StreamOutput {
-	IPaddress server;
-	TCPsocket socket;
-
-	std::vector<unsigned char> buffer;
-	void ReadData(unsigned char *buffPtr, size_t buffLen) override;
-	void WriteData(unsigned char *buffPtr, size_t buffLen) override;
-public:
-	StreamSocket(std::string &addr, Uint16 port);
-	~StreamSocket() override;
-
-	void Flush();
+	size_t GetReadedLength();
 };
