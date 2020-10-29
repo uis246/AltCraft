@@ -31,10 +31,6 @@ namespace PluginApi {
 		LOG(ERROR) << text;
 	}
 
-	AC_API GameState *GetGameState() {
-		return ::GetGameState();
-	}
-
 	AC_API void RegisterBlock(BlockId blockId, bool collides, std::string blockstate, std::string variant) {
 		RegisterStaticBlockInfo(blockId, BlockInfo{
 			collides,
@@ -66,13 +62,15 @@ int LoadFileRequire(lua_State* L) {
 
 	std::string scriptPath = "/" + package + "/code/lua/" + script;
 
-	AssetScript *asset = AssetManager::GetAsset<AssetScript>(scriptPath);
-	if (!asset) {
+//	AssetScript *asset = AssetManager::GetAsset<AssetScript>(scriptPath);
+	AssetTreeNode *asset = AssetManager::GetAssetByAssetName(scriptPath);
+	if (!asset || asset->type != AssetTreeNode::ASSET_SCRIPT) {
 		sol::stack::push(L, "Module '" + scriptPath + "' not found");
 		return 1;
 	}
+	AssetScript *scriptAsset = reinterpret_cast<AssetScript*>(asset->asset.get());
 
-	luaL_loadbuffer(L, asset->code.data(), asset->code.size(), path.c_str());
+	luaL_loadbuffer(L, scriptAsset->code.data(), scriptAsset->code.size(), path.c_str());
 	return 1;
 }
 
@@ -96,9 +94,14 @@ void PluginSystem::Init() noexcept {
 	lua = sol::state();
 	lua.open_libraries();
 
-	lua["package"]["searchers"] = lua.create_table_with(
-		1, LoadFileRequire
-	);
+	lua["package"]
+		#if SOL_LUA_VESION_I_ < 502
+			["loaders"]
+		#else
+			["searchers"]
+		#endif
+		= lua.create_table_with(
+			1, LoadFileRequire);
 
 	lua.new_usertype<Entity>("Entity",
 		"pos", &Entity::pos);
@@ -199,7 +202,7 @@ void PluginSystem::Init() noexcept {
 	apiTable["LogWarning"] = PluginApi::LogWarning;
 	apiTable["LogInfo"] = PluginApi::LogInfo;
 	apiTable["LogError"] = PluginApi::LogError;
-	apiTable["GetGameState"] = PluginApi::GetGameState;
+	apiTable["GetGameState"] = GetGameState;
 	apiTable["RegisterBlock"] = PluginApi::RegisterBlock;
 	apiTable["RegisterDimension"] = RegisterNewDimension;
 	apiTable["RegisterBiome"] = RegisterNewBiome;
