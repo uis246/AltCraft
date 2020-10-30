@@ -260,12 +260,16 @@ RendererWorld::RendererWorld() {
 
 	listener->RegisterHandler("SetMinLightLevel", [this](const Event& eventData) {
 		auto value = eventData.get<float>();
-		AssetManager::GetAsset<AssetShader>("/altcraft/shaders/face")->shader->Activate();
-		AssetManager::GetAsset<AssetShader>("/altcraft/shaders/face")->shader->SetUniform("MinLightLevel", value);
+		AssetTreeNode *blockNode = AssetManager::GetAssetByAssetName("/altcraft/shaders/face");
+		if (blockNode->type==AssetTreeNode::ASSET_SHADER) {
+			reinterpret_cast<AssetShader*>(blockNode->asset.get())->shader->Activate();
+			reinterpret_cast<AssetShader*>(blockNode->asset.get())->shader->SetUniform("MinLightLevel", value);
+		}
+
 	});
 
-    for (int i = 0; i < numOfWorkers; i++)
-        workers.push_back(std::thread(&RendererWorld::WorkerFunction, this, i));
+	for (int i = 0; i < numOfWorkers; i++)
+		workers.push_back(std::thread(&RendererWorld::WorkerFunction, this, i));
 
 	PUSH_EVENT("UpdateSectionsRender", 0);
 }
@@ -300,21 +304,24 @@ void RendererWorld::Render(RenderState & renderState) {
 	float playerYawR = playerYaw * (M_PI / 180.f);
 
 	float f = player->pitch * (M_PI / 180.f);
-	float back = (player->pitch + 90.f) * (M_PI / 180.f);
+	float up = (player->pitch + 90.f) * (M_PI / 180.f);
 	float cosYaw = cosf(playerYawR),
 			sinYaw = sinf(playerYawR);
 	float cosf0 = cosf(f),
 			sinf0 = sinf(f);
-	float cosBack = cosf(back),
-			sinBack = sinf(back);
+	float cosUp = cosf(up),
+			sinUp = sinf(up);
 
-	Audio::UpdateListener(Vector3<float>(cosYaw*cosf0, sinf0, sinYaw*cosf0), Vector3<float>(cosBack*cosYaw, sinBack, cosBack*sinYaw), Vector3<float>(player->pos.x, player->pos.y+player->EyeOffset.y, player->pos.z), Vector3<float>(player->vel.x, player->vel.y, player->vel.z));
+	Audio::UpdateListener(Vector3<float>(cosYaw*cosf0, sinf0, sinYaw*cosf0), Vector3<float>(cosUp*cosYaw, sinUp, cosUp*sinYaw), Vector3<float>(player->pos.x, player->pos.y+player->EyeOffset.y, player->pos.z), Vector3<float>(player->vel.x, player->vel.y, player->vel.z));
 	}
 
 
     //Render Entities
     glLineWidth(3.0);
-	Shader *entityShader = AssetManager::GetAsset<AssetShader>("/altcraft/shaders/entity")->shader.get();
+	Shader *entityShader = nullptr;
+	AssetTreeNode *entityNode = AssetManager::GetAssetByAssetName("/altcraft/shaders/entity");
+	if (entityNode->type==AssetTreeNode::ASSET_SHADER)
+		entityShader = reinterpret_cast<AssetShader*>(entityNode->asset.get())->shader.get();
 	entityShader->Activate();
 	entityShader->SetUniform("projection", projection);
 	entityShader->SetUniform("view", view);
@@ -326,32 +333,32 @@ void RendererWorld::Render(RenderState & renderState) {
     }
 
     //Render selected block
-    Vector selectedBlock = GetGameState()->GetSelectionStatus().selectedBlock;
-    if (selectedBlock != Vector()) {
+    const SelectionStatus& selectionStatus = GetGameState()->GetSelectionStatus();
+    if (selectionStatus.isBlockSelected) {
         glLineWidth(2.0f);
         {
             glm::mat4 model = glm::mat4(1.0);
-            model = glm::translate(model, selectedBlock.glm());
-            model = glm::translate(model,glm::vec3(0.5f,0.5f,0.5f));
-            model = glm::scale(model,glm::vec3(1.01f,1.01f,1.01f));
+			model = glm::translate(model, selectionStatus.selectedBlock.glm());
+			model = glm::translate(model,glm::vec3(0.5f,0.5f,0.5f));
+			model = glm::scale(model,glm::vec3(1.01f,1.01f,1.01f));
 			entityShader->SetUniform("model", model);
 			entityShader->SetUniform("color", glm::vec3(0, 0, 0));
-            glCheckError();
-            glDrawArrays(GL_LINES, 0, 24);
+			glCheckError();
+			glDrawArrays(GL_LINES, 0, 24);
         }
     }
 
     //Render raycast hit
-    const bool renderHit = false;
+	const bool renderHit = false;
     if (renderHit) {
-    VectorF hit = GetGameState()->GetSelectionStatus().raycastHit;
+	VectorF hit = selectionStatus.raycastHit;
         glLineWidth(2.0f);
         {
             glm::mat4 model;
-            model = glm::translate(model, hit.glm());
+			model = glm::translate(model, hit.glm());
             model = glm::scale(model,glm::vec3(0.3f,0.3f,0.3f));
 			entityShader->SetUniform("model", model);
-            if (selectedBlock == Vector())
+			if (selectionStatus.isBlockSelected)
 				entityShader->SetUniform("color", glm::vec3(0.7f, 0, 0));
             else
 				entityShader->SetUniform("color", glm::vec3(0, 0, 0.7f));
@@ -365,7 +372,10 @@ void RendererWorld::Render(RenderState & renderState) {
 
 	//Render sky
 	renderState.TimeOfDay = GetGameState()->GetTimeStatus().timeOfDay;
-	Shader *skyShader = AssetManager::GetAsset<AssetShader>("/altcraft/shaders/sky")->shader.get();
+	Shader *skyShader = nullptr;
+	AssetTreeNode *skyNode = AssetManager::GetAssetByAssetName("/altcraft/shaders/sky");
+	if (skyNode->type==AssetTreeNode::ASSET_SHADER)
+		skyShader = reinterpret_cast<AssetShader*>(skyNode->asset.get())->shader.get();
 	skyShader->Activate();
 	skyShader->SetUniform("projection", projection);
 	skyShader->SetUniform("view", view);
@@ -414,7 +424,10 @@ void RendererWorld::Render(RenderState & renderState) {
     //Render sections
 	auto rawGlobalTime = (std::chrono::high_resolution_clock::now() - globalTimeStart);
 	float globalTime = rawGlobalTime.count() / 1000000000.0f;
-	Shader *blockShader = AssetManager::GetAsset<AssetShader>("/altcraft/shaders/face")->shader.get();
+	Shader *blockShader = nullptr;
+	AssetTreeNode *blockNode = AssetManager::GetAssetByAssetName("/altcraft/shaders/face");
+	if (blockNode->type==AssetTreeNode::ASSET_SHADER)
+		blockShader = reinterpret_cast<AssetShader*>(blockNode->asset.get())->shader.get();
 	blockShader->Activate();
 	blockShader->SetUniform("DayTime", mixLevel);
 	blockShader->SetUniform("projView", projView);
@@ -447,7 +460,10 @@ void RendererWorld::Render(RenderState & renderState) {
 }
 
 void RendererWorld::PrepareRender() {
-	Shader *blockShader = AssetManager::GetAsset<AssetShader>("/altcraft/shaders/face")->shader.get();
+	Shader *blockShader = nullptr;
+	AssetTreeNode *blockNode = AssetManager::GetAssetByAssetName("/altcraft/shaders/face");
+	if (blockNode->type==AssetTreeNode::ASSET_SHADER)
+		blockShader = reinterpret_cast<AssetShader*>(blockNode->asset.get())->shader.get();
 	blockShader->Activate();
 	blockShader->SetUniform("textureAtlas", 0);
 	blockShader->SetUniform("MinLightLevel", 0.2f);
@@ -457,7 +473,10 @@ void RendererWorld::PrepareRender() {
 	moonTexture.w /= 4.0f; //First phase will be fine for now
 	moonTexture.h /= 2.0f;
 
-	Shader *sky = AssetManager::GetAsset<AssetShader>("/altcraft/shaders/sky")->shader.get();
+	Shader *sky = nullptr;
+	AssetTreeNode *skyNode = AssetManager::GetAssetByAssetName("/altcraft/shaders/sky");
+	if (skyNode->type==AssetTreeNode::ASSET_SHADER)
+		sky = reinterpret_cast<AssetShader*>(skyNode->asset.get())->shader.get();
 	sky->Activate();
 	sky->SetUniform("textureAtlas", 0);	
 	sky->SetUniform("sunTexture", glm::vec4(sunTexture.x, sunTexture.y, sunTexture.w, sunTexture.h));

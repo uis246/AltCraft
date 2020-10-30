@@ -131,7 +131,10 @@ void RendererEntity::Render(RenderState& renderState, const World *world) {
     model = glm::translate(model, glm::vec3(0, entity.height / 2.0, 0));
     model = glm::scale(model, glm::vec3(entity.width, entity.height, entity.width));
     
-	Shader *entityShader = AssetManager::GetAsset<AssetShader>("/altcraft/shaders/entity")->shader.get();
+	Shader *entityShader = nullptr;
+	AssetTreeNode *entityAsset = AssetManager::GetAssetByAssetName("/altcraft/shaders/entity");
+	if (entityAsset->type == AssetTreeNode::ASSET_SHADER)
+		entityShader = reinterpret_cast<AssetShader*>(entityAsset->asset.get())->shader.get();
 	entityShader->SetUniform("model", model);
 	entityShader->SetUniform("color", entity.renderColor);
     glCheckError();

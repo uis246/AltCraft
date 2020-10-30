@@ -31,8 +31,12 @@ Framebuffer::Framebuffer(unsigned int width, unsigned int height, bool createDep
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-		AssetManager::GetAsset<AssetShader>("/altcraft/shaders/fbo")->shader->Activate();
-		AssetManager::GetAsset<AssetShader>("/altcraft/shaders/fbo")->shader->SetUniform("inputTexture", 1);
+		AssetTreeNode *fbo = AssetManager::GetAssetByAssetName("/altcraft/shaders/fbo");
+		if (fbo->type == AssetTreeNode::ASSET_SHADER) {
+			AssetShader *fboAsset = reinterpret_cast<AssetShader*>(fbo->asset.get());
+			fboAsset->shader->Activate();
+			fboAsset->shader->SetUniform("inputTexture", 1);
+		}
 		glActiveTexture(GL_TEXTURE1);
 		glCheckError();
 	}
@@ -80,8 +84,10 @@ void Framebuffer::Activate() {
 void Framebuffer::RenderTo(Framebuffer &target) {
 	OPTICK_EVENT();
 	glBindFramebuffer(GL_FRAMEBUFFER, target.fbo);
-	glViewport(0, 0, target.width, target.height);	
-	AssetManager::GetAsset<AssetShader>("/altcraft/shaders/fbo")->shader->Activate();
+	glViewport(0, 0, target.width, target.height);
+	AssetTreeNode *fbo = AssetManager::GetAssetByAssetName("/altcraft/shaders/fbo");
+	if (fbo->type == AssetTreeNode::ASSET_SHADER)
+		reinterpret_cast<AssetShader*>(fbo->asset.get())->shader->Activate();
 	glBindVertexArray(quadVao);
 	glBindTexture(GL_TEXTURE_2D, texColor);
 	glDrawArrays(GL_TRIANGLES, 0, 6);

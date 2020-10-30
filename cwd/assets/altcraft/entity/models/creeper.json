@@ -1,0 +1,34 @@
+{
+	"textures": {
+		"creeper": "entity/creeper/creeper.png"
+	},
+	"boxes": {
+		"head": {
+			"width": 8,
+			"height": 8,
+			"depth": 8,
+			"offsetX": -4.0,
+			"offsetY": -8.0,
+			"offsetZ": -4.0,
+			"up": {"uv": [], "texture": "#creeper"}
+		},
+		"body": {
+			"width": 8,
+			"height": 12,
+			"depth": 4,
+			"offsetX": -4.0,
+			"offsetY": 0.0,
+			"offsetZ": -2.0,
+			"up": {"uv": [], "texture": "#creeper"}
+		},
+		"leg": {
+			"width": 4,
+			"height": 6,
+			"depth": 4,
+			"offsetX": -2.0,
+			"offsetY": 0.0,
+			"offsetZ": -2.0,
+			"up": {"uv": [], "texture": "#creeper"}
+		}
+	}
+} 

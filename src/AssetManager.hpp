@@ -195,15 +195,9 @@ namespace AssetManager {
     std::string GetAssetNameByBlockId(BlockId block);
 
 	Asset *GetAssetPtr(const std::string &assetName);
-
-	template <typename T>
-	T *GetAsset(const std::string &assetName) {
-		return dynamic_cast<T*>(GetAssetPtr(assetName));
-	}
-
 	AssetTreeNode *GetAssetByAssetName(const std::string &assetName);
 	
 	GLuint GetTextureAtlasId();
 
 	TextureCoord GetTexture(const std::string &assetName);
-};
+}

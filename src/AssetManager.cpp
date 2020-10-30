@@ -151,7 +151,7 @@ void ParseBlockModels() {
 		if (!node.asset || node.type != AssetTreeNode::ASSET_BLOCK_MODEL)
 			return;
 
-		BlockModel &model = dynamic_cast<AssetBlockModel*>(node.asset.get())->blockModel;
+		BlockModel &model = reinterpret_cast<AssetBlockModel*>(node.asset.get())->blockModel;
 		for (const auto& element : model.Elements) {
 			Vector t = element.to - element.from;
 			VectorF elementSize(VectorF(t.x, t.y, t.z) / 16.0f);
@@ -273,7 +273,7 @@ void ParseBlockModels() {
 					textureName.insert(0, "/minecraft/textures/");
 					AssetTreeNode *node = AssetManager::GetAssetByAssetName(textureName);
 					AssetTexture *assetTexture = nullptr;
-					if (!node || node->type == AssetTreeNode::ASSET_TEXTURE)
+					if (node && node->type == AssetTreeNode::ASSET_TEXTURE)
 						assetTexture = reinterpret_cast<AssetTexture*>(node->asset.get());
 
 					texture = atlas->GetTexture(assetTexture->id);
@@ -417,6 +417,7 @@ GLuint AssetManager::GetTextureAtlasId()
 	return atlas->GetRawTextureId();
 }
 
+//Get texture coordinates in atlas by name
 TextureCoord AssetManager::GetTexture(const std::string &assetName) {
 	AssetTreeNode *node = GetAssetByAssetName(assetName);
 	if (!node || node->type != AssetTreeNode::ASSET_TEXTURE)

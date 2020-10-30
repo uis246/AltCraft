@@ -88,11 +88,8 @@ void Audio::UpdateListener(Vector3<float> direction, Vector3<float> up, Vector3<
 	ALfloat listPos[6] = {direction.x, direction.y, direction.z, up.x, up.y, up.z};
 
 	alListener3f(AL_POSITION, pos.x, pos.y, pos.z);
-//	alCheckError();
 	alListener3f(AL_VELOCITY, vel.x, vel.y, vel.z);
-//	alCheckError();
 	alListenerfv(AL_ORIENTATION, listPos);
-//	alCheckError();
 }
 
 void Audio::PlaySound(Vector3<float> pos, buffer_t buffer, bool relative, bool loop) noexcept {
