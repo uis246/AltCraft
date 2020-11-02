@@ -78,7 +78,7 @@ void Chunk::ParseChunkData(PacketMultiBlockChange *packet) {
 			continue;
 		}
 
-		sections[sectionPos.y]->SetBlockId(worldPos, BlockId{(unsigned short) (it.BlockId >> 4),(unsigned char) (it.BlockId & 0xF) });
+		sections[sectionPos.y]->SetBlockId(worldPos, BlockId{(unsigned short) (it.BlockId >> 4), (unsigned char) (it.BlockId & 0xF)});
 		UpdateBlock(Vector(x + (pos.x * 16), y, z + (pos.z * 16)), &changedForce);
 
 
@@ -155,13 +155,8 @@ Section* Chunk::ParseSection(StreamInput *data, unsigned char height) {
 	if (hasSkyLight)
 		skyLight = data->ReadByteArray(2048);
 
-	long long *blockData = reinterpret_cast<long long*>(dataArray.data());
-	for (size_t i = 0; i < dataArray.size() / sizeof(long long); i++)
-		endswap(blockData[i]);
-	std::vector<long long> blockArray(blockData, blockData + dataArray.size() / sizeof(long long));
-
 
 	return new Section(
-		Vector(this->pos.x, height, this->pos.z), bitsPerBlock, std::move(palette), blockArray,
+		Vector(this->pos.x, height, this->pos.z), bitsPerBlock, std::move(palette), std::move(dataArray),
 		std::move(blockLight), std::move(skyLight));
 }

@@ -7,20 +7,25 @@
 #include "Vector.hpp"
 
 class Section {
-    std::vector<long long> block;
-	unsigned char light[2048] = {};
-	unsigned char sky[2048] = {};
-    unsigned char bitsPerBlock = 0;
-    std::vector<unsigned short> palette;
+	struct lightData {
+		uint8_t block[2048];
+		uint8_t sky[2048];//Only when hasSkyLight==true
+	};
+
+	uint16_t *blocks = nullptr;//Should host endian
+	struct lightData *light = nullptr;//2K or 4K
+	uint8_t bitsPerBlock, pow;
+	std::vector<uint16_t> palette;
 
 	Vector worldPosition;
-    mutable size_t hash = 0;
+	mutable size_t hash = 0;
+	bool hasSkyLight = false;
 
     void CalculateHash() const;
-
-    std::map<Vector, BlockId> overrideList;
+	void ExpandBPB();
 public:
-    Section(Vector pos, unsigned char bitsPerBlock, std::vector<unsigned short> palette, std::vector<long long> blockData, const std::vector<unsigned char> &lightData, const std::vector<unsigned char> &skyData);
+	Section(Vector pos, unsigned char bitsPerBlock, std::vector<unsigned short> palette, std::vector<uint8_t> blockData, const std::vector<unsigned char> &lightData, const std::vector<unsigned char> &skyData);
+	~Section();
     
 	Section() = default;
 	
@@ -31,6 +36,7 @@ public:
     unsigned char GetBlockSkyLight(Vector pos) const;
 
     void SetBlockId(Vector pos, BlockId value);
+	void SetBlock(unsigned int num, uint16_t block);
 
     void SetBlockLight(Vector pos, unsigned char value);
 

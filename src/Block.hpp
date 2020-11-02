@@ -8,7 +8,7 @@
 
 struct BlockId {
 	unsigned short id : 12;
-    unsigned char state : 4;
+	unsigned char state : 4;
 };
 
 enum BlockFacing {
