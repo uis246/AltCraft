@@ -1,4 +1,5 @@
 #include "Section.hpp"
+#include "Platform.hpp"
 
 #include <easylogging++.h>
 
@@ -54,7 +55,7 @@ Section::Section(Vector pos, unsigned char bitsPerBlock, std::vector<unsigned sh
 			const uint64_t *lptr = reinterpret_cast<uint64_t*>(blockData.data());
 			uint64_t *dlptr = reinterpret_cast<uint64_t*>(blocks);
 			for (size_t i=0; i<16*16*16*bitsPerBlock/(sizeof(uint64_t)*8); i++) {
-				dlptr[i] = be64toh(lptr[i]);
+				dlptr[i] = bswap_64(lptr[i]);
 			}
 		} else { // only when bPB>4 && bPB<8
 			//Expand?
@@ -87,7 +88,7 @@ Section::Section(Vector pos, unsigned char bitsPerBlock, std::vector<unsigned sh
 			uint8_t offset = ((ib - iy*8)%16);
 			unsigned int buf = p(iy);
 			if (offset > 16 - bitsPerBlock)
-				buf |= (p(iy+1) << 8) | (ptr[iy+2] << 16);
+				buf |= (p(iy+1) << 8) | (p(iy+2) << 16);
 			else if (offset > 8 - bitsPerBlock)
 				buf |= p(iy+1) << 8;
 			blocks[i] = (buf >> (ib % 8)) & mask;

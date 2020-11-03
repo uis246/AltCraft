@@ -52,3 +52,10 @@
 #define floorASR(value, shmat, dest) (dest=std::floor(value / (float)(2 << shmat)))
 #define floorASRQ(value, shmat, dest) (dest=std::floor(value / (float)(2 << shmat)))
 #endif
+
+#ifndef __GNUC__
+#define mv64(x, i) (x&(0xFF<<(i*8)))>>((7-i)*8)
+#define bswap_64(x) ( mv64(x, 0) | mv64(x, 1) | mv64(x, 2) | mv64(x, 3) | mv64(x, 4) | mv64(x, 5) | mv64(x, 6) | mv64(x, 7))
+#else
+#include <byteswap.h>
+#endif
