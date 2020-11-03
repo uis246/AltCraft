@@ -1,6 +1,5 @@
 #include "Event.hpp"
-
-#include <optick.h>
+#include "Platform.hpp"
 
 std::list<EventListener*> EventSystem::listeners;
 std::recursive_mutex EventSystem::listenersMutex;

@@ -5,7 +5,6 @@
 
 #include <easylogging++.h>
 #include <sol.hpp>
-#include <optick.h>
 
 #include "GameState.hpp"
 #include "Game.hpp"

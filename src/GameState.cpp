@@ -2,7 +2,6 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <easylogging++.h>
-#include <optick.h>
 
 #include "Event.hpp"
 #include "Packet.hpp"

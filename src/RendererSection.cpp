@@ -1,7 +1,6 @@
 #include "RendererSection.hpp"
 
 #include <easylogging++.h>
-#include <optick.h>
 
 #include "Utility.hpp"
 #include "Renderer.hpp"

@@ -8,7 +8,6 @@
 #include <easylogging++.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <SDL.h>
-#include <optick.h>
 
 #include "Utility.hpp"
 #include "Plugin.hpp"

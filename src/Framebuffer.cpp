@@ -3,7 +3,6 @@
 #include <string>
 #include "Utility.hpp"
 #include "AssetManager.hpp"
-#include <optick.h>
 
 const GLuint magic = 316784;
 GLuint quadVao = magic, quadVbo = magic;

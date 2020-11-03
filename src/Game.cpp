@@ -2,8 +2,6 @@
 
 #include <memory>
 
-#include <optick.h>
-
 #include "Render.hpp"
 #include "GameState.hpp"
 #include "NetworkClient.hpp"

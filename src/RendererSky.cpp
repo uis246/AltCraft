@@ -1,9 +1,8 @@
 #include "RendererSky.hpp"
 
-#include <optick.h>
-
 #include "Renderer.hpp"
 #include "Utility.hpp"
+#include "Platform.hpp"
 
 const GLfloat vertices[] = {
     //Z+ edge

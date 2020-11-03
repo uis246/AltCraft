@@ -1,6 +1,5 @@
 #include "Renderer.hpp"
-
-#include <optick.h>
+#include "Plugin.hpp"
 
 void RenderState::SetActiveVao(GLuint Vao) {
 	OPTICK_EVENT();
