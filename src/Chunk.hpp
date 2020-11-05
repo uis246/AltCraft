@@ -24,7 +24,7 @@ public:
 	Section* GetSection(unsigned char height) const noexcept;
 
 	BlockId GetBlockId(Vector blockPos) const noexcept;
-	void SetBlockId(Vector blockPos, BlockId block);
+	void SetBlockId(Vector blockPos, BlockId block) noexcept;
 
 	Vector2I32 GetPosition() const noexcept;
 };

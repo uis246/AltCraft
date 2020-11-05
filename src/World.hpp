@@ -44,9 +44,6 @@ class World {
     int dimension = 0;
 
 	std::map<Vector2I32, std::shared_ptr<Chunk>> chunks;
-//    std::map<Vector, std::shared_ptr<Section>> sections;
-
-    Section ParseSection(StreamInput *data, Vector position);
 
     std::list<Entity> entities;
 
@@ -72,6 +69,7 @@ public:
 
     std::vector<Vector> GetSectionsList() const;
 
+	const std::shared_ptr<Chunk> GetChunkPtr(Vector2I32 chunkPos) const;
     const Section &GetSection(Vector sectionPos) const;
 
 	AC_API RaycastResult Raycast(glm::vec3 position, glm::vec3 direction) const;

@@ -16,6 +16,8 @@
 #include "Game.hpp"
 #include "Audio.hpp"
 
+extern Section fallbackSection;
+
 void RendererWorld::WorkerFunction(size_t workerId) {
 	AC_THREAD_SET_NAME("Worker");
     EventListener tasksListener;
@@ -58,13 +60,40 @@ void RendererWorld::ParseQueueUpdate() {
 			vec.y -= 4500;
 		}
 		
-		parsing[id].data.section = GetGameState()->GetWorld().GetSection(vec);
-		parsing[id].data.north = GetGameState()->GetWorld().GetSection(vec + Vector(0, 0, 1));
-		parsing[id].data.south = GetGameState()->GetWorld().GetSection(vec + Vector(0, 0, -1));
-		parsing[id].data.west = GetGameState()->GetWorld().GetSection(vec + Vector(1, 0, 0));
-		parsing[id].data.east = GetGameState()->GetWorld().GetSection(vec + Vector(-1, 0, 0));
-		parsing[id].data.bottom = GetGameState()->GetWorld().GetSection(vec + Vector(0, -1, 0));
-		parsing[id].data.top = GetGameState()->GetWorld().GetSection(vec + Vector(0, 1, 0));
+		GameState *gs = GetGameState();
+
+		Vector2I32 chunkPos(vec.x, vec.z);
+
+		parsing[id].chunkCenter = gs->GetWorld().GetChunkPtr(chunkPos),
+		parsing[id].chunkNorth  = gs->GetWorld().GetChunkPtr(chunkPos+Vector2I32(0, 1)),
+		parsing[id].chunkSouth  = gs->GetWorld().GetChunkPtr(chunkPos+Vector2I32(0, -1)),
+		parsing[id].chunkWest   = gs->GetWorld().GetChunkPtr(chunkPos+Vector2I32(1, 1)),
+		parsing[id].chunkEast   = gs->GetWorld().GetChunkPtr(chunkPos+Vector2I32(-1, 1));
+
+		parsing[id].data.section = parsing[id].chunkCenter->GetSection(vec.y);
+		parsing[id].data.north = parsing[id].chunkNorth->GetSection(vec.y);
+		parsing[id].data.south = parsing[id].chunkSouth->GetSection(vec.y);
+		parsing[id].data.west = parsing[id].chunkWest->GetSection(vec.y);
+		parsing[id].data.east = parsing[id].chunkEast->GetSection(vec.y);
+		parsing[id].data.bottom = parsing[id].chunkCenter->GetSection(vec.y-1);
+		parsing[id].data.top = parsing[id].chunkCenter->GetSection(vec.y+1);
+
+		if (parsing[id].data.section == nullptr)
+			continue;//It's nothing to do
+
+		if (parsing[id].data.north == nullptr)
+			parsing[id].data.north = &fallbackSection;
+		if (parsing[id].data.south == nullptr)
+			parsing[id].data.south = &fallbackSection;
+		if (parsing[id].data.west == nullptr)
+			parsing[id].data.west = &fallbackSection;
+		if (parsing[id].data.east == nullptr)
+			parsing[id].data.east = &fallbackSection;
+		if (parsing[id].data.bottom == nullptr)
+			parsing[id].data.bottom = &fallbackSection;
+		if (parsing[id].data.top == nullptr)
+			parsing[id].data.top = &fallbackSection;
+
 
 		parsing[id].parsing = true;
 
@@ -91,20 +120,9 @@ void RendererWorld::ParseQeueueRemoveUnnecessary() {
 		}
 
 		if (std::find(elements.begin(), elements.end(), vec) != elements.end())
-			continue;
+			continue;//Continue if section already in queue
 				
 		const Section& section = GetGameState()->GetWorld().GetSection(vec);
-
-		bool skip = false;
-
-		for (int i = 0; i < RendererWorld::parsingBufferSize; i++) {
-			if (parsing[i].data.section.GetHash() == section.GetHash()) {
-				skip = true;
-				break;
-			}
-		}
-		if (skip)
-			continue;
 
 		auto it = sections.find(vec);
 		if (it != sections.end() && section.GetHash() == it->second.GetHash()) {
@@ -405,7 +423,7 @@ void RendererWorld::Render(RenderState & renderState) {
 		dayTime *= -1;
 	while (dayTime > 24000)
 		dayTime -= 24000;
-	if (dayTime > 0 && dayTime < moonriseMin || dayTime > sunriseMax) //day
+	if ((dayTime > 0 && dayTime < moonriseMin) || dayTime > sunriseMax) //day
 		mixLevel = 1.0;
 	if (dayTime > moonriseMax && dayTime < sunriseMin) //night
 		mixLevel = 0.0;

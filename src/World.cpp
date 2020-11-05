@@ -30,6 +30,7 @@ void World::ParseChunkData(std::shared_ptr<PacketChunkData> packet) {
 	Vector2I32 chunkPosition = Vector2I32(packet->ChunkX, packet->ChunkZ);
 	std::shared_ptr<Chunk> chunk;
 
+	LOG(INFO) << "Loading chunk " << chunkPosition;
 	auto it = chunks.find(chunkPosition);
 	if (it != chunks.end()) {
 		chunk = it->second;
@@ -55,19 +56,25 @@ std::vector<Vector> World::GetSectionsList() const {
 	return sectionsList;
 }
 
-static Section fallbackSection;
+Section fallbackSection;
+static std::shared_ptr<Chunk> fallbackChunk = std::make_shared<Chunk>(Vector2I32(0, 0), false);
 
-const Section &World::GetSection(Vector position) const {
-
-	if (position.y > 16||position.y < 0)
-		return fallbackSection;
-
-	auto it = chunks.find(Vector2I32(position.x, position.z));
+const std::shared_ptr<Chunk> World::GetChunkPtr(Vector2I32 position) const {
+	auto it = chunks.find(position);
 
 	if (it == chunks.end())
+		return fallbackChunk;
+
+	return it->second;
+}
+
+const Section &World::GetSection(Vector position) const {
+	if (position.y > 15 || position.y < 0)
 		return fallbackSection;
 
-	Section *sec=it->second->GetSection(position.y);
+	std::shared_ptr<Chunk> chunk = GetChunkPtr(Vector2I32(position.x, position.z));
+
+	Section *sec=chunk->GetSection(position.y);
 	if (!sec)
 		return fallbackSection;
 

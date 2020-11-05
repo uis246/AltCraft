@@ -15,13 +15,13 @@ struct BlockLightness {
 };
 
 struct SectionsData {
-	Section section;
-	Section west;
-	Section east;
-	Section top;
-	Section bottom;
-	Section north;
-	Section south;
+	Section *section = nullptr;
+	Section *west = nullptr;
+	Section *east = nullptr;
+	Section *top = nullptr;
+	Section *bottom = nullptr;
+	Section *north = nullptr;
+	Section *south = nullptr;
 
 	BlockId GetBlockId(const Vector &pos) const;
 	

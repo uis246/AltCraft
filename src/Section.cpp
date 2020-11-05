@@ -11,7 +11,7 @@ void Section::CalculateHash() const {
 
 
 	size_t llen = hasSkyLight ? 2048 : 4096;
-	size_t sz = (16*16*16) << (this->pow - 2) >> 1;
+	size_t sz = (16*16*16/2) << (this->pow - 2);
 	std::vector<unsigned char> rawData;
 	rawData.resize(sz + llen);
 
@@ -154,7 +154,6 @@ unsigned char Section::GetBlockSkyLight(Vector pos) const {
 	return (blockNumber % 2 == 0) ? (skyValue & 0xF) : (skyValue >> 4);
 }
 
-//FIXME
 void Section::SetBlockId(Vector pos, BlockId value) {
 	SetBlock((pos.y * 256) + (pos.z * 16) + pos.x, (value.id << 4) | value.state);
 }
@@ -174,6 +173,7 @@ void Section::SetBlock(unsigned int num, uint16_t block) {
 		}
 		if (index == -1) {//Not found
 			if (psz == ((uint)1<<bitsPerBlock)){
+				//Compact palette
 				//Expand bPB
 				LOG(ERROR) << "NYI";
 			} else {
@@ -189,7 +189,7 @@ void Section::SetBlock(unsigned int num, uint16_t block) {
 			ptr[num] = index;
 		}
 	}
-    hash = -1;
+	hash = ~(size_t)0;
 	CalculateHash();
 }
 
@@ -208,4 +208,6 @@ Section::~Section() {
 		free(light);
 	if (blocks)
 		free(blocks);
+	light = nullptr;
+	blocks = nullptr;
 }

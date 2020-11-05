@@ -11,6 +11,7 @@
 #include "RendererEntity.hpp"
 #include "RendererSky.hpp"
 #include "RendererSectionData.hpp"
+#include "Chunk.hpp"
 
 class Frustum;
 class GameState;
@@ -21,6 +22,7 @@ class RenderState;
 
 class RendererWorld {
 	struct SectionParsing {
+		std::shared_ptr<Chunk> chunkCenter, chunkNorth, chunkSouth, chunkWest, chunkEast;
 		SectionsData data;
 		RendererSectionData renderer;
 		bool parsing = false;
@@ -41,7 +43,7 @@ class RendererWorld {
 	void ParseQeueueRemoveUnnecessary();
     //Blocks
     std::vector<Vector> renderList;
-    std::map<Vector, RendererSection> sections;
+	std::map<Vector, RendererSection> sections;
     void UpdateAllSections(VectorF playerPos);
 	std::chrono::time_point<std::chrono::high_resolution_clock> globalTimeStart;
     //Entities

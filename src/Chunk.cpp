@@ -95,6 +95,7 @@ void Chunk::ParseChunkData(PacketMultiBlockChange *packet) {
 }
 
 void Chunk::Unload() {
+	LOG(INFO) <<  "Unloading chunk " << pos;
 	for (int i = 0; i < 16; i++) {
 		if(sections[i])
 			PUSH_EVENT("ChunkDeleted", Vector(pos.x, i, pos.z));
@@ -102,6 +103,8 @@ void Chunk::Unload() {
 }
 
 Section* Chunk::GetSection(unsigned char height) const noexcept {
+	if (height > 15)
+		return nullptr;
 	return sections[height].get();
 }
 
@@ -111,7 +114,7 @@ BlockId Chunk::GetBlockId(Vector blockPos) const noexcept {
 		return {0, 0};
 	return sectionPtr->GetBlockId(Vector(blockPos.x, blockPos.y % 16, blockPos.z));
 }
-void Chunk::SetBlockId(Vector blockPos, BlockId block) {
+void Chunk::SetBlockId(Vector blockPos, BlockId block) noexcept {
 	Vector sectionPos = Vector(pos.x, blockPos.y / 16, pos.z);
 	Section* sectionPtr = sections[sectionPos.y].get();
 	if (!sectionPtr) {
