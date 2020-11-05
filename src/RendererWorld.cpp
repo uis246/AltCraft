@@ -124,6 +124,17 @@ void RendererWorld::ParseQeueueRemoveUnnecessary() {
 				
 		const Section& section = GetGameState()->GetWorld().GetSection(vec);
 
+		bool skip = false;
+
+		for (size_t i = 0; i < RendererWorld::parsingBufferSize; i++) {
+			if (parsing[i].data.section && parsing[i].data.section->GetPosition() == vec && parsing[i].data.section->GetHash() == section.GetHash()) {
+				skip = true;
+				break;
+			}
+		}
+		if (skip)
+			continue;
+
 		auto it = sections.find(vec);
 		if (it != sections.end() && section.GetHash() == it->second.GetHash()) {
 			continue;
@@ -286,7 +297,10 @@ RendererWorld::RendererWorld() {
 
 	});
 
-	for (int i = 0; i < numOfWorkers; i++)
+	for (size_t i = 0; i < RendererWorld::parsingBufferSize; i++)
+		parsing[i].data.section = nullptr;
+
+	for (size_t i = 0; i < numOfWorkers; i++)
 		workers.push_back(std::thread(&RendererWorld::WorkerFunction, this, i));
 
 	PUSH_EVENT("UpdateSectionsRender", 0);
