@@ -10,12 +10,12 @@ void Section::CalculateHash() const {
     }
 
 
-	size_t llen = hasSkyLight ? 2048 : 4096;
+	size_t llen = hasSkyLight ? 4096 : 2048;
 	size_t sz = (16*16*16/2) << (this->pow - 2);
 	std::vector<unsigned char> rawData;
 	rawData.resize(sz + llen);
 
-	std::memcpy(rawData.data(), light->block, sz);
+	std::memcpy(rawData.data(), light->block, 2048);
 	if(hasSkyLight)
 		std::memcpy(rawData.data() + 2048, light->sky, 2048);
 	std::memcpy(rawData.data() + llen, blocks, sz);
@@ -46,7 +46,7 @@ Section::Section(Vector pos, unsigned char bitsPerBlock, std::vector<unsigned sh
 
     this->worldPosition = pos;
 	this->palette = std::move(palette);
-	size_t sz = (16*16*16) << (this->pow - 2) >> 1;
+	size_t sz = (16*16*16/2) << (this->pow - 2);
 	this->blocks = reinterpret_cast<uint16_t*>(malloc(sz));
 	#define p(i) ptr[7+((i)&~7)-((i)&7)]
 	if (this->bitsPerBlock <= 8) {

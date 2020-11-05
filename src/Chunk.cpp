@@ -64,26 +64,25 @@ void Chunk::ParseChunkData(PacketMultiBlockChange *packet) {
 	std::vector<Vector> changedSections, changedForce;
 	for (auto& it : packet->Records) {
 		int x = (it.HorizontalPosition >> 4 & 15);
-		int y = it.YCoordinate;
+		uint8_t y = it.YCoordinate;
 		int z = (it.HorizontalPosition & 15);
 
 		Vector worldPos(x, y, z);
-		Vector sectionPos(pos.x, 0, pos.z);
-		floorASRQ(y, 4, sectionPos.y);
+		uint8_t h = y / 16;
 
-		Section *section = sections[sectionPos.y].get();
+		Section *section = sections[h].get();
 
 		if(!section){
 			LOG(WARNING) << "Block change empty section";
 			continue;
 		}
 
-		sections[sectionPos.y]->SetBlockId(worldPos, BlockId{(unsigned short) (it.BlockId >> 4), (unsigned char) (it.BlockId & 0xF)});
+		sections[h]->SetBlockId(Vector(x, h, z), BlockId{(unsigned short) (it.BlockId >> 4), (unsigned char) (it.BlockId & 0xF)});
 		UpdateBlock(Vector(x + (pos.x * 16), y, z + (pos.z * 16)), &changedForce);
 
 
-		if (std::find(changedSections.begin(), changedSections.end(), sectionPos) == changedSections.end())
-			changedSections.push_back(sectionPos);
+		if (std::find(changedSections.begin(), changedSections.end(), h) == changedSections.end())
+			changedSections.push_back(h);
 
 	}
 
@@ -95,7 +94,6 @@ void Chunk::ParseChunkData(PacketMultiBlockChange *packet) {
 }
 
 void Chunk::Unload() {
-	LOG(INFO) <<  "Unloading chunk " << pos;
 	for (int i = 0; i < 16; i++) {
 		if(sections[i])
 			PUSH_EVENT("ChunkDeleted", Vector(pos.x, i, pos.z));

@@ -67,8 +67,8 @@ void RendererWorld::ParseQueueUpdate() {
 		parsing[id].chunkCenter = gs->GetWorld().GetChunkPtr(chunkPos),
 		parsing[id].chunkNorth  = gs->GetWorld().GetChunkPtr(chunkPos+Vector2I32(0, 1)),
 		parsing[id].chunkSouth  = gs->GetWorld().GetChunkPtr(chunkPos+Vector2I32(0, -1)),
-		parsing[id].chunkWest   = gs->GetWorld().GetChunkPtr(chunkPos+Vector2I32(1, 1)),
-		parsing[id].chunkEast   = gs->GetWorld().GetChunkPtr(chunkPos+Vector2I32(-1, 1));
+		parsing[id].chunkWest   = gs->GetWorld().GetChunkPtr(chunkPos+Vector2I32(1, 0)),
+		parsing[id].chunkEast   = gs->GetWorld().GetChunkPtr(chunkPos+Vector2I32(-1, 0));
 
 		parsing[id].data.section = parsing[id].chunkCenter->GetSection(vec.y);
 		parsing[id].data.north = parsing[id].chunkNorth->GetSection(vec.y);

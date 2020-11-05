@@ -412,7 +412,9 @@ void GameState::UpdatePacket(std::shared_ptr<Packet> ptr) {
 			entity.entityId = player->entityId;
 			entity.width = 0.6;
 			entity.height = 1.8;
-			world = World(packet->Dimension);
+			//NOTE: Force respawn? Cuberite use this
+			if (gameStatus.dimension != packet->Dimension)
+				world = World(packet->Dimension);
 			world.AddEntity(entity);
 			player = world.GetEntityPtr(entity.entityId);
 

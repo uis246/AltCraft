@@ -30,7 +30,6 @@ void World::ParseChunkData(std::shared_ptr<PacketChunkData> packet) {
 	Vector2I32 chunkPosition = Vector2I32(packet->ChunkX, packet->ChunkZ);
 	std::shared_ptr<Chunk> chunk;
 
-	LOG(INFO) << "Loading chunk " << chunkPosition;
 	auto it = chunks.find(chunkPosition);
 	if (it != chunks.end()) {
 		chunk = it->second;
@@ -273,11 +272,12 @@ void World::ParseChunkData(std::shared_ptr<PacketMultiBlockChange> packet) {
 }
 
 void World::ParseChunkData(std::shared_ptr<PacketUnloadChunk> packet) {
-	auto chunk=chunks.find(Vector2I32(packet->ChunkX, packet->ChunkZ));
+	Vector2I32 pos(packet->ChunkX, packet->ChunkZ);
+	auto chunk=chunks.find(pos);
 	if(chunk == chunks.end())
 		return;
 	chunk->second->Unload();
-	chunks.erase(chunk);
+	chunks.erase(pos);
 	UpdateChunkSectionsList();
 }
 
