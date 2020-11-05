@@ -65,10 +65,6 @@ Section::Section(Vector pos, unsigned char bitsPerBlock, std::vector<unsigned sh
 			for (size_t i = 0; i < 16*16*16; i++) {
 				size_t ib = i * bitsPerBlock;
 				size_t iy = ib / 8;
-//				uint16_t buf = (ptr[iy]) | (ptr[iy+1] << 8);
-//				uint8_t uis = (buf >> ((ib - iy*8)%16)) & mask;
-
-				#define p(i) ptr[7+((i)&~7)-((i)&7)]
 				uint8_t offset = ib%8;
 				uint16_t buf = p(iy);
 				if (offset > 8 - bitsPerBlock)
@@ -77,14 +73,12 @@ Section::Section(Vector pos, unsigned char bitsPerBlock, std::vector<unsigned sh
 			}
 		}
 	} else {
-		//FIXME
 		//Align to uint16_t and swap to host endian
 		const uint8_t *ptr = reinterpret_cast<uint8_t*>(blockData.data());
 		const uint16_t mask = 0xffff >> (16 - bitsPerBlock);
 		for (size_t i = 0; i < 16*16*16; i++) {
 			size_t ib = i * bitsPerBlock;
 			size_t iy = ib / 8;
-//			unsigned int buf = (ptr[iy] << 16) | (ptr[iy+1] << 8) | (ptr[iy+2]);
 			uint8_t offset = ((ib - iy*8)%16);
 			unsigned int buf = p(iy);
 			if (offset > 16 - bitsPerBlock)
@@ -103,6 +97,7 @@ Section::Section(Vector pos, unsigned char bitsPerBlock, std::vector<unsigned sh
 
     hash = -1;
 	CalculateHash();
+	std::atomic_thread_fence(std::memory_order_release);
 }
 
 BlockId Section::GetBlockId(Vector pos) const {
@@ -113,6 +108,9 @@ BlockId Section::GetBlockId(Vector pos) const {
 	BlockId ret;
 
 	uint16_t value;
+
+
+	mutex.lock_shared();//Prevent expanding and use acquire memory orded
 	if (bitsPerBlock <= 8) {//4 or 8
 		uint8_t *block = reinterpret_cast<uint8_t*>(blocks);//Make endianess independent
 		unsigned int realIndex = virtualIndex >> (3 - this->pow);
@@ -132,6 +130,9 @@ BlockId Section::GetBlockId(Vector pos) const {
 	} else {//16
 		value = blocks[virtualIndex];
 	}
+	mutex.unlock_shared();
+
+
 	ret.id = value >> 4;
 	ret.state = value & 0x0F;
 	return ret;
@@ -150,14 +151,16 @@ unsigned char Section::GetBlockSkyLight(Vector pos) const {
 		return 0;
 	int blockNumber = pos.y * 256 + pos.z * 16 + pos.x;
 	unsigned char skyValue = this->light->sky[blockNumber / 2];
-	//NOTE pos.x?
 	return (blockNumber % 2 == 0) ? (skyValue & 0xF) : (skyValue >> 4);
 }
 
 void Section::SetBlockId(Vector pos, BlockId value) {
 	SetBlock((pos.y * 256) + (pos.z * 16) + pos.x, (value.id << 4) | value.state);
 }
+
+//Should be called only from main thread
 void Section::SetBlock(unsigned int num, uint16_t block) {
+	//Don't lock mutex, we are in main thread, it's nothing to worry about. I hope.
 	if (bitsPerBlock > 8) {//We use only 16 bits per block
 		//Just set
 		blocks[num] = block;
@@ -175,7 +178,9 @@ void Section::SetBlock(unsigned int num, uint16_t block) {
 			if (psz == ((uint)1<<bitsPerBlock)){
 				//Compact palette
 				//Expand bPB
-				LOG(ERROR) << "NYI";
+				ExpandBPB();
+				SetBlock(num, block);
+				return;
 			} else {
 				//Add blockID to palette
 				palette.push_back(block);
@@ -192,6 +197,38 @@ void Section::SetBlock(unsigned int num, uint16_t block) {
 	hash = ~(size_t)0;
 	CalculateHash();
 }
+
+void Section::ExpandBPB() noexcept {
+	bool locked = mutex.try_lock();//We are in main thread! Try to lock ASAP!
+
+	size_t sz = (16*16*16/2) << (this->pow - 1);
+	uint16_t *expanded = reinterpret_cast<uint16_t*>(malloc(sz));
+	if (this->pow == 2) {//Expand to 8 bPB
+		uint8_t *old = reinterpret_cast<uint8_t*>(blocks);
+		uint8_t *new_blocks = reinterpret_cast<uint8_t*>(expanded);
+		for (size_t i = 0; i < 16*16*16; i++) {
+			uint8_t nibble = i&1;
+			new_blocks[i] = (old[i>>1] >> (nibble << 2)) & 0x0F;
+		}
+	} else if (this->pow == 3) {//Expand to 16 bPB
+		for (size_t i = 0; i < 16*16*16; i++) {
+			expanded[i] = palette[blocks[i]];
+		}
+	}
+
+	//Lock and swap
+	if (!locked)
+		mutex.lock();
+	free(blocks);
+	if (this->bitsPerBlock == 8) {
+		palette.clear();
+		palette.shrink_to_fit();
+	}
+	blocks = expanded;
+	this->bitsPerBlock = 1 << (++this->pow);
+	mutex.unlock();
+}
+
 
 Vector Section::GetPosition() const {
 	return worldPosition;

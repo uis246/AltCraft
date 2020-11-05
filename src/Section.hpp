@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <map>
+#include <shared_mutex>
 
 #include "Block.hpp"
 #include "Vector.hpp"
@@ -12,6 +13,7 @@ class Section {
 		uint8_t sky[2048];//Only when hasSkyLight==true
 	};
 
+	mutable std::shared_mutex mutex;
 	uint16_t *blocks = nullptr;//Should host endian
 	struct lightData *light = nullptr;//2K or 4K
 	uint8_t bitsPerBlock, pow;
@@ -22,7 +24,7 @@ class Section {
 	bool hasSkyLight = false;
 
     void CalculateHash() const;
-	void ExpandBPB();
+	void ExpandBPB() noexcept;
 public:
 	Section(Vector pos, unsigned char bitsPerBlock, std::vector<unsigned short> palette, std::vector<uint8_t> blockData, const std::vector<unsigned char> &lightData, const std::vector<unsigned char> &skyData);
 	~Section();
