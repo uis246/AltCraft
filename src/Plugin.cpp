@@ -216,7 +216,6 @@ void PluginSystem::Deinit() noexcept {
 	}
 
 	plugins.clear();
-	lua.~state();
 }
 
 void PluginSystem::Execute(const std::string &luaCode, bool except) {
