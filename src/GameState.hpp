@@ -80,7 +80,7 @@ public:
 
 	void Update(double deltaTime);
 
-	void UpdatePacket(std::shared_ptr<Packet> ptr);
+	void UpdatePacket(std::shared_ptr<PacketCB> ptr);
 
 	void StartDigging();
 

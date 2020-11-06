@@ -34,7 +34,7 @@ uint32_t Network::ReadPacketLen(){
 	return result;
 }
 
-std::shared_ptr<Packet> Network::ReceivePacket(ConnectionState state, bool useCompression) {
+std::shared_ptr<PacketCB> Network::ReceivePacket(ConnectionState state, bool useCompression) {
 	size_t packetLength = ReadPacketLen();
 	StreamROBuffer streamBuffer(packetLength);
 	socket->ReadData(streamBuffer.buffer, packetLength);
@@ -87,7 +87,7 @@ void Network::Connect(unsigned char *buffPtr, size_t buffLen) {
 	socket->Connect(buffPtr, buffLen);
 }
 
-void Network::SendPacket(Packet &packet, int compressionThreshold, bool more) {
+void Network::SendPacket(PacketSB &packet, int compressionThreshold, bool more) {
 	uint32_t len = packet.GetLen() + VarIntLen(packet.GetPacketId());
 	if (compressionThreshold >= 0) {
 //		FIXME: implement packet compression
@@ -107,8 +107,8 @@ void Network::SendPacket(Packet &packet, int compressionThreshold, bool more) {
 	}
 }
 
-std::shared_ptr<Packet> Network::ReceivePacketByPacketId(int packetId, ConnectionState state, StreamInput &stream) {
-	std::shared_ptr < Packet > packet(nullptr);
+std::shared_ptr<PacketCB> Network::ReceivePacketByPacketId(int packetId, ConnectionState state, StreamInput &stream) {
+	std::shared_ptr < PacketCB > packet(nullptr);
 	switch (state) {
 		case Handshaking:
             switch (packetId) {
@@ -141,7 +141,7 @@ std::shared_ptr<Packet> Network::ReceivePacketByPacketId(int packetId, Connectio
 	return packet;
 }
 
-std::shared_ptr<Packet> Network::ParsePacketPlay(PacketNamePlayCB id) {
+std::shared_ptr<PacketCB> Network::ParsePacketPlay(PacketNamePlayCB id) {
 	switch (id) {
 		case SpawnObject:
             return std::make_shared<PacketSpawnObject>();

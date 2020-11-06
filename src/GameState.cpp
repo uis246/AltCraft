@@ -20,7 +20,7 @@ void GameState::Update(double deltaTime) {
 			PUSH_EVENT("RemoveLoadingScreen", 0);
 
 			auto packetPerformRespawn = std::make_shared<PacketClientStatus>(0);
-			PUSH_EVENT("SendPacket", std::static_pointer_cast<Packet>(packetPerformRespawn));
+			PUSH_EVENT("SendPacket", std::static_pointer_cast<PacketSB>(packetPerformRespawn));
 		}
 	}
 
@@ -36,7 +36,7 @@ void GameState::Update(double deltaTime) {
 			player->pos.x, player->pos.y, player->pos.z,
 			player->yaw, player->pitch, player->onGround);
 
-		auto packet = std::static_pointer_cast<Packet>(packetToSend);
+		auto packet = std::static_pointer_cast<PacketSB>(packetToSend);
 		PUSH_EVENT("SendPacket", packet);
 		timeOfPreviousSendedPacket = clock.now();
 	}
@@ -48,7 +48,7 @@ void GameState::Update(double deltaTime) {
 			player->pos.x, player->pos.y,
 			player->pos.z, player->onGround);
 
-		auto packet = std::static_pointer_cast<Packet>(updatePacket);
+		auto packet = std::static_pointer_cast<PacketSB>(updatePacket);
 		PUSH_EVENT("SendPacket", packet);
 	}
 
@@ -83,7 +83,7 @@ void GameState::Update(double deltaTime) {
 		timeStatus.interpolatedTimeOfDay += 20.0 * deltaTime;
 }
 
-void GameState::UpdatePacket(std::shared_ptr<Packet> ptr) {
+void GameState::UpdatePacket(std::shared_ptr<PacketCB> ptr) {
 	switch ((PacketNamePlayCB)ptr->GetPacketId()) {
 		case SpawnObject: {
 			auto packet = std::static_pointer_cast<PacketSpawnObject>(ptr);
@@ -287,13 +287,13 @@ void GameState::UpdatePacket(std::shared_ptr<Packet> ptr) {
 			receivedJoinGame = true;
 
 			auto packetSettings = std::make_shared<PacketClientSettings>("en_us", 0x14, 0, true, 0x7F, 1);
-			PUSH_EVENT("SendPacket", std::static_pointer_cast<Packet>(packetSettings));
+			PUSH_EVENT("SendPacket", std::static_pointer_cast<PacketSB>(packetSettings));
 
 			std::string brandStr("\x08""AltCraft");
 			std::vector<unsigned char> brandData;
 			std::copy(brandStr.begin(), brandStr.end(), std::back_inserter(brandData));
 			auto packetPluginBrand = std::make_shared<PacketPluginMessageSB>("MC|Brand", brandData);
-			PUSH_EVENT("SendPacket", std::static_pointer_cast<Packet>(packetPluginBrand));
+			PUSH_EVENT("SendPacket", std::static_pointer_cast<PacketSB>(packetPluginBrand));
 
 			break;
 		}
@@ -384,7 +384,7 @@ void GameState::UpdatePacket(std::shared_ptr<Packet> ptr) {
 			receivedFirstPlayerPosAndLook = true;
 
 			auto packetResponse = std::make_shared<PacketTeleportConfirm>(packet->TeleportId);
-			PUSH_EVENT("SendPacket", std::static_pointer_cast<Packet>(packetResponse));
+			PUSH_EVENT("SendPacket", std::static_pointer_cast<PacketSB>(packetResponse));
 
 			break;
 		}
@@ -459,7 +459,7 @@ void GameState::UpdatePacket(std::shared_ptr<Packet> ptr) {
 			if (playerStatus.health <= 0) {
 				LOG(INFO) << "Player is dead. Respawning...";
 				auto packetPerformRespawn = std::make_shared<PacketClientStatus>(0);
-				PUSH_EVENT("SendPacket", std::static_pointer_cast<Packet>(packetPerformRespawn));
+				PUSH_EVENT("SendPacket", std::static_pointer_cast<PacketSB>(packetPerformRespawn));
 			}
 			break;
 		}
@@ -518,7 +518,7 @@ void GameState::UpdatePacket(std::shared_ptr<Packet> ptr) {
 	while (!playerInventory.pendingTransactions.empty()) {
 		auto packet = std::make_shared<PacketClickWindow>(playerInventory.pendingTransactions.front());
 		playerInventory.pendingTransactions.pop();
-		PUSH_EVENT("SendPacket", std::static_pointer_cast<Packet>(packet));
+		PUSH_EVENT("SendPacket", std::static_pointer_cast<PacketSB>(packet));
 	}
 }
 
@@ -620,7 +620,7 @@ void GameState::StartDigging() {
 		return;
 
 	auto packetStart = std::make_shared<PacketPlayerDigging>(0, selectionStatus.selectedBlock, 1);
-	auto packet = std::static_pointer_cast<Packet>(packetStart);
+	auto packet = std::static_pointer_cast<PacketSB>(packetStart);
 	PUSH_EVENT("SendPacket", packet);
 
 	FinishDigging();
@@ -628,7 +628,7 @@ void GameState::StartDigging() {
 
 void GameState::FinishDigging() {
 	auto packetFinish = std::make_shared<PacketPlayerDigging>(2, selectionStatus.selectedBlock, 1);
-	auto packet = std::static_pointer_cast<Packet>(packetFinish);
+	auto packet = std::static_pointer_cast<PacketSB>(packetFinish);
 	PUSH_EVENT("SendPacket", packet);
 }
 
@@ -639,7 +639,7 @@ void GameState::FinishDigging() {
 //            remove_delayed_action(finish_digging)
 void GameState::CancelDigging() {
 	auto packetCancel = std::make_shared<PacketPlayerDigging>(1, selectionStatus.selectedBlock, 1);
-	auto packet = std::static_pointer_cast<Packet>(packetCancel);
+	auto packet = std::static_pointer_cast<PacketSB>(packetCancel);
 	PUSH_EVENT("SendPacket", packet);
 }
 
@@ -680,6 +680,6 @@ void GameState::PlaceBlock() {
 	auto packetPlace = std::make_shared<PacketPlayerBlockPlacement>(
 		selectionStatus.selectedBlock, (unsigned char)face, 0, 0, 0, 0);
 
-	auto packet = std::static_pointer_cast<Packet>(packetPlace);
+	auto packet = std::static_pointer_cast<PacketSB>(packetPlace);
 	PUSH_EVENT("SendPacket", packet);
 }

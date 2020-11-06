@@ -81,7 +81,7 @@ void NetworkClient::ExecNs() {
 	AC_THREAD_SET_NAME("Network");
 
     listener.RegisterHandler("SendPacket", [&](const Event& eventData) {
-        std::shared_ptr<Packet> packet = eventData.get<std::shared_ptr<Packet>>();
+		std::shared_ptr<PacketSB> packet = eventData.get<std::shared_ptr<PacketSB>>();
         network->SendPacket(*packet,compressionThreshold);
     });
 
@@ -89,7 +89,7 @@ void NetworkClient::ExecNs() {
 		while (isRunning) {
 			listener.HandleAllEvents();
 
-			std::shared_ptr<Packet> packet = network->ReceivePacket(state, compressionThreshold >= 0);
+			std::shared_ptr<PacketCB> packet = network->ReceivePacket(state, compressionThreshold >= 0);
 			if (packet != nullptr) {
 				if (packet->GetPacketId() != PacketNamePlayCB::KeepAliveCB) {
 					PUSH_EVENT("ReceivedPacket", packet);

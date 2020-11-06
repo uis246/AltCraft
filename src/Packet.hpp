@@ -88,11 +88,11 @@ enum PacketNamePlayCB {
     Effect,
     Particle,
     JoinGame,
-    Map,
+	Map,
+	EntityCB,
     EntityRelativeMove,
     EntityLookAndRelativeMove,
     EntityLook,
-    EntityCB,
     VehicleMove,
     OpenSignEditor,
     CraftRecipeResponse,
@@ -137,14 +137,20 @@ enum PacketNamePlayCB {
 #define StringLen(str) (VarIntLen(str.size())+str.size())
 
 struct Packet {
-    virtual ~Packet() = default;
-    virtual void ToStream(StreamOutput *stream) = 0;
-    virtual void FromStream(StreamInput *stream) = 0;
-	virtual uint32_t GetLen() const = 0;
-    virtual int GetPacketId() = 0;
+	virtual ~Packet() = default;
+	virtual int GetPacketId() = 0;
 };
 
-struct PacketHandshake : Packet {
+struct PacketCB : Packet {
+	virtual void FromStream(StreamInput *stream) = 0;
+};
+
+struct PacketSB : Packet {
+	virtual void ToStream(StreamOutput *stream) = 0;
+	virtual uint32_t GetLen() const = 0;
+};
+
+struct PacketHandshake : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteVarInt(protocolVersion);
         stream->WriteString(serverAddress);
@@ -176,7 +182,7 @@ struct PacketHandshake : Packet {
     int nextState;
 };
 
-struct PacketLoginStart : Packet {
+struct PacketLoginStart : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteString(Username);
     }
@@ -196,7 +202,7 @@ struct PacketLoginStart : Packet {
     std::string Username;
 };
 
-struct PacketLoginSuccess : Packet {
+struct PacketLoginSuccess : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteString(Uuid);
         stream->WriteString(Username);
@@ -220,7 +226,7 @@ struct PacketLoginSuccess : Packet {
     std::string Username;
 };
 
-struct PacketJoinGame : Packet {
+struct PacketJoinGame : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteInt(EntityId);
         stream->WriteUByte(Gamemode);
@@ -264,7 +270,7 @@ struct PacketJoinGame : Packet {
     bool ReducedDebugInfo;
 };
 
-struct PacketDisconnectPlay : Packet {
+struct PacketDisconnectPlay : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
 		stream->WriteString(Reason);//TODO: Implement chat-wrapper
     }
@@ -284,7 +290,7 @@ struct PacketDisconnectPlay : Packet {
     std::string Reason;
 };
 
-struct PacketSpawnPosition : Packet {
+struct PacketSpawnPosition : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WritePosition(Location);
     }
@@ -304,7 +310,7 @@ struct PacketSpawnPosition : Packet {
     Vector Location;
 };
 
-struct PacketKeepAliveCB : Packet {
+struct PacketKeepAliveCB : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteLong(KeepAliveId);
     }
@@ -323,7 +329,7 @@ struct PacketKeepAliveCB : Packet {
     long long KeepAliveId;
 };
 
-struct PacketKeepAliveSB : Packet {
+struct PacketKeepAliveSB : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteLong(KeepAliveId);
     }
@@ -345,7 +351,7 @@ struct PacketKeepAliveSB : Packet {
     PacketKeepAliveSB(int KeepAliveId) : KeepAliveId(KeepAliveId) {}
 };
 
-struct PacketPlayerPositionAndLookCB : Packet {
+struct PacketPlayerPositionAndLookCB : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteDouble(X);
         stream->WriteDouble(Y);
@@ -389,7 +395,7 @@ struct PacketPlayerPositionAndLookCB : Packet {
     int TeleportId;
 };
 
-struct PacketTeleportConfirm : Packet {
+struct PacketTeleportConfirm : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteVarInt(TeleportId);
     }
@@ -411,7 +417,7 @@ struct PacketTeleportConfirm : Packet {
     PacketTeleportConfirm(int TeleportId) : TeleportId(TeleportId) {}
 };
 
-struct PacketClientStatus : Packet {
+struct PacketClientStatus : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteVarInt(ActionId);
     }
@@ -433,7 +439,7 @@ struct PacketClientStatus : Packet {
     PacketClientStatus(int ActionId) : ActionId(ActionId) {}
 };
 
-struct PacketPlayerPositionAndLookSB : Packet {
+struct PacketPlayerPositionAndLookSB : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteDouble(X);
         stream->WriteDouble(FeetY);
@@ -478,7 +484,7 @@ struct PacketPlayerPositionAndLookSB : Packet {
                                                                            Pitch(Pitch), OnGround(OnGround) {}
 };
 
-struct PacketChunkData : Packet {
+struct PacketChunkData : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteInt(ChunkX);
         stream->WriteInt(ChunkZ);
@@ -526,7 +532,7 @@ struct PacketChunkData : Packet {
     std::vector<int> BlockEntities; //TODO: Replace int with NbtTag and implement NbtTree
 };
 
-struct PacketPlayerPosition : Packet {
+struct PacketPlayerPosition : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteDouble(X);
         stream->WriteDouble(FeetY);
@@ -560,7 +566,7 @@ struct PacketPlayerPosition : Packet {
     PacketPlayerPosition(double X, double Y, double Z, bool ground) : X(X), FeetY(Y), Z(Z), OnGround(ground) {}
 };
 
-struct PacketPlayerLook : Packet {
+struct PacketPlayerLook : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteFloat(Yaw);
         stream->WriteFloat(Pitch);
@@ -590,7 +596,7 @@ struct PacketPlayerLook : Packet {
     PacketPlayerLook(float Yaw, float Pitch, bool ground) : Yaw(Yaw), Pitch(Pitch), OnGround(ground) {}
 };
 
-struct PacketUpdateHealth : Packet {
+struct PacketUpdateHealth : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteFloat(Health);
         stream->WriteVarInt(Food);
@@ -618,10 +624,7 @@ struct PacketUpdateHealth : Packet {
     float FoodSaturation;
 };
 
-struct PacketSpawnObject : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
+struct PacketSpawnObject : PacketCB {
 
     void FromStream(StreamInput *stream) override {
         EntityId = stream->ReadVarInt();
@@ -638,10 +641,6 @@ struct PacketSpawnObject : Packet {
         VelocityZ = stream->ReadShort();
     }
 
-	uint32_t GetLen() const override {
-		return 0;
-	}
-
     int GetPacketId() override {
         return PacketNamePlayCB::SpawnObject;
     }
@@ -657,11 +656,7 @@ struct PacketSpawnObject : Packet {
     short VelocityZ;
 };
 
-struct PacketEntityRelativeMove : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketEntityRelativeMove : PacketCB {
     void FromStream(StreamInput *stream) override {
         EntityId = stream->ReadVarInt();
         DeltaX = stream->ReadShort();
@@ -669,10 +664,6 @@ struct PacketEntityRelativeMove : Packet {
         DeltaZ = stream->ReadShort();
         OnGround = stream->ReadBool();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::EntityRelativeMove;
@@ -683,25 +674,16 @@ struct PacketEntityRelativeMove : Packet {
     bool OnGround;
 };
 
-struct PacketEntityLookAndRelativeMove : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketEntityLookAndRelativeMove : PacketCB {
     void FromStream(StreamInput *stream) override {
         EntityId = stream->ReadVarInt();
         DeltaX = stream->ReadShort();
         DeltaY = stream->ReadShort();
         DeltaZ = stream->ReadShort();
-        //TODO: WTF?
-        /*Yaw = stream->ReadAngle();
+		Yaw = stream->ReadAngle();
         Pitch = stream->ReadAngle();
-        OnGround = stream->ReadBool();*/
+		OnGround = stream->ReadBool();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::EntityLookAndRelativeMove;
@@ -713,21 +695,13 @@ struct PacketEntityLookAndRelativeMove : Packet {
     bool OnGround;
 };
 
-struct PacketEntityLook : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketEntityLook : PacketCB {
     void FromStream(StreamInput *stream) override {
         EntityId = stream->ReadVarInt();
         Yaw = stream->ReadAngle();
         Pitch = stream->ReadAngle();
         OnGround = stream->ReadBool();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::EntityLook;
@@ -738,21 +712,13 @@ struct PacketEntityLook : Packet {
     bool OnGround;
 };
 
-struct PacketEntityVelocity : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketEntityVelocity : PacketCB {
     void FromStream(StreamInput *stream) override {
         EntityId = stream->ReadVarInt();
         VelocityX = stream->ReadShort();
         VelocityY = stream->ReadShort();
         VelocityZ = stream->ReadShort();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::EntityVelocity;
@@ -764,11 +730,7 @@ struct PacketEntityVelocity : Packet {
     short VelocityZ;
 };
 
-struct PacketEntityTeleport : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketEntityTeleport : PacketCB {
     void FromStream(StreamInput *stream) override {
         EntityId = stream->ReadVarInt();
         X = stream->ReadDouble();
@@ -778,10 +740,6 @@ struct PacketEntityTeleport : Packet {
         Pitch = stream->ReadAngle();
         OnGround = stream->ReadBool();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::EntityTeleport;
@@ -793,11 +751,7 @@ struct PacketEntityTeleport : Packet {
     bool OnGround;
 };
 
-struct PacketSpawnPlayer : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketSpawnPlayer : PacketCB {
     void FromStream(StreamInput *stream) override {
         EntityId = stream->ReadVarInt();
         PlayerUuid = stream->ReadUuid();
@@ -807,10 +761,6 @@ struct PacketSpawnPlayer : Packet {
         Yaw = stream->ReadAngle();
         Pitch = stream->ReadAngle();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::SpawnPlayer;
@@ -824,11 +774,7 @@ struct PacketSpawnPlayer : Packet {
 
 };
 
-struct PacketDestroyEntities : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketDestroyEntities : PacketCB {
     void FromStream(StreamInput *stream) override {
         int count = stream->ReadVarInt();
         EntityIds.reserve(count);
@@ -838,10 +784,6 @@ struct PacketDestroyEntities : Packet {
         }
     }
 
-	uint32_t GetLen() const override {
-		return 0;
-	}
-
     int GetPacketId() override {
         return PacketNamePlayCB::DestroyEntities;
     }
@@ -849,11 +791,7 @@ struct PacketDestroyEntities : Packet {
     std::vector <unsigned int> EntityIds;
 };
 
-struct PacketSpawnMob : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketSpawnMob : PacketCB {
     void FromStream(StreamInput *stream) override {
         EntityId = stream->ReadVarInt();
         EntityUuid = stream->ReadUuid();
@@ -869,10 +807,6 @@ struct PacketSpawnMob : Packet {
         VelocityZ = stream->ReadShort();
     }
 
-	uint32_t GetLen() const override {
-		return 0;
-	}
-
     int GetPacketId() override {
         return PacketNamePlayCB::SpawnMob;
     }
@@ -886,19 +820,11 @@ struct PacketSpawnMob : Packet {
     //Metadata
 };
 
-struct PacketBlockChange : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketBlockChange : PacketCB {
     void FromStream(StreamInput *stream) override {
         Position = stream->ReadPosition();
         BlockId = stream->ReadVarInt();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::BlockChange;
@@ -908,11 +834,7 @@ struct PacketBlockChange : Packet {
     int BlockId;
 };
 
-struct PacketMultiBlockChange : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketMultiBlockChange : PacketCB {
     void FromStream(StreamInput *stream) override {
         ChunkX = stream->ReadInt();
         ChunkZ = stream->ReadInt();
@@ -925,10 +847,6 @@ struct PacketMultiBlockChange : Packet {
             Records.push_back(record);
         }
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::MultiBlockChange;
@@ -944,19 +862,11 @@ struct PacketMultiBlockChange : Packet {
     std::vector<Record> Records;
 };
 
-struct PacketTimeUpdate : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketTimeUpdate : PacketCB {
     void FromStream(StreamInput *stream) override {
         WorldAge = stream->ReadLong();
         TimeOfDay = stream->ReadLong();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::TimeUpdate;
@@ -966,19 +876,11 @@ struct PacketTimeUpdate : Packet {
     long long TimeOfDay;
 };
 
-struct PacketUnloadChunk : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketUnloadChunk : PacketCB {
     void FromStream(StreamInput *stream) override {
         ChunkX = stream->ReadInt();
         ChunkZ = stream->ReadInt();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::UnloadChunk;
@@ -988,18 +890,10 @@ struct PacketUnloadChunk : Packet {
     int ChunkZ;
 };
 
-struct PacketCloseWindowCB : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketCloseWindowCB : PacketCB {
     void FromStream(StreamInput *stream) override {
         WindowId = stream->ReadUByte();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::CloseWindowCB;
@@ -1008,11 +902,7 @@ struct PacketCloseWindowCB : Packet {
     unsigned char WindowId;
 };
 
-struct PacketOpenWindow : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketOpenWindow : PacketCB {
     void FromStream(StreamInput *stream) override {
         WindowId = stream->ReadUByte();
         WindowType = stream->ReadString();
@@ -1022,10 +912,6 @@ struct PacketOpenWindow : Packet {
         if (WindowType == "EntityHorse")
             EntityId = stream->ReadInt();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::OpenWindow;
@@ -1038,21 +924,13 @@ struct PacketOpenWindow : Packet {
     int EntityId;
 };
 
-struct PacketWindowItems : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketWindowItems : PacketCB {
     void FromStream(StreamInput *stream) override {
         WindowId = stream->ReadUByte();
         short count = stream->ReadShort();
         for (int i = 0; i < count; i++)
             SlotData.push_back(stream->ReadSlot());
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::WindowItems;
@@ -1062,20 +940,12 @@ struct PacketWindowItems : Packet {
     std::vector<SlotDataType> SlotData;
 };
 
-struct PacketWindowProperty : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketWindowProperty : PacketCB {
     void FromStream(StreamInput *stream) override {
         WindowId = stream->ReadUByte();
         Property = stream->ReadShort();
         Value = stream->ReadShort();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::WindowProperty;
@@ -1086,20 +956,12 @@ struct PacketWindowProperty : Packet {
     short Value;
 };
 
-struct PacketSetSlot : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketSetSlot : PacketCB {
     void FromStream(StreamInput *stream) override {
         WindowId = stream->ReadByte();
         Slot = stream->ReadShort();
         SlotData = stream->ReadSlot();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::SetSlot;
@@ -1110,20 +972,12 @@ struct PacketSetSlot : Packet {
     SlotDataType SlotData;
 };
 
-struct PacketConfirmTransactionCB : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketConfirmTransactionCB : PacketCB {
     void FromStream(StreamInput *stream) override {
         WindowId = stream->ReadByte();
         ActionNumber = stream->ReadShort();
         Accepted = stream->ReadBool();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::ConfirmTransactionCB;
@@ -1134,7 +988,7 @@ struct PacketConfirmTransactionCB : Packet {
     bool Accepted;
 };
 
-struct PacketConfirmTransactionSB : Packet {
+struct PacketConfirmTransactionSB : PacketSB, PacketCB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteByte(WindowId);
         stream->WriteShort(ActionNumber);
@@ -1162,7 +1016,7 @@ struct PacketConfirmTransactionSB : Packet {
     bool Accepted;
 };
 
-struct PacketClickWindow : Packet {
+struct PacketClickWindow : PacketSB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteUByte(WindowId);
         stream->WriteShort(Slot);
@@ -1170,10 +1024,6 @@ struct PacketClickWindow : Packet {
         stream->WriteShort(ActionNumber);
         stream->WriteVarInt(Mode);
         stream->WriteSlot(ClickedItem);
-    }
-
-    void FromStream(StreamInput *stream) override {
-
     }
 
 	uint32_t GetLen() const override {
@@ -1202,13 +1052,9 @@ struct PacketClickWindow : Packet {
         Button(button), ActionNumber(actionNumber), Mode(mode), ClickedItem(ClickedItem) {};
 };
 
-struct PacketCloseWindowSB : Packet {
+struct PacketCloseWindowSB : PacketSB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteUByte(WindowId);
-    }
-
-    void FromStream(StreamInput *stream) override {
-
     }
 
 	uint32_t GetLen() const override {
@@ -1222,18 +1068,10 @@ struct PacketCloseWindowSB : Packet {
     unsigned char WindowId;
 };
 
-struct PacketDisconnect : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketDisconnect : PacketCB {
     void FromStream(StreamInput *stream) override {
         Reason = stream->ReadChat().ToPlainText();
     }
-
-	uint32_t GetLen() const override {
-		return StringLen(Reason);
-	}
 
     int GetPacketId() override {
         return PacketNameLoginCB::Disconnect;
@@ -1242,18 +1080,10 @@ struct PacketDisconnect : Packet {
     std::string Reason;
 };
 
-struct PacketSetCompression : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketSetCompression : PacketCB {
     void FromStream(StreamInput *stream) override {
         Threshold = stream->ReadVarInt();
     }
-
-	uint32_t GetLen() const override {
-		return sizeof(Threshold);
-	}
 
     int GetPacketId() override {
         return PacketNameLoginCB::SetCompression;
@@ -1262,19 +1092,11 @@ struct PacketSetCompression : Packet {
     int Threshold;
 };
 
-struct PacketChatMessageCB : Packet {
-    void ToStream(StreamOutput *stream) override {
-
-    }
-
+struct PacketChatMessageCB : PacketCB {
     void FromStream(StreamInput *stream) override {
         JsonData = stream->ReadChat();
         Position = stream->ReadByte();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::ChatMessageCB;
@@ -1284,13 +1106,9 @@ struct PacketChatMessageCB : Packet {
     unsigned char Position;
 };
 
-struct PacketChatMessageSB : Packet {
+struct PacketChatMessageSB : PacketSB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteString(Message);
-    }
-
-    void FromStream(StreamInput *stream) override {
-
     }
 
 	uint32_t GetLen() const override {
@@ -1306,15 +1124,11 @@ struct PacketChatMessageSB : Packet {
     PacketChatMessageSB(const std::string msg) : Message(msg) {};
 };
 
-struct PacketPlayerDigging : Packet {
+struct PacketPlayerDigging : PacketSB {
     void ToStream(StreamOutput *stream) override {
         stream->WriteVarInt(Status);
         stream->WritePosition(Location);
         stream->WriteByte(Face);
-    }
-
-    void FromStream(StreamInput *stream) override {
-
     }
 
 	uint32_t GetLen() const override {
@@ -1334,7 +1148,7 @@ struct PacketPlayerDigging : Packet {
     PacketPlayerDigging(int status, const Vector& location, signed char face) : Status(status),Location(location),Face(face) {};
 };
 
-struct PacketPlayerBlockPlacement : Packet {
+struct PacketPlayerBlockPlacement : PacketSB {
     void ToStream(StreamOutput *stream) override {
         stream->WritePosition(location);
         stream->WriteByte(face);
@@ -1342,10 +1156,6 @@ struct PacketPlayerBlockPlacement : Packet {
         stream->WriteFloat(cursorPositionX);
         stream->WriteFloat(cursorPositionY);
         stream->WriteFloat(cursorPositionZ);
-    }
-
-    void FromStream(StreamInput *stream) override {
-
     }
 
 	uint32_t GetLen() const override {
@@ -1375,21 +1185,13 @@ struct PacketPlayerBlockPlacement : Packet {
     float cursorPositionZ;
 };
 
-struct PacketRespawn : Packet {
-    void ToStream(StreamOutput* stream) override {
-
-    }
-
+struct PacketRespawn : PacketCB {
     void FromStream(StreamInput* stream) override {
         Dimension = stream->ReadInt();
         Difficulty = stream->ReadUByte();
         Gamemode = stream->ReadUByte();
         LevelType = stream->ReadString();
     }
-
-	uint32_t GetLen() const override {
-		return 0;
-	}
 
     int GetPacketId() override {
         return PacketNamePlayCB::Respawn;
@@ -1401,14 +1203,10 @@ struct PacketRespawn : Packet {
     std::string LevelType;
 };
 
-struct PacketPluginMessageSB : Packet {
+struct PacketPluginMessageSB : PacketSB {
     void ToStream(StreamOutput* stream) override {
         stream->WriteString(Channel);
         stream->WriteByteArray(Data);
-    }
-
-    void FromStream(StreamInput* stream) override {
-
     }
 
 	uint32_t GetLen() const override {
@@ -1426,7 +1224,7 @@ struct PacketPluginMessageSB : Packet {
     std::vector<unsigned char> Data;
 };
 
-struct PacketClientSettings : Packet {
+struct PacketClientSettings : PacketSB {
     void ToStream(StreamOutput* stream) override {
         stream->WriteString(Locale);
         stream->WriteByte(ViewDistance);
@@ -1434,10 +1232,6 @@ struct PacketClientSettings : Packet {
         stream->WriteBool(ChatColors);
         stream->WriteUByte(DisplayedSkinParts);
         stream->WriteVarInt(MainHand);
-    }
-
-    void FromStream(StreamInput* stream) override {
-
     }
 
 	uint32_t GetLen() const override {

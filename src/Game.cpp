@@ -173,7 +173,7 @@ void InitEvents() {
 	listener.RegisterHandler("ReceivedPacket", [](const Event& eventData) {
 		if (!gs)
 			return;
-		std::shared_ptr<Packet> packet = eventData.get<std::shared_ptr<Packet>>();
+		std::shared_ptr<PacketCB> packet = eventData.get<std::shared_ptr<PacketCB>>();
 		gs->UpdatePacket(packet);
 		});
 
