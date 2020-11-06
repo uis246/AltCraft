@@ -91,7 +91,7 @@ target_link_libraries(AltCraft ${PLATFORM_LIBRARIES})
 #Setup dependencies (GLEW, glm, nlohmann/json, easylogging++)
 add_subdirectory(external)
 target_include_directories(AltCraft PUBLIC external/include)
-target_link_libraries(AltCraft deps nlohmann_json)
+target_link_libraries(AltCraft deps nlohmann_json sol2)
 
 target_include_directories(AltCraft PUBLIC external/optick)
 if (${ENABLE_OPTICK})

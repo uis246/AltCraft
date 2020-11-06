@@ -1,3 +1,6 @@
 [submodule "nlohmann-json"]
 	path = external/nlohmann
 	url = https://github.com/nlohmann/json
+[submodule "sol2"]
+	path = external/sol2
+	url = https://github.com/ThePhD/sol2

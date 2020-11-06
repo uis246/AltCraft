@@ -16,3 +16,4 @@ endif()
 
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(nlohmann)
+add_subdirectory(sol2)
