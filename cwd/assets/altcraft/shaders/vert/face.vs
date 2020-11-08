@@ -1,47 +1,56 @@
 #version 330 core
-
-layout (location = 0) in vec3 position;
-layout (location = 2) in vec2 UvCoordinates;
-layout (location = 7) in vec4 Texture;
-layout (location = 8) in mat4 model;
-layout (location = 12) in vec3 color;
-layout (location = 13) in vec2 light;
-layout (location = 14) in float TextureLayer;
-layout (location = 15) in float TextureFrames;
-
-out VS_OUT {
-    vec2 UvPosition;
-    vec3 Texture;
-    vec3 Color;
-    vec2 Light;
-} vs_out;
+precision mediump float;
+precision mediump int;
 
 uniform float GlobalTime;
+uniform float DayTime;
+uniform float MinLightLevel;
 uniform mat4 projView;
 
-vec3 TransformTextureCoord(vec4 TextureAtlasCoords, vec2 UvCoords, float Layer) {
-    float x = TextureAtlasCoords.x;
-    float y = TextureAtlasCoords.y;
-//     float w = TextureAtlasCoords.z;
-    float h = TextureAtlasCoords.w;
-	vec2 transformed = vec2(x, 1 - y - h) + UvCoords * TextureAtlasCoords.zw;
-    return vec3(transformed.x, transformed.y, Layer);
-}
+//Per quad info
 
-void main()
-{
-    vec4 sourcePosition = vec4(position,1.0f);
-    gl_Position = projView * model * sourcePosition;
+//xx yy ww hh 4*2=8
+//p h l f 4*1=4 //12
+//T(L1){Uu} (L2){Vv} 2*2=4 //16
 
-	vec4 texturePos = Texture;
-	float frameHeight = texturePos.w / TextureFrames;
-	float currentFrame = mod(GlobalTime * 4.0f, TextureFrames);
-    currentFrame = trunc(currentFrame);
-	texturePos.w = frameHeight;
-	texturePos.y = texturePos.y + currentFrame * frameHeight;
+layout(location = 0) in uvec2 qinfo;
+layout(location = 1) in vec2 uv;
+layout(location = 2) in vec3 positions[4];
+//3
+//4
+//5
+layout(location = 6) in uvec4 utex;
+layout(location = 7) in uvec4 phlf;
 
-    vs_out.UvPosition = UvCoordinates;
-    vs_out.Texture = TransformTextureCoord(texturePos,UvCoordinates,TextureLayer);
-    vs_out.Color = color;
-    vs_out.Light = light;
+out vec2 UvPosition;
+flat out uint Layer;
+
+out VS_OUT {
+	flat float Light;
+	flat vec3 Color;
+} vs_out;
+
+//Intel SNB: VS vec4 shader: 55 instructions. 0 loops. 196 cycles. 0:0 spills:fills, 1 sends. Compacted 880 to 864 bytes (2%)
+
+void main() {
+	gl_Position = projView * vec4(positions[gl_VertexID], 1.0);
+
+	vec4 subUV = vec4(
+		uvec4(qinfo, qinfo >> uint(5)) & uint(0x1F)
+		) / 16.0;
+
+	vec4 tex = vec4(utex) / 1024.0;
+	float frames = float(phlf.w);
+	tex.w /= frames;
+	tex.y += trunc(mod(GlobalTime * 4.0f, frames)) * tex.w;
+
+	tex.xy += subUV.xy * tex.zw;
+	tex.zw = (subUV.zw-subUV.xy) * tex.zw;
+
+	UvPosition = tex.xy + tex.zw*uv;
+	Layer = phlf.z;
+
+	vec2 light = vec2((qinfo >> uint(10)) & uint(0xF)) / 15.0;
+	vs_out.Light = clamp(light.x + (light.y * DayTime), MinLightLevel, 1.0);
+	vs_out.Color = vec3(0.275, 0.63, 0.1) * (qinfo.x>>14);
 }

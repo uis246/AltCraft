@@ -28,7 +28,7 @@ class Render {
     std::map<SDL_Scancode, bool> isKeyPressed;
     bool HasFocus=true;
     float sensetivity = 0.1f;
-    bool isWireframe = false;	
+	bool isWireframe = false;
 	std::unique_ptr<Framebuffer> framebuffer;
     std::vector<std::string> chatMessages;
 	EventListener listener;

@@ -39,10 +39,11 @@ static const Vector FaceDirectionVector[] = {
 struct ParsedFace {
 	FaceDirection visibility;
 	glm::mat4 transform;
-	glm::vec4 texture;
-	float layer;
-	float frames;
-	glm::vec3 color;
+	uint16_t textureId;
+	uint16_t Uu, Vv;//10-bit
+	uint16_t x, y, w, h;
+	uint8_t layer, frames;
+	bool tint;
 };
 
 struct BlockFaces {
@@ -197,7 +198,7 @@ namespace AssetManager {
 	Asset *GetAssetPtr(const std::string &assetName);
 	AssetTreeNode *GetAssetByAssetName(const std::string &assetName);
 	
-	GLuint GetTextureAtlasId();
+	GLuint GetTextureAtlasId() noexcept;
 
 	TextureCoord GetTexture(const std::string &assetName);
 }

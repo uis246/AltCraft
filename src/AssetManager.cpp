@@ -101,6 +101,7 @@ void LoadTextures() {
 		data.data = std::move(textureAsset->textureData);
 		data.width = textureAsset->realWidth;
 		data.height = textureAsset->realHeight;
+		data.frames = textureAsset->frames;
 		textureData.push_back(data);
 		textureAsset->id = id++;
 	});
@@ -257,17 +258,20 @@ void ParseBlockModels() {
 					break;
 				}
 				parsedFace.transform = faceTransform;
-				TextureCoord texture;
-				unsigned int textureFrames = 1;
+				uint16_t textureId, frames;
 				textureName = face.second.texture;
 				if (model.Textures.empty()) {
-					texture = AssetManager::GetTexture("minecraft/textures/error");
-				}
-				else {
+					AssetTreeNode *node = AssetManager::GetAssetByAssetName("/minecraft/textures/error");
+					AssetTexture *assetTexture = nullptr;
+					if (node && node->type == AssetTreeNode::ASSET_TEXTURE)
+						assetTexture = reinterpret_cast<AssetTexture*>(node->asset.get());
+					textureId = assetTexture->id;
+					frames = assetTexture->frames;
+				} else {
 					while (textureName[0] == '#') {
 						textureName.erase(0, 1);
 						auto textureIt = model.Textures.find(textureName);
-						textureName = textureIt != model.Textures.end() ? textureIt->second : "minecraft/textures/error";
+						textureName = textureIt != model.Textures.end() ? textureIt->second : "error";
 					}
 					textureName.insert(0, "/minecraft/textures/");
 					AssetTreeNode *node = AssetManager::GetAssetByAssetName(textureName);
@@ -275,37 +279,24 @@ void ParseBlockModels() {
 					if (node && node->type == AssetTreeNode::ASSET_TEXTURE)
 						assetTexture = reinterpret_cast<AssetTexture*>(node->asset.get());
 
-					texture = atlas->GetTexture(assetTexture->id);
-					textureFrames = assetTexture->frames;
-
-					if (!(face.second.uv == BlockModel::ElementData::FaceData::Uv{ 0,16,0,16 }) && !(face.second.uv == BlockModel::ElementData::FaceData::Uv{ 0,0,0,0 })
-						&& !(face.second.uv == BlockModel::ElementData::FaceData::Uv{ 0,0,16,16 })) {
-						double x = face.second.uv.x1;
-						double y = face.second.uv.x1;
-						double w = face.second.uv.x2 - face.second.uv.x1;
-						double h = face.second.uv.y2 - face.second.uv.y1;
-						x /= 16.0;
-						y /= 16.0;
-						w /= 16.0;
-						h /= 16.0;
-						double X = texture.x;
-						double Y = texture.y;
-						double W = texture.w;
-						double H = texture.h;
-
-						texture.x = X + x * W;
-						texture.y = Y + y * H;
-						texture.w = w * W;
-						texture.h = h * H;
-					}
+					textureId = assetTexture->id;
+					frames = assetTexture->frames;
 				}
-				parsedFace.texture = glm::vec4{ texture.x,texture.y,texture.w,texture.h };
-				parsedFace.layer = texture.layer;
-				parsedFace.frames = textureFrames;
+				TextureCoord tc = atlas->GetTexture(textureId);
+				parsedFace.x = tc.pixelX;
+				parsedFace.y = tc.pixelY;
+				parsedFace.w = tc.pixelW;
+				parsedFace.h = tc.pixelH;
+				parsedFace.layer = tc.layer;
+
+				parsedFace.frames = frames;
+				parsedFace.textureId = textureId;
+				parsedFace.Uu = (face.second.uv.x2<<5)|face.second.uv.x1;
+				parsedFace.Vv = (face.second.uv.y2<<5)|face.second.uv.y1;
 				if (face.second.tintIndex)
-					parsedFace.color = glm::vec3(0.275, 0.63, 0.1);
+					parsedFace.tint = true;
 				else
-					parsedFace.color = glm::vec3(0, 0, 0);
+					parsedFace.tint = false;
 
 				model.parsedFaces.push_back(parsedFace);
 			}
@@ -411,7 +402,7 @@ AssetTreeNode *AssetManager::GetAssetByAssetName(const std::string & assetName) 
 	return node;
 }
 
-GLuint AssetManager::GetTextureAtlasId()
+GLuint AssetManager::GetTextureAtlasId() noexcept
 {
 	return atlas->GetRawTextureId();
 }

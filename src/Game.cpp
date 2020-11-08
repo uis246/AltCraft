@@ -107,7 +107,7 @@ void InitEvents() {
 		}
 		if (message[0] == '!')
 			message = message.substr(1);
-		auto packet = std::static_pointer_cast<Packet>(std::make_shared<PacketChatMessageSB>(message));
+		auto packet = std::static_pointer_cast<PacketSB>(std::make_shared<PacketChatMessageSB>(message));
 		PUSH_EVENT("SendPacket",packet);
 		});
 

@@ -14,11 +14,17 @@ inline const BlockId& GetBlockId(int x, int y, int z, const std::array<BlockId, 
 	return blockIdData[y * 256 + z * 16 + x];
 }
 
-void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, const glm::mat4 &transform, bool visibility[FaceDirection::none], BlockLightness light, BlockLightness skyLight) {
+static const glm::vec4 poss[] = {
+	{0, 0, 0, 1},
+	{0, 0, 1, 1},
+	{1, 0, 0, 1},
+	{1, 0, 1, 1}
+};
+
+void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, const Vector &isp, const Vector &section, bool visibility[FaceDirection::none], BlockLightness light, BlockLightness skyLight) {
 	for (const auto &face : model.faces) {
-		glm::vec2 lightness;
-		lightness.x = _max(light.face[0], light.face[1], light.face[2], light.face[3], light.face[4], light.face[5]);
-		lightness.y = _max(skyLight.face[0], skyLight.face[1], skyLight.face[2], skyLight.face[3], skyLight.face[4], skyLight.face[5]);
+		uint8_t block = _max(light.face[0], light.face[1], light.face[2], light.face[3], light.face[4], light.face[5]);
+		uint8_t sky = _max(skyLight.face[0], skyLight.face[1], skyLight.face[2], skyLight.face[3], skyLight.face[4], skyLight.face[5]);
 		if (face.visibility != FaceDirection::none) {
 			FaceDirection direction = face.visibility;
 			Vector directionVec = model.faceDirectionVector[direction];
@@ -34,14 +40,41 @@ void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, co
 
 			if (visibility[faceDirection])
 				continue;
-			lightness = glm::vec2(light.face[faceDirection], skyLight.face[faceDirection]);
 		}
-		data.models.push_back(transform * model.transform * face.transform);
-		data.textures.push_back(face.texture);
-		data.textureLayers.push_back(face.layer);
-		data.textureFrames.push_back(face.frames);
-		data.lights.push_back(lightness);
-		data.colors.push_back(face.color);
+
+		glm::mat4 toApply = model.transform * face.transform;
+		for (const glm::vec4 &pos : poss) {
+			data.verts.push_back(glm::vec3(toApply * pos) + isp.glm() + section.glm());
+		}
+		uint32_t xy, wh, phlf;
+		{
+			uint16_t *xyp=reinterpret_cast<uint16_t*>(&xy),
+					*whp=reinterpret_cast<uint16_t*>(&wh);
+			uint16_t *x=xyp, *y=xyp+1, *w=whp, *h=whp+1;
+			*x = face.x;
+			*y = face.y;
+			*w = face.w;
+			*h = face.h;
+
+			uint8_t *P=reinterpret_cast<uint8_t*>(&phlf),
+					*H=P+1, *L=P+2, *F=P+3;
+			*P = (isp.z<<4)|isp.x;
+			*H = isp.y;
+			*L = face.layer;
+			*F = face.frames;
+		}
+		uint32_t TLUuLVv;
+		{
+			uint16_t *TLUu=reinterpret_cast<uint16_t*>(&TLUuLVv), *LVv=TLUu+1;
+
+			*TLUu = (face.tint<<14) | (block<<10) | face.Uu;
+			*LVv = (sky<<10) | face.Vv;
+		}
+
+		data.quadInfo.push_back(xy);
+		data.quadInfo.push_back(wh);
+		data.quadInfo.push_back(phlf);
+		data.quadInfo.push_back(TLUuLVv);
 	}
 }
 
@@ -111,8 +144,6 @@ RendererSectionData ParseSection(const SectionsData &sections) {
 	data.hash = sections.section->GetHash();
 	data.sectionPos = sections.section->GetPosition();
 
-	glm::mat4 baseOffset = glm::translate(glm::mat4(1.0), (sections.section->GetPosition() * 16).glm()), transform;
-
 	for (int y = 0; y < 16; y++) {
 		for (int z = 0; z < 16; z++) {
 			for (int x = 0; x < 16; x++) {
@@ -122,20 +153,16 @@ RendererSectionData ParseSection(const SectionsData &sections) {
 
 				Vector vec(x, y, z);
 
-				transform = glm::translate(baseOffset, vec.glm());
-
 				BlockLightness light = sections.GetLight(vec);
 				BlockLightness skyLight = sections.GetSkyLight(vec);
 
 				BlockFaces *model = GetInternalBlockModel(block, idModels);
-				AddFacesByBlockModel(data, *model, transform, blockVisibility[y * 256 + z * 16 + x], light, skyLight);
+				AddFacesByBlockModel(data, *model, vec, data.sectionPos * 16, blockVisibility[y * 256 + z * 16 + x], light, skyLight);
 			}
 		}
 	}
-	data.textures.shrink_to_fit();
-	data.textureLayers.shrink_to_fit();
-	data.models.shrink_to_fit();
-	data.colors.shrink_to_fit();
+	data.verts.shrink_to_fit();
+	data.quadInfo.shrink_to_fit();
 
 	return data;
 }

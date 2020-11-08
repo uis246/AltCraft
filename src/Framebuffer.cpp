@@ -82,8 +82,7 @@ void Framebuffer::Activate() {
 
 void Framebuffer::RenderTo(Framebuffer &target) {
 	OPTICK_EVENT();
-	glBindFramebuffer(GL_FRAMEBUFFER, target.fbo);
-	glViewport(0, 0, target.width, target.height);
+	target.Clear();
 	AssetTreeNode *fbo = AssetManager::GetAssetByAssetName("/altcraft/shaders/fbo");
 	if (fbo->type == AssetTreeNode::ASSET_SHADER)
 		reinterpret_cast<AssetShader*>(fbo->asset.get())->shader->Activate();

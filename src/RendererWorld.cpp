@@ -127,7 +127,7 @@ void RendererWorld::ParseQeueueRemoveUnnecessary() {
 		bool skip = false;
 
 		for (size_t i = 0; i < RendererWorld::parsingBufferSize; i++) {
-			if (parsing[i].data.section && parsing[i].data.section->GetPosition() == vec && parsing[i].data.section->GetHash() == section.GetHash()) {
+			if (parsing[i].data.section && parsing[i].data.section->GetPosition() == vec && (parsing[i].renderer.hash == section.GetHash() || parsing[i].parsing)) {
 				skip = true;
 				break;
 			}
@@ -217,8 +217,10 @@ RendererWorld::RendererWorld() {
 				return;
 			}
 			it->second.UpdateData(parsing[id].renderer);
-		} else
-			sections.emplace(std::make_pair(parsing[id].renderer.sectionPos, RendererSection(parsing[id].renderer)));
+		} else {
+			if (!parsing[id].renderer.quadInfo.empty())
+				sections.emplace(std::make_pair(parsing[id].renderer.sectionPos, RendererSection(parsing[id].renderer)));
+		}
 
 		parsing[id] = RendererWorld::SectionParsing();
     });
@@ -358,11 +360,12 @@ void RendererWorld::Render(RenderState & renderState) {
 	entityShader->SetUniform("projection", projection);
 	entityShader->SetUniform("view", view);
     glCheckError();
-		
+
     renderState.SetActiveVao(RendererEntity::GetVao());
     for (auto& it : entities) {
         it.Render(renderState, &GetGameState()->GetWorld());
     }
+	glCheckError();
 
     //Render selected block
     const SelectionStatus& selectionStatus = GetGameState()->GetSelectionStatus();
@@ -464,28 +467,32 @@ void RendererWorld::Render(RenderState & renderState) {
 	blockShader->SetUniform("DayTime", mixLevel);
 	blockShader->SetUniform("projView", projView);
 	blockShader->SetUniform("GlobalTime", globalTime);
-    glCheckError();
+	glCheckError();
 
 	Frustum frustum(projView);
 
-    size_t culledSections = sections.size();
+	size_t culledSections = sections.size();
 	unsigned int renderedFaces = 0;
-    for (auto& section : sections) { 
+	for (auto& section : sections) {
+		Vector pos = section.second.GetPosition() * 16;
 		glm::vec3 point{
-			section.second.GetPosition().x * 16 + 8,
-			section.second.GetPosition().y * 16 + 8,
-			section.second.GetPosition().z * 16 + 8
+			pos.x + 8,
+			pos.y + 8,
+			pos.z + 8
 		};
 
 		bool isVisible = frustum.TestSphere(point, 16.0f);
-        
-        if (!isVisible) {
-            culledSections--;
-            continue;
-        }
-        section.second.Render(renderState);
+
+		if (!isVisible) {
+			culledSections--;
+			continue;
+		}
+
+		section.second.Render();
 		renderedFaces += section.second.numOfFaces;
-    }
+	}
+	glCheckError();
+	glBindVertexArray(0);
     this->culledSections = culledSections;
 	DebugInfo::renderFaces.store(renderedFaces, std::memory_order_relaxed);
     glCheckError();

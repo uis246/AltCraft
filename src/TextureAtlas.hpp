@@ -7,16 +7,17 @@
 struct TextureData {
 	std::vector<unsigned char> data; //expected format RGBA8888
 	int width, height;
+	size_t frames;
 };
 
 struct TextureCoord {
 	double x, y, w, h;
-	int pixelX, pixelY, pixelW, pixelH;
+	unsigned int pixelX, pixelY, pixelW, pixelH;
 	size_t layer;
 };
 
 class TextureAtlas {
-	GLuint texture;
+	GLuint textures[1];
 	std::vector<TextureCoord> textureCoords;
 public:
 	TextureAtlas(std::vector<TextureData> &textures);
@@ -26,7 +27,7 @@ public:
 	~TextureAtlas();
 
 	inline GLuint GetRawTextureId() {
-		return texture;
+		return textures[0];
 	}
 
 	TextureCoord GetTexture(int id) {

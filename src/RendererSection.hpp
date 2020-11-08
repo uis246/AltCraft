@@ -9,19 +9,16 @@ class RenderState;
 class RendererSectionData;
 
 class RendererSection {
-    enum Vbos {
-        MODELS = 0,
-        TEXTURES,
-		LAYERS,
-		FRAMES,
-        COLORS,
-        LIGHTS,
-        VBOCOUNT,
-    };
-    GLuint Vao = { 0 };
-    GLuint Vbo[VBOCOUNT] = { 0 };
+	enum buffers {
+		BUFVERTS = 0,
+		BUFQUAD,
+		BUFCOUNT
+	};
+	GLuint vertexarray = 0;
+	GLuint buffers[BUFCOUNT] = { 0 };
+	GLsizeiptr bufsizes[BUFCOUNT] = { 0 };
 	
-	static GLuint VboVertices, VboUvs;
+	static GLuint VboUvs;
 
 	size_t hash;
     Vector sectionPos;
@@ -34,13 +31,13 @@ public:
 
 	~RendererSection();
 
-	void Render(RenderState &renderState);
+	void Render();
 
     Vector GetPosition();
 
     size_t GetHash();
 
-    size_t numOfFaces;
+	size_t numOfFaces = 0;
 
     friend void swap(RendererSection &lhs, RendererSection &rhs);
 

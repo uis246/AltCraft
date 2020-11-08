@@ -59,7 +59,7 @@ Render::Render(unsigned int windowWidth, unsigned int windowHeight,
 		SDL_GL_SetSwapInterval(0);
 	framebuffer->Resize(renderState.WindowWidth * fieldResolutionScale, renderState.WindowHeight * fieldResolutionScale);
 
-    LOG(INFO) << "Supported threads: " << std::thread::hardware_concurrency();
+	LOG(INFO) << "Supported threads: " << std::thread::hardware_concurrency();
 }
 
 Render::~Render() {
@@ -127,14 +127,16 @@ void Render::InitGlew() {
     SDL_GL_GetDrawableSize(window, &width, &height);
     glViewport(0, 0, width, height);
 	glClearColor(0.8,0.8,0.8, 1.0f);
-    glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glDisable(GL_MULTISAMPLE);
     glCheckError();
     if (glActiveTexture == nullptr) {
         throw std::runtime_error("GLEW initialization failed with unknown reason");
@@ -142,11 +144,11 @@ void Render::InitGlew() {
 }
 
 void Render::PrepareToRendering() {
-    //TextureAtlas texture
+	//Bind TextureAtlas
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, AssetManager::GetTextureAtlasId());
 
-    ImGui_ImplSdlGL3_Init(window);
+	ImGui_ImplSdlGL3_Init(window);
 
 	int width, height;
 	SDL_GL_GetDrawableSize(window, &width, &height);
@@ -178,19 +180,17 @@ void Render::UpdateKeyboard() {
 
 void Render::RenderFrame() {
 	OPTICK_EVENT();
-	framebuffer->Clear();
-	Framebuffer::GetDefault().Clear();	
 
-	if (renderWorld)
-		framebuffer->Activate();
-    if (isWireframe)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    if (renderWorld)
-        world->Render(renderState);
-    if (isWireframe)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);	
-	if (renderWorld)
+	if (renderWorld) {
+		framebuffer->Clear();
+		if (isWireframe)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		world->Render(renderState);
+		if (isWireframe)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		framebuffer->RenderTo(Framebuffer::GetDefault());
+	} else
+		Framebuffer::GetDefault().Clear();
 
 	RenderGui();
 

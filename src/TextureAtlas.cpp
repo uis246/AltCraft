@@ -16,8 +16,9 @@ TextureAtlas::TextureAtlas(std::vector<TextureData> &textures) {
 	const int padding = 1;
 	const int paddingLimit = 128;
 
+	size_t tsz = textures.size();
 	std::vector<stbrp_rect> totalRects;
-	for (int i = 0; i < textures.size(); i++) {
+	for (size_t i = 0; i < tsz; i++) {
 		stbrp_rect rect;
 		rect.id = i;
 		rect.x = 0;
@@ -81,11 +82,15 @@ TextureAtlas::TextureAtlas(std::vector<TextureData> &textures) {
 	}
 	LOG(INFO) << "Texture atlas size is " << textureSize << "x" << textureSize << "x" << layer;
 
+	size_t texturesCount = textureCoords.size();
 	//OpenGL
 	int mipLevelCount = 1;
 
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
+	//Texture atlas
+	glGenTextures(1, this->textures);
+
+	//Fill texture atlas
+	glBindTexture(GL_TEXTURE_2D_ARRAY, this->textures[0]);
 	glTexStorage3D(GL_TEXTURE_2D_ARRAY, mipLevelCount, GL_RGBA8, textureSize, textureSize, layer+1);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -95,9 +100,9 @@ TextureAtlas::TextureAtlas(std::vector<TextureData> &textures) {
 	glCheckError();
 
 	//Uploading texture data
-	for (int i = 0; i < textureCoords.size(); i++) {
+	for (size_t i = 0; i < texturesCount; i++) {
 		size_t bytesPerLine = textureCoords[i].pixelW * 4;
-		for (int y = 0; y < textureCoords[i].pixelH / 2; y++) {
+		for (size_t y = 0; y < textureCoords[i].pixelH / 2; y++) {
 			int invY = textureCoords[i].pixelH - y - 1;
 			unsigned char *src = textures[i].data.data() + y * bytesPerLine;
 			unsigned char *dst = textures[i].data.data() + invY * bytesPerLine;
@@ -105,7 +110,7 @@ TextureAtlas::TextureAtlas(std::vector<TextureData> &textures) {
 				std::swap(*(src + j), *(dst + j));
 			}
 		}
-		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, textureCoords[i].pixelX, textureSize - textureCoords[i].pixelY - textureCoords[i].pixelH, textureCoords[i].layer,
+		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, textureCoords[i].pixelX, textureCoords[i].pixelY, textureCoords[i].layer,
 			textureCoords[i].pixelW, textureCoords[i].pixelH, 1, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, textures[i].data.data());
 		glCheckError();
 	}
@@ -114,5 +119,5 @@ TextureAtlas::TextureAtlas(std::vector<TextureData> &textures) {
 }
 
 TextureAtlas::~TextureAtlas() {
-	glDeleteTextures(1, &texture);
+	glDeleteTextures(1, textures);
 }

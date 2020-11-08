@@ -176,11 +176,6 @@ void ModLoader::ParseAssetBlockModel(AssetTreeNode &node) noexcept {
 	nlohmann::json modelData = nlohmann::json::parse(node.data);
 	BlockModel model;
 
-	if (node.name == "button") {
-		int a = 15;
-		a++;
-	}
-
 	if (modelData.find("parent") != modelData.end()) {
 		std::string parentName = modelData["parent"].get<std::string>();
 		parentName = parentName.substr(parentName.find('/') + 1);
@@ -266,6 +261,8 @@ void ModLoader::ParseAssetBlockModel(AssetTreeNode &node) noexcept {
 					uv.x2 = face["uv"][2];
 					uv.y2 = face["uv"][3];
 					faceData.uv = uv;
+				} else {
+					faceData.uv = {0, 0, 16, 16};
 				}
 
 				FaceDirection cullface = FaceDirection::none;
