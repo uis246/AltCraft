@@ -1,0 +1,79 @@
+#version 330 core
+
+uniform float GlobalTime;
+uniform float DayTime;
+uniform float MinLightLevel;
+uniform mat4 projView;
+
+//Texture pos format
+//xxxx yyyy wwww hhhh
+uniform samplerBuffer texturePos;
+//Texture info
+//l f
+//l - layer
+//f - frames
+// uniform usamplerBuffer textureInfo;
+
+layout (location = 0) in vec3 position;//3f
+
+//Per quad info
+//Lp tt (lf)
+//L - Light (block<<4|sky)
+//p - block horisontal pos (z<<4|x)
+//tt- texture id
+//l - layer
+//f - frames
+uniform usamplerBuffer quadInfo;
+uniform usamplerBuffer biomes;
+
+
+out VS_OUT {
+	flat float biome;//debug only
+	flat uint Layer;
+	vec2 UvPosition;
+	float Light;
+	flat vec3 Color;
+} vs_out;
+
+void main()
+{
+	gl_Position = vec4(position, 1.0) * projView;
+
+	uint vert = uint(gl_VertexID)%uint(3);
+	int d = int(uint(gl_VertexID)/uint(3));
+	int m = d&1;
+	vec2 mul = vec2(int(vert&uint(1))^m, int(vert>>uint(1))^m);//CW front
+
+	int quad = d>>1;
+	uvec2 qinfo = texelFetch(quadInfo, quad).rg;
+
+	vec4 tex = texelFetch(texturePos, qinfo.g);
+//	uint inf = texelFetch(textureInfo, int(qinfo)&0xFFFF).r;
+	uvec2 tinf = texelFetch(textureInfo, qinfo.g).rg;
+//	float frames = float(int(inf)&0xF);
+	float frames = float(tinf.g);
+	float frameHeight = tex.w / frames;
+	float currentFrame = mod(GlobalTime * 4.0f, frames);
+	currentFrame = trunc(currentFrame);
+	tex.w = frameHeight;
+	tex.y = tex.y + currentFrame * frameHeight;
+
+	float blockLight = float((qinfo.r>>uint(4) & uint(0xF))) / 15.0;
+	float skyLight = (float(qinfo.r & uint(0xF)) / 15.0) * DayTime;
+
+	vs_out.UvPosition = tex.xy + (tex.zw*mul);
+	vs_out.Light = clamp(blockLight + skyLight,MinLightLevel,1.0);
+//	vs_out.Layer = inf >> uint(8);
+	vs_out.Layer = tinf.r;
+	vs_out.biome = float(texelFetch(biomes, int(qinfo>>uint(16))&0xF).r) / 256.0;
+}
+//(12*6)+4=48+24+4=52+24=76
+
+//Per quad format
+//Lptt
+//L - Light
+//p - block pos
+//tt- texture id
+
+//Quad pos in texture:
+//(12*4)+4=48+4=52

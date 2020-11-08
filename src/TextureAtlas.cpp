@@ -16,8 +16,9 @@ TextureAtlas::TextureAtlas(std::vector<TextureData> &textures) {
 	const int padding = 1;
 	const int paddingLimit = 128;
 
+	size_t tsz = textures.size();
 	std::vector<stbrp_rect> totalRects;
-	for (int i = 0; i < textures.size(); i++) {
+	for (size_t i = 0; i < tsz; i++) {
 		stbrp_rect rect;
 		rect.id = i;
 		rect.x = 0;
@@ -81,11 +82,34 @@ TextureAtlas::TextureAtlas(std::vector<TextureData> &textures) {
 	}
 	LOG(INFO) << "Texture atlas size is " << textureSize << "x" << textureSize << "x" << layer;
 
+	size_t texturesCount = textureCoords.size();
 	//OpenGL
 	int mipLevelCount = 1;
 
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
+	//Create TBO
+	glGenBuffers(1, &this->tbo);
+	//Create 2 textures
+	//Texture atlas and texture coords
+	glGenTextures(2, this->textures);
+
+	float *coordBuffer = reinterpret_cast<float*>(alloca(texturesCount * 4 * sizeof(float)));
+	for (size_t i = 0; i < texturesCount; i++) {
+		TextureCoord *coord = &textureCoords[i];
+		coordBuffer[i*4] = coord->x;
+		coordBuffer[i*4 + 1] = coord->y;
+		coordBuffer[i*4 + 2] = coord->w;
+		coordBuffer[i*4 + 3] = coord->h;
+	}
+	//Fill texture coords
+	glBindTexture(GL_TEXTURE_BUFFER, this->textures[1]);
+	glBindBuffer(GL_TEXTURE_BUFFER, tbo);
+	glBufferData(GL_TEXTURE_BUFFER, texturesCount * 4 * sizeof(float), coordBuffer, GL_STATIC_DRAW);
+	glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, tbo);
+
+	glCheckError();
+
+	//Fill texture atlas
+	glBindTexture(GL_TEXTURE_2D_ARRAY, this->textures[0]);
 	glTexStorage3D(GL_TEXTURE_2D_ARRAY, mipLevelCount, GL_RGBA8, textureSize, textureSize, layer+1);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -95,7 +119,7 @@ TextureAtlas::TextureAtlas(std::vector<TextureData> &textures) {
 	glCheckError();
 
 	//Uploading texture data
-	for (int i = 0; i < textureCoords.size(); i++) {
+	for (size_t i = 0; i < texturesCount; i++) {
 		size_t bytesPerLine = textureCoords[i].pixelW * 4;
 		for (int y = 0; y < textureCoords[i].pixelH / 2; y++) {
 			int invY = textureCoords[i].pixelH - y - 1;
@@ -114,5 +138,5 @@ TextureAtlas::TextureAtlas(std::vector<TextureData> &textures) {
 }
 
 TextureAtlas::~TextureAtlas() {
-	glDeleteTextures(1, &texture);
+	glDeleteTextures(2, textures);
 }

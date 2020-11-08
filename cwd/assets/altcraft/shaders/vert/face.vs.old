@@ -1,0 +1,95 @@
+#version 330 core
+
+// layout (location = 0) in vec3 position;//3f
+// layout (location = 2) in vec2 UvCoordinates;//2f
+// layout (location = 7) in vec4 Texture;//4f I
+// layout (location = 8) in mat4 model;//4*4f I
+// layout (location = 12) in vec3 color;//3f I
+// layout (location = 13) in vec2 light;//2f I
+// layout (location = 14) in float TextureLayer;//1f I
+// layout (location = 15) in float TextureFrames;//1f I
+
+//I = 4+(4*4)+3+2+1+1=4+16+5+2=20+7=27 float
+//27*4 = 108 bpv
+//108*6+
+
+//Total: 3+2+4+16+3+2+1+1=5+20+5+2=32 floats
+//32*4=128 bytes per vertex
+//128*6=768 bytes per quad
+
+//We can
+//Remove model matrix. We will precompute it on model generation and meshing
+//-16 floats
+//Total: 32-16=16 floats
+//64 bytes per vertex
+// layout (location = 0) in vec3 position;//3f
+// layout (location = 2) in vec2 UvCoordinates;//2f
+// layout (location = 7) in vec4 Texture;//4f pos+size
+// layout (location = 12) in vec3 color;//3f
+// layout (location = 13) in vec2 light;//2f
+// layout (location = 14) in float TextureLayer;//1f
+// layout (location = 15) in float TextureFrames;//1f
+
+//Remove UvCoordinates. Or Texture. Texture, I think. But add height to TextureFrames
+//-4+1=-3 floats
+//Total: 16-4+1=12+1=13 floats
+//13*4=52 bytes per vertex
+layout (location = 0) in vec3 position;//3f
+layout (location = 2) in vec2 UvCoordinates;//2f
+layout (location = 12) in vec3 color;//3f
+layout (location = 13) in vec2 light;//2f
+layout (location = 14) in float TextureLayer;//1f
+layout (location = 15) in vec2 TextureFrames;//2f
+
+//Also maybe we can store color and light per quad or per primitive
+// layout (location = 0) in vec3 position;//3f
+// layout (location = 2) in vec2 UvCoordinates;//2f
+// some uniform sampler
+// layout (location = 14) in float TextureLayer;//1f
+// layout (location = 15) in vec2 TextureFrames;//2f
+//-3-2=-5 floats
+//Total: 13-3-2=10-2=8 floats
+//8*4=16*2=32 bytes per vertex
+//and 5*4=20 bytes per quad(2 primitives)
+
+//So we can store color and other per-biome data one per vertical colomn
+//In-section position will stored in uint8_t (z<<4)|x
+//33 bytes per vertex, 2*4=8 per quad and 3*4*256=8*256=3072 per section
+//Or 32 bpv, 9 bpq and 3072 bps
+
+out VS_OUT {
+    vec2 UvPosition;
+    vec3 Texture;
+    vec3 Color;
+    vec2 Light;
+} vs_out;
+
+uniform float GlobalTime;
+uniform mat4 projView;
+
+vec3 TransformTextureCoord(vec4 TextureAtlasCoords, vec2 UvCoords, float Layer) {
+    float x = TextureAtlasCoords.x;
+    float y = TextureAtlasCoords.y;
+//     float w = TextureAtlasCoords.z;
+    float h = TextureAtlasCoords.w;
+	vec2 transformed = vec2(x, 1 - y - h) + UvCoords * TextureAtlasCoords.zw;
+    return vec3(transformed.x, transformed.y, Layer);
+}
+
+void main()
+{
+    vec4 sourcePosition = vec4(position,1.0f);
+    gl_Position = projView * model * sourcePosition;
+
+	vec4 texturePos = Texture;
+	float frameHeight = texturePos.w / TextureFrames;
+	float currentFrame = mod(GlobalTime * 4.0f, TextureFrames);
+    currentFrame = trunc(currentFrame);
+	texturePos.w = frameHeight;
+	texturePos.y = texturePos.y + currentFrame * frameHeight;
+
+    vs_out.UvPosition = UvCoordinates;
+    vs_out.Texture = TransformTextureCoord(texturePos,UvCoordinates,TextureLayer);
+    vs_out.Color = color;
+    vs_out.Light = light;
+}

@@ -127,7 +127,7 @@ void RendererWorld::ParseQeueueRemoveUnnecessary() {
 		bool skip = false;
 
 		for (size_t i = 0; i < RendererWorld::parsingBufferSize; i++) {
-			if (parsing[i].data.section && parsing[i].data.section->GetPosition() == vec && parsing[i].data.section->GetHash() == section.GetHash()) {
+			if (parsing[i].data.section && parsing[i].data.section->GetPosition() == vec && (parsing[i].renderer.hash == section.GetHash() || parsing[i].parsing)) {
 				skip = true;
 				break;
 			}
@@ -358,7 +358,7 @@ void RendererWorld::Render(RenderState & renderState) {
 	entityShader->SetUniform("projection", projection);
 	entityShader->SetUniform("view", view);
     glCheckError();
-		
+
     renderState.SetActiveVao(RendererEntity::GetVao());
     for (auto& it : entities) {
         it.Render(renderState, &GetGameState()->GetWorld());
@@ -468,6 +468,7 @@ void RendererWorld::Render(RenderState & renderState) {
 
 	Frustum frustum(projView);
 
+	glBindVertexArray(0);
     size_t culledSections = sections.size();
 	unsigned int renderedFaces = 0;
     for (auto& section : sections) { 
@@ -498,6 +499,9 @@ void RendererWorld::PrepareRender() {
 		blockShader = reinterpret_cast<AssetShader*>(blockNode->asset.get())->shader.get();
 	blockShader->Activate();
 	blockShader->SetUniform("textureAtlas", 0);
+	blockShader->SetUniform("texturePos", 2);
+	blockShader->SetUniform("pos", 3);
+	blockShader->SetUniform("quadInfo", 4);
 	blockShader->SetUniform("MinLightLevel", 0.2f);
 
 	TextureCoord sunTexture = AssetManager::GetTexture("/minecraft/textures/environment/sun");

@@ -2,10 +2,12 @@
   "vert": "/altcraft/shaders/vert/face",
   "frag": "/altcraft/shaders/frag/face",
   "uniforms": [
-    "projView",
-    "textureAtlas",
+    "GlobalTime",
     "DayTime",
     "MinLightLevel",
-    "GlobalTime"
+    "projView",
+    "textureAtlas",
+    "texturePos",
+    "quadInfo"
   ]
 }

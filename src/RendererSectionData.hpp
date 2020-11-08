@@ -31,13 +31,9 @@ struct SectionsData {
 };
 
 struct RendererSectionData {
-    std::vector<glm::mat4> models;
-    std::vector<glm::vec4> textures;
-	std::vector<float> textureLayers;
-	std::vector<float> textureFrames;
-    std::vector<glm::vec3> colors;
-    std::vector<glm::vec2> lights;
-    size_t hash = 0;
+	std::vector<glm::vec3> verts;
+	std::vector<uint16_t> quadInfo;
+	size_t hash = ~0;
     Vector sectionPos;
 	bool forced = false;
 };

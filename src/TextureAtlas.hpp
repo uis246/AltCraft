@@ -16,7 +16,8 @@ struct TextureCoord {
 };
 
 class TextureAtlas {
-	GLuint texture;
+	GLuint textures[2];
+	GLuint tbo;
 	std::vector<TextureCoord> textureCoords;
 public:
 	TextureAtlas(std::vector<TextureData> &textures);
@@ -26,7 +27,10 @@ public:
 	~TextureAtlas();
 
 	inline GLuint GetRawTextureId() {
-		return texture;
+		return textures[0];
+	}
+	inline GLuint GetRawTextureInfoId() {
+		return textures[1];
 	}
 
 	TextureCoord GetTexture(int id) {

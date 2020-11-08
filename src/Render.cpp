@@ -145,6 +145,8 @@ void Render::PrepareToRendering() {
     //TextureAtlas texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, AssetManager::GetTextureAtlasId());
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_BUFFER, AssetManager::GetTextureAtlasInfoId());
 
     ImGui_ImplSdlGL3_Init(window);
 

@@ -176,11 +176,6 @@ void ModLoader::ParseAssetBlockModel(AssetTreeNode &node) noexcept {
 	nlohmann::json modelData = nlohmann::json::parse(node.data);
 	BlockModel model;
 
-	if (node.name == "button") {
-		int a = 15;
-		a++;
-	}
-
 	if (modelData.find("parent") != modelData.end()) {
 		std::string parentName = modelData["parent"].get<std::string>();
 		parentName = parentName.substr(parentName.find('/') + 1);

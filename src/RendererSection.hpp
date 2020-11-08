@@ -9,17 +9,18 @@ class RenderState;
 class RendererSectionData;
 
 class RendererSection {
-    enum Vbos {
-        MODELS = 0,
-        TEXTURES,
-		LAYERS,
-		FRAMES,
-        COLORS,
-        LIGHTS,
-        VBOCOUNT,
+	enum buffers {
+		BUFVERTS = 0,
+		BUFQUAD,
+		BUFCOUNT
     };
-    GLuint Vao = { 0 };
-    GLuint Vbo[VBOCOUNT] = { 0 };
+	enum textures {
+		TEXVERTS = 0,
+		TEXQUAD,
+		TEXCOUNT
+	};
+	GLuint buffers[BUFCOUNT] = { 0 };
+	GLuint textures[TEXCOUNT] = { 0 };
 	
 	static GLuint VboVertices, VboUvs;
 
