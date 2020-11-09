@@ -18,6 +18,8 @@
 #include "Plugin.hpp"
 #include "Audio.hpp"
 
+bool Render::isWireframe;
+
 Render::Render(unsigned int windowWidth, unsigned int windowHeight,
                std::string windowTitle) {
     InitEvents();
@@ -134,7 +136,7 @@ void Render::InitGlew() {
 	glFrontFace(GL_CCW);
 
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glCheckError();
     if (glActiveTexture == nullptr) {
         throw std::runtime_error("GLEW initialization failed with unknown reason");

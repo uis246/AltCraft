@@ -283,7 +283,8 @@ void ParseBlockModels() {
 					textureId = assetTexture->id;
 				}
 				parsedFace.textureId = textureId;
-				parsedFace.layer_frame = (atlas->GetTexture(textureId).layer<<4) | textureFrames;
+				parsedFace.layer_frame = (atlas->GetTexture(textureId).layer<<8) | textureFrames;
+				parsedFace.uv = 0;//FIXME
 				if (face.second.tintIndex)
 					parsedFace.color = glm::vec3(0.275, 0.63, 0.1);
 				else

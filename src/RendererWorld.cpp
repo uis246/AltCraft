@@ -369,6 +369,7 @@ void RendererWorld::Render(RenderState & renderState) {
     for (auto& it : entities) {
         it.Render(renderState, &GetGameState()->GetWorld());
     }
+	glCheckError();
 
     //Render selected block
     const SelectionStatus& selectionStatus = GetGameState()->GetSelectionStatus();
@@ -495,7 +496,8 @@ void RendererWorld::Render(RenderState & renderState) {
 		glUniform3f(sectionPos, pos.x, pos.y, pos.z);
 		section.second.Render();
 		renderedFaces += section.second.numOfFaces;
-    }
+	}
+	glCheckError();
 	glBindVertexArray(0);
     this->culledSections = culledSections;
 	DebugInfo::renderFaces.store(renderedFaces, std::memory_order_relaxed);

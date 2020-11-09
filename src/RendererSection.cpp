@@ -3,7 +3,7 @@
 #include <easylogging++.h>
 
 #include "Utility.hpp"
-#include "Renderer.hpp"
+#include "Render.hpp"
 #include "RendererSectionData.hpp"
 
 RendererSection::RendererSection(const RendererSectionData &data) {
@@ -58,15 +58,17 @@ void swap(RendererSection & lhs, RendererSection & rhs) {
 void RendererSection::Render() {
 	OPTICK_EVENT();
 	//Bind quad verts texture
+	if (numOfFaces == 0)
+		return;
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_BUFFER, textures[TEXVERTS]);
 	//Bind quad info texture
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_BUFFER, textures[TEXQUAD]);
 	//Or we can use ARB_multi_bind
-	glCheckError();
 
-	glDrawArrays(GL_TRIANGLES, 0, 6 * numOfFaces);
+	if(!Render::isWireframe)
+		glDrawArrays(GL_TRIANGLES, 0, 6 * numOfFaces);
 	glCheckError();
 }
 
@@ -92,7 +94,7 @@ void RendererSection::UpdateData(const RendererSectionData & data) {
 
 	glBindBuffer(GL_TEXTURE_BUFFER, buffers[BUFQUAD]);
 	glBufferData(GL_TEXTURE_BUFFER, bufsizes[BUFQUAD], NULL, GL_STATIC_DRAW);//Orphan buffer
-	newSize = data.quadInfo.size() * sizeof(uint16_t) * 4;
+	newSize = data.quadInfo.size() * sizeof(uint16_t);
 	if (newSize > bufsizes[BUFQUAD]) {//Reallocate
 		glBufferData(GL_TEXTURE_BUFFER, newSize, data.quadInfo.data(), GL_STATIC_DRAW);
 		bufsizes[BUFQUAD] = newSize;

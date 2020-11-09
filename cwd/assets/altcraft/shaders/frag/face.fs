@@ -1,5 +1,7 @@
 #version 330 core
 
+in vec2 UvPosition;
+
 in VS_OUT {
 //     vec2 UvPosition;
 //     vec3 Texture;
@@ -7,7 +9,6 @@ in VS_OUT {
 //     vec2 Light;
 // 	flat float biome;//debug only
 	flat uint Layer;
-	vec2 UvPosition;
 	flat float Light;
 	flat vec3 Color;
 } fs_in;
@@ -34,17 +35,17 @@ vec3 hsv2rgb(vec3 c)
 }
 
 void main() {
-//	vec4 color = texture(textureAtlas,fs_in.UvPosition);
+	vec4 color = texture(textureAtlas, vec3(UvPosition, fs_in.Layer));
 //// 	if (color.a < 0.3)
 //// 		discard;
 
-//	vec3 hsvColor = rgb2hsv(color.xyz);
-//	hsvColor+=fs_in.Color;
+// 	vec3 hsvColor = rgb2hsv(color.xyz);
+// 	hsvColor+=fs_in.Color;
 //	color = vec4(hsv2rgb(hsvColor),1);
 
-//	color.rgb = color.rgb * fs_in.Light;
-//	gl_FragColor = color;
+	color.rgb *= fs_in.Light;
+	gl_FragColor = color;
 
 // 	gl_FragColor = vec4(fs_in.UvPosition, texture(textureAtlas, vec3(fs_in.UvPosition, fs_in.Layer)).r, fs_in.Light);
-	gl_FragColor = vec4(texture(textureAtlas, vec3(fs_in.UvPosition, fs_in.Layer)).rgb, (fs_in.Light*0.001)+float(fs_in.Layer));
+// 	gl_FragColor = vec4(texture(textureAtlas, vec3(UvPosition, fs_in.Layer)).rgb, (fs_in.Light*0.001)+float(fs_in.Layer));
 }

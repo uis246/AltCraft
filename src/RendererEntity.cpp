@@ -136,8 +136,6 @@ void RendererEntity::Render(RenderState& renderState, const World *world) {
 		entityShader = reinterpret_cast<AssetShader*>(entityAsset->asset.get())->shader.get();
 	entityShader->SetUniform("model", model);
 	entityShader->SetUniform("color", entity.renderColor);
-    glCheckError();
-    glDrawArrays(GL_LINES, 0, 24);
 
-    glCheckError();
+    glDrawArrays(GL_LINES, 0, 24);
 }
