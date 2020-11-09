@@ -59,7 +59,7 @@ Render::Render(unsigned int windowWidth, unsigned int windowHeight,
 		SDL_GL_SetSwapInterval(0);
 	framebuffer->Resize(renderState.WindowWidth * fieldResolutionScale, renderState.WindowHeight * fieldResolutionScale);
 
-    LOG(INFO) << "Supported threads: " << std::thread::hardware_concurrency();
+	LOG(INFO) << "Supported threads: " << std::thread::hardware_concurrency();
 }
 
 Render::~Render() {
@@ -131,7 +131,7 @@ void Render::InitGlew() {
 
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
+	glFrontFace(GL_CCW);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -147,6 +147,7 @@ void Render::PrepareToRendering() {
 	glBindTexture(GL_TEXTURE_2D_ARRAY, AssetManager::GetTextureAtlasId());
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_BUFFER, AssetManager::GetTextureAtlasInfoId());
+	glActiveTexture(GL_TEXTURE0);
 
     ImGui_ImplSdlGL3_Init(window);
 

@@ -21,6 +21,7 @@ class RendererSection {
 	};
 	GLuint buffers[BUFCOUNT] = { 0 };
 	GLuint textures[TEXCOUNT] = { 0 };
+	GLsizeiptr bufsizes[BUFCOUNT] = { 0 };
 	
 	static GLuint VboVertices, VboUvs;
 
@@ -35,13 +36,13 @@ public:
 
 	~RendererSection();
 
-	void Render(RenderState &renderState);
+	void Render();
 
     Vector GetPosition();
 
     size_t GetHash();
 
-    size_t numOfFaces;
+	size_t numOfFaces = 0;
 
     friend void swap(RendererSection &lhs, RendererSection &rhs);
 

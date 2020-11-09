@@ -5,8 +5,9 @@
 
 #include <easylogging++.h>
 
+#include "Utility.hpp"
 
-GLuint Shader::GetUniformLocation(const std::string &name) {
+GLint Shader::GetUniformLocation(const std::string &name) {
 	auto it = uniforms.find(name);
 	if (it == uniforms.end()) {
 		LOG(ERROR) << "Accessed not existing uniform " << name;
@@ -17,7 +18,7 @@ GLuint Shader::GetUniformLocation(const std::string &name) {
 
 Shader::Shader(const std::string &vertSource, const std::string &fragSource, const std::vector<std::string> &uniformsNames)
 {
-	bool vertFailed = false, fragFailed = false, linkFailed = false, uniformsFailed = false;
+	bool vertFailed = false, fragFailed = false, linkFailed = false;
 	const GLchar *vertSourcePtr = vertSource.c_str();
 	const GLchar *fragSourcePtr = fragSource.c_str();
 
@@ -70,7 +71,7 @@ Shader::Shader(const std::string &vertSource, const std::string &fragSource, con
 	glUseProgram(program);
 
 	for (auto &it : uniformsNames) {
-		GLuint location = glGetUniformLocation(program, it.c_str());
+		GLint location = glGetUniformLocation(program, it.c_str());
 		if (location == -1) {
 			glDeleteProgram(program);
 			LOG(ERROR) << "Uniform name \"" << it << "\" not found in shader";

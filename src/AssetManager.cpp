@@ -261,7 +261,7 @@ void ParseBlockModels() {
 				unsigned int textureFrames = 1;
 				textureName = face.second.texture;
 				if (model.Textures.empty()) {
-					AssetTreeNode *node = AssetManager::GetAssetByAssetName(textureName);
+					AssetTreeNode *node = AssetManager::GetAssetByAssetName("/minecraft/textures/error");
 					AssetTexture *assetTexture = nullptr;
 					if (node && node->type == AssetTreeNode::ASSET_TEXTURE)
 						assetTexture = reinterpret_cast<AssetTexture*>(node->asset.get());

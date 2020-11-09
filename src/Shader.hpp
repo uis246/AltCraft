@@ -9,10 +9,9 @@
 #include <glm/gtc/type_ptr.hpp>
 
 class Shader {
-	std::map<std::string, GLuint> uniforms;
+	std::map<std::string, GLint> uniforms;
 	GLuint program = 0;
 
-	GLuint GetUniformLocation(const std::string &name);
 
 public:
 	Shader(const Shader &) = delete;
@@ -25,6 +24,7 @@ public:
 	~Shader();
 
 	void Activate();
+	GLint GetUniformLocation(const std::string &name);
 
 	inline void SetUniform(const std::string &name, int val) {
 		glUniform1i(GetUniformLocation(name), val);

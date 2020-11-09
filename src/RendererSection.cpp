@@ -20,7 +20,7 @@ RendererSection::RendererSection(const RendererSectionData &data) {
 //		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_BUFFER, textures[TEXQUAD]);
 		glBindBuffer(GL_TEXTURE_BUFFER, buffers[BUFQUAD]);
-		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB16UI, buffers[BUFQUAD]);
+		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA16UI, buffers[BUFQUAD]);
 //		glActiveTexture(GL_TEXTURE0);
 
 		glBindBuffer(GL_TEXTURE_BUFFER, 0);
@@ -55,12 +55,17 @@ void swap(RendererSection & lhs, RendererSection & rhs) {
     std::swap(lhs.sectionPos, rhs.sectionPos);
 }
 
-void RendererSection::Render(RenderState &renderState) {
+void RendererSection::Render() {
 	OPTICK_EVENT();
+	//Bind quad verts texture
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_BUFFER, textures[TEXVERTS]);
+	//Bind quad info texture
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_BUFFER, textures[TEXQUAD]);
+	//Or we can use ARB_multi_bind
+	glCheckError();
+
 	glDrawArrays(GL_TRIANGLES, 0, 6 * numOfFaces);
 	glCheckError();
 }
@@ -77,10 +82,22 @@ void RendererSection::UpdateData(const RendererSectionData & data) {
 	OPTICK_EVENT();
 	glActiveTexture(GL_TEXTURE3);
 	glBindBuffer(GL_TEXTURE_BUFFER, buffers[BUFVERTS]);
-	glBufferData(GL_TEXTURE_BUFFER, data.verts.size() * sizeof(glm::vec3), data.verts.data(), GL_STATIC_DRAW);
+	glBufferData(GL_TEXTURE_BUFFER, bufsizes[BUFVERTS], NULL, GL_STATIC_DRAW);//Orphan buffer
+	GLsizeiptr newSize = data.verts.size() * sizeof(glm::vec3);
+	if (newSize > bufsizes[BUFVERTS]) {//Reallocate
+		glBufferData(GL_TEXTURE_BUFFER, newSize, data.verts.data(), GL_STATIC_DRAW);
+		bufsizes[BUFVERTS] = newSize;
+	} else
+		glBufferSubData(GL_TEXTURE_BUFFER, 0, newSize, data.verts.data());
 
 	glBindBuffer(GL_TEXTURE_BUFFER, buffers[BUFQUAD]);
-	glBufferData(GL_TEXTURE_BUFFER, data.quadInfo.size() * sizeof(uint16_t) * 3, data.quadInfo.data(), GL_STATIC_DRAW);
+	glBufferData(GL_TEXTURE_BUFFER, bufsizes[BUFQUAD], NULL, GL_STATIC_DRAW);//Orphan buffer
+	newSize = data.quadInfo.size() * sizeof(uint16_t) * 4;
+	if (newSize > bufsizes[BUFQUAD]) {//Reallocate
+		glBufferData(GL_TEXTURE_BUFFER, newSize, data.quadInfo.data(), GL_STATIC_DRAW);
+		bufsizes[BUFQUAD] = newSize;
+	} else
+		glBufferSubData(GL_TEXTURE_BUFFER, 0, newSize, data.quadInfo.data());
 
 	glBindBuffer(GL_TEXTURE_BUFFER, 0);
 	glCheckError();

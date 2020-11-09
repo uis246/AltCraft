@@ -45,5 +45,5 @@ void main() {
 //	color.rgb = color.rgb * fs_in.Light;
 //	gl_FragColor = color;
 
-	gl_FragColor = vec4(fs_in.UvPosition, fs_in.Layer, 1.0);
+	gl_FragColor = vec4(fs_in.UvPosition, texture(textureAtlas, vec3(fs_in.UvPosition, fs_in.Layer)).r, fs_in.Light);
 }

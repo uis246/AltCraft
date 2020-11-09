@@ -183,10 +183,16 @@ void RendererWorld::UpdateAllSections(VectorF playerPos) {
     }	
 }
 
+GLuint emptyVAO=0;
+
 RendererWorld::RendererWorld() {
 	OPTICK_EVENT();
     MaxRenderingDistance = 2;
     numOfWorkers = _max(1, (signed int) std::thread::hardware_concurrency() - 2);
+
+	if (!emptyVAO) {
+		glGenVertexArrays(1, &emptyVAO);
+	}
 
     listener = std::make_unique<EventListener>();
 
@@ -468,14 +474,16 @@ void RendererWorld::Render(RenderState & renderState) {
 
 	Frustum frustum(projView);
 
-	glBindVertexArray(0);
+	glBindVertexArray(emptyVAO);
+	GLint sectionPos = blockShader->GetUniformLocation("sectionOffset");
     size_t culledSections = sections.size();
 	unsigned int renderedFaces = 0;
-    for (auto& section : sections) { 
+	for (auto& section : sections) {
+		Vector pos = section.second.GetPosition() * 16;
 		glm::vec3 point{
-			section.second.GetPosition().x * 16 + 8,
-			section.second.GetPosition().y * 16 + 8,
-			section.second.GetPosition().z * 16 + 8
+			pos.x + 8,
+			pos.y + 8,
+			pos.z + 8
 		};
 
 		bool isVisible = frustum.TestSphere(point, 16.0f);
@@ -484,9 +492,11 @@ void RendererWorld::Render(RenderState & renderState) {
             culledSections--;
             continue;
         }
-        section.second.Render(renderState);
+		glUniform3f(sectionPos, pos.x, pos.y, pos.z);
+		section.second.Render();
 		renderedFaces += section.second.numOfFaces;
     }
+	glBindVertexArray(0);
     this->culledSections = culledSections;
 	DebugInfo::renderFaces.store(renderedFaces, std::memory_order_relaxed);
     glCheckError();

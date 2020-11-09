@@ -36,16 +36,14 @@ void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, co
 		}
 		glm::vec4 poss[]={
 			{0, 0, 0, 0},
-			{1, 0, 1, 0},
-			{1, 0, 0, 0},
-			{0, 0, 0, 0},
 			{0, 0, 1, 0},
+			{1, 0, 0, 0},
 			{1, 0, 1, 0}
 						 };
 		glm::mat4 toApply = model.transform * face.transform;
 		for (const glm::vec4 &pos : poss) {
-			glm::vec4 result = toApply * pos;
-			data.verts.push_back(result);
+			glm::vec3 result = toApply * pos;
+			data.verts.push_back(result + isp.glm());
 		}
 		uint16_t Lp = (((block<<4)|sky)<<8) | (isp.z<<4)|isp.x;
 		uint16_t tid = face.textureId;

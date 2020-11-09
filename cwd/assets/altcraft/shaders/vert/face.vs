@@ -1,6 +1,4 @@
-﻿#version 330 core
-
-#define ATLAS_DIM 1024
+#version 330 core
 
 uniform float GlobalTime;
 uniform float DayTime;
@@ -9,7 +7,7 @@ uniform mat4 projView;
 
 //Section offset
 //section.xyz*16
-uniform ivec3 sectionOffset;
+uniform vec3 sectionOffset;
 
 //Texture pos format
 //xxxx yyyy wwww hhhh
@@ -57,7 +55,7 @@ void main()
 	//If or sh+or
 	uint vert = (uint(gl_VertexID)%uint(3)) ^ (m<<1 | m);
 	vec2 mul = vec2(vert&uint(1), vert>>uint(1));//CW front
-	gl_Position = projView * vec4(texelFetch(pos, int(vert+(quad*uint(4)))).rgb+vec3(sectionOffset), 1.0);
+	gl_Position = projView * vec4(texelFetch(pos, int(vert+(quad*uint(4)))).rgb+sectionOffset, 1.0);
 
 	uvec4 qinfo = texelFetch(quadInfo, int(quad)).rgba;
 	vec4 uv=vec4(uvec4(qinfo.a>>uint(12), qinfo.a>>uint(8), qinfo.a>>uint(4), (qinfo.a))&uint(0xF))/16.0;
@@ -78,7 +76,7 @@ void main()
 	float skyLight = (float(qinfo.r & uint(0xF)) / 15.0) * DayTime;
 
 	vs_out.UvPosition = tex.xy + tex.zw*mul;
-	vs_out.Light = clamp(blockLight + skyLight,MinLightLevel,1.0);
+	vs_out.Light = clamp(blockLight + skyLight, MinLightLevel, 1.0);
 //	vs_out.Layer = inf >> uint(8);
 	vs_out.Layer = qinfo.g >> uint(4);
 // 	vs_out.biome = float(texelFetch(biomes, int(qinfo>>uint(16))&0xF).r) / 256.0;

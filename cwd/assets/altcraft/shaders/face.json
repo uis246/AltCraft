@@ -3,11 +3,13 @@
   "frag": "/altcraft/shaders/frag/face",
   "uniforms": [
     "GlobalTime",
-    "DayTime",
-    "MinLightLevel",
     "projView",
     "textureAtlas",
     "texturePos",
-    "quadInfo"
+    "quadInfo",
+    "MinLightLevel",
+    "DayTime",
+    "sectionOffset",
+    "pos"
   ]
 }
