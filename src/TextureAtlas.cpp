@@ -129,7 +129,7 @@ TextureAtlas::TextureAtlas(std::vector<TextureData> &textures) {
 				std::swap(*(src + j), *(dst + j));
 			}
 		}
-		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, textureCoords[i].pixelX, textureSize - textureCoords[i].pixelY - textureCoords[i].pixelH, textureCoords[i].layer,
+		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, textureCoords[i].pixelX, textureCoords[i].pixelY, textureCoords[i].layer,
 			textureCoords[i].pixelW, textureCoords[i].pixelH, 1, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, textures[i].data.data());
 		glCheckError();
 	}

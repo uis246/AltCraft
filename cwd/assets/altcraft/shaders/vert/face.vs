@@ -31,6 +31,10 @@ uniform samplerBuffer pos;//Tex 3
 //u - uv start
 //v - uv end
 //(x<<4)|y
+//Todo quad format
+//Lp tt uv UV
+//uv - uv start
+//UV - uv end
 uniform usamplerBuffer quadInfo;//Tex 4
 //4*2*1=6
 //48+8=56
@@ -58,10 +62,11 @@ void main()
 	gl_Position = projView * vec4(texelFetch(pos, int(vert+(quad*uint(4)))).rgb+sectionOffset, 1.0);
 
 	uvec4 qinfo = texelFetch(quadInfo, int(quad)).rgba;
+	//TODO: UV
 // 	vec4 uv=vec4(uvec4(qinfo.a>>uint(12), qinfo.a>>uint(8), qinfo.a>>uint(4), (qinfo.a))&uint(0xF))/16.0;
 
 	vec4 tex = texelFetch(texturePos, int(qinfo.g));
-	float frames = float(qinfo.b&uint(0x0F));
+	float frames = float(qinfo.b&uint(0xFF));
 	float frameHeight = tex.w / frames;
 	float currentFrame = mod(GlobalTime * 4.0f, frames);
 	currentFrame = trunc(currentFrame);
@@ -70,7 +75,6 @@ void main()
 
 // 	tex.xy += uv.xy * tex.zw;
 // 	tex.zw = (uv.zw-uv.xy) * tex.zw;
-	tex.y = 1 - (tex.y + tex.w);
 
 	float blockLight = float((qinfo.r>>uint(12) & uint(0xF))) / 15.0;
 	float skyLight = (float((qinfo.r>>uint(8)) & uint(0xF)) / 15.0) * DayTime;

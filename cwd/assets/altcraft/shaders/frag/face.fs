@@ -3,11 +3,6 @@
 in vec2 UvPosition;
 
 in VS_OUT {
-//     vec2 UvPosition;
-//     vec3 Texture;
-//     vec3 Color;
-//     vec2 Light;
-// 	flat float biome;//debug only
 	flat uint Layer;
 	flat float Light;
 	flat vec3 Color;
@@ -45,7 +40,4 @@ void main() {
 
 	color.rgb *= fs_in.Light;
 	gl_FragColor = color;
-
-// 	gl_FragColor = vec4(fs_in.UvPosition, texture(textureAtlas, vec3(fs_in.UvPosition, fs_in.Layer)).r, fs_in.Light);
-// 	gl_FragColor = vec4(texture(textureAtlas, vec3(UvPosition, fs_in.Layer)).rgb, (fs_in.Light*0.001)+float(fs_in.Layer));
 }

@@ -14,6 +14,13 @@ inline const BlockId& GetBlockId(int x, int y, int z, const std::array<BlockId, 
 	return blockIdData[y * 256 + z * 16 + x];
 }
 
+static const glm::vec4 poss[] = {
+	{0, 0, 0, 1},
+	{0, 0, 1, 1},
+	{1, 0, 0, 1},
+	{1, 0, 1, 1}
+};
+
 void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, const Vector &isp, bool visibility[FaceDirection::none], BlockLightness light, BlockLightness skyLight) {
 	for (const auto &face : model.faces) {
 		uint8_t block = _max(light.face[0], light.face[1], light.face[2], light.face[3], light.face[4], light.face[5]);
@@ -34,12 +41,7 @@ void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, co
 			if (visibility[faceDirection])
 				continue;
 		}
-		glm::vec4 poss[]={
-			{0, 0, 0, 1},
-			{0, 0, 1, 1},
-			{1, 0, 0, 1},
-			{1, 0, 1, 1}
-						 };
+
 		glm::mat4 toApply = model.transform * face.transform;
 		for (const glm::vec4 &pos : poss) {
 			glm::vec3 result = toApply * pos;

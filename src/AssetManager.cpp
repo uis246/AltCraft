@@ -257,7 +257,7 @@ void ParseBlockModels() {
 					break;
 				}
 				parsedFace.transform = faceTransform;
-				uint8_t textureId;
+				uint16_t textureId;
 				unsigned int textureFrames = 1;
 				textureName = face.second.texture;
 				if (model.Textures.empty()) {
