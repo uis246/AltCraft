@@ -50,15 +50,16 @@ out VS_OUT {
 void main()
 {
 	uint d = uint(gl_VertexID)/uint(3);
-	int quad = gl_InstanceID/2;
+	uint quad = d>>1;
 	uint m = d&uint(1);
 	//If or sh+or
 	uint vert = (uint(gl_VertexID)%uint(3)) ^ (m<<1 | m);
 	vec2 mul = vec2(vert&uint(1), vert>>uint(1));//CW front
-	gl_Position = projView * vec4(texelFetch(pos, int(vert)+(quad*4)).rgb+sectionOffset, 1.0);
+	gl_Position = projView * vec4(texelFetch(pos, int(vert+(quad*uint(4)))).rgb+sectionOffset, 1.0);
 
-	uvec4 qinfo = texelFetch(quadInfo, quad).rgba;
+	uvec4 qinfo = texelFetch(quadInfo, int(quad)).rgba;
 	vec4 uv=vec4(uvec4(qinfo.a>>uint(12), qinfo.a>>uint(8), qinfo.a>>uint(4), (qinfo.a))&uint(0xF))/16.0;
+	
 
 	vec4 tex = texelFetch(texturePos, int(qinfo.g));
 	float frames = float(qinfo.g&uint(0x0F));

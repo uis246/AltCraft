@@ -187,11 +187,13 @@ void Render::RenderFrame() {
 	if (renderWorld)
 		framebuffer->Activate();
     if (isWireframe)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glEnable(GL_RASTERIZER_DISCARD);
     if (renderWorld)
         world->Render(renderState);
     if (isWireframe)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);	
+//        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glDisable(GL_RASTERIZER_DISCARD);
 	if (renderWorld)
 		framebuffer->RenderTo(Framebuffer::GetDefault());
 

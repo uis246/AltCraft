@@ -102,7 +102,7 @@ void RendererSection::UpdateData(const RendererSectionData & data) {
 	glBindBuffer(GL_TEXTURE_BUFFER, 0);
 	glCheckError();
 
-	numOfFaces = data.quadInfo.size();
+	numOfFaces = data.verts.size()/4;
 	sectionPos = data.sectionPos;
 	hash = data.hash;
 }

@@ -35,10 +35,10 @@ void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, co
 				continue;
 		}
 		glm::vec4 poss[]={
-			{0, 0, 0, 0},
-			{0, 0, 1, 0},
-			{1, 0, 0, 0},
-			{1, 0, 1, 0}
+			{0, 0, 0, 1},
+			{0, 0, 1, 1},
+			{1, 0, 0, 1},
+			{1, 0, 1, 1}
 						 };
 		glm::mat4 toApply = model.transform * face.transform;
 		for (const glm::vec4 &pos : poss) {
