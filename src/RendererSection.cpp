@@ -60,16 +60,18 @@ void RendererSection::Render() {
 	//Bind quad verts texture
 	if (numOfFaces == 0)
 		return;
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_BUFFER, textures[TEXVERTS]);
-	//Bind quad info texture
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_BUFFER, textures[TEXQUAD]);
-	//Or we can use ARB_multi_bind
+	if (GLEW_ARB_multi_bind) {
+		glBindTextures(3, TEXCOUNT, textures);
+	} else
+	{
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_BUFFER, textures[TEXVERTS]);
+		//Bind quad info texture
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_BUFFER, textures[TEXQUAD]);
+	}
 
-	if(!Render::isWireframe)
-		glDrawArrays(GL_TRIANGLES, 0, 6 * numOfFaces);
-	glCheckError();
+	glDrawArrays(GL_TRIANGLES, 0, 6 * numOfFaces);
 }
 
 Vector RendererSection::GetPosition() {

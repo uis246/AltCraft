@@ -1,4 +1,5 @@
 #version 330 core
+precision lowp float;
 
 uniform float GlobalTime;
 uniform float DayTime;
@@ -11,10 +12,12 @@ uniform vec3 sectionOffset;
 
 //Texture pos format
 //xxxx yyyy wwww hhhh
-uniform samplerBuffer texturePos;//Texture 2
+//uniform samplerBuffer texturePos;//Texture 2
 //Next texture pos format
-//xxyy wwhh lfpp
-//Or xx yy ww hh
+uniform usamplerBuffer texturePos;
+//xxww yyhh plpf
+//p - padding
+//Should be zero
 
 //xxxx yyyy zzzz
 uniform samplerBuffer pos;//Tex 3
@@ -22,22 +25,15 @@ uniform samplerBuffer pos;//Tex 3
 
 //Per quad info
 //RR GG BB AA
-//Lp tt lf uv
-//L - Light (block<<4|sky)
+//ph tt {T0lUv} {LVv}
 //p - block horisontal pos (z<<4|x)
+//h - block vertical pos
 //tt- texture id
-//l - layer
-//f - frames
-//u - uv start
-//v - uv end
-//(x<<4)|y
-//Todo quad format
-//Lp tt uv UV
-//uv - uv start
-//UV - uv end
+//lUu - uv with block light
+//LVv - uv with sky light
+//T - tint flag
+
 uniform usamplerBuffer quadInfo;//Tex 4
-//4*2*1=6
-//48+8=56
 
 //Indexed by horisontal position
 //(z<<4|x)
@@ -56,40 +52,29 @@ void main()
 	uint d = uint(gl_VertexID)/uint(3);
 	uint quad = d>>1;
 	uint m = d&uint(1);
-	//If or sh+or
 	uint vert = (uint(gl_VertexID)%uint(3)) ^ (m<<1 | m);
 	vec2 mul = vec2(vert&uint(1), vert>>uint(1));//CW front
 	gl_Position = projView * vec4(texelFetch(pos, int(vert+(quad*uint(4)))).rgb+sectionOffset, 1.0);
 
 	uvec4 qinfo = texelFetch(quadInfo, int(quad)).rgba;
-	//TODO: UV
-// 	vec4 uv=vec4(uvec4(qinfo.a>>uint(12), qinfo.a>>uint(8), qinfo.a>>uint(4), (qinfo.a))&uint(0xF))/16.0;
 
-	vec4 tex = texelFetch(texturePos, int(qinfo.g));
-	float frames = float(qinfo.b&uint(0xFF));
-	float frameHeight = tex.w / frames;
-	float currentFrame = mod(GlobalTime * 4.0f, frames);
-	currentFrame = trunc(currentFrame);
-	tex.w = frameHeight;
-	tex.y = tex.y + currentFrame * frameHeight;
+	vec2 uv_start = vec2(qinfo.zw & uint(0x1F)) / 16.0;
+	vec2 uv_end = vec2((qinfo.zw >> uint(5)) & uint(0x1F)) / 16.0;
+	vec2 light = vec2((qinfo.zw >> uint(10)) & uint(0xF)) / 15.0;
 
-// 	tex.xy += uv.xy * tex.zw;
-// 	tex.zw = (uv.zw-uv.xy) * tex.zw;
+	uvec3 texf = texelFetch(texturePos, int(qinfo.y)).xyz;
+	uvec3 up = texf >> uint(16);
+	uvec3 low = texf & uint(0xFFFF);
+	vec4 tex = vec4(up.xy, low.xy) / 1024.0;
+	float frames = float(low.z);
+	tex.w = tex.w / frames;
+	tex.y += trunc(mod(GlobalTime * 4.0f, frames)) * tex.w;
 
-	float blockLight = float((qinfo.r>>uint(12) & uint(0xF))) / 15.0;
-	float skyLight = (float((qinfo.r>>uint(8)) & uint(0xF)) / 15.0) * DayTime;
+	tex.xy += uv_start * tex.zw;
+	tex.zw = (uv_end-uv_start) * tex.zw;
 
 	UvPosition = tex.xy + tex.zw*mul;
-	vs_out.Light = clamp(blockLight + skyLight, MinLightLevel, 1.0);
-	vs_out.Layer = qinfo.b >> uint(8);
-// 	vs_out.biome = float(texelFetch(biomes, int(qinfo>>uint(16))&0xF).r) / 256.0;
+	vs_out.Light = clamp(light.x + (light.y * DayTime), MinLightLevel, 1.0);
+	vs_out.Layer = up.z;
+	vs_out.Color = vec3(0.275, 0.63, 0.1) * (qinfo.z>>15);
 }
-
-//Per quad format
-//Lptt
-//L - Light
-//p - block pos
-//tt- texture id
-
-//Quad pos in texture:
-//(12*4)+(4*2)=48+8=56

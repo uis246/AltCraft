@@ -44,17 +44,16 @@ void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, co
 
 		glm::mat4 toApply = model.transform * face.transform;
 		for (const glm::vec4 &pos : poss) {
-			glm::vec3 result = toApply * pos;
-			data.verts.push_back(result + isp.glm());
+			data.verts.push_back(glm::vec3(toApply * pos) + isp.glm());
 		}
-		uint16_t Lp = (((block<<4)|sky)<<8) | (isp.z<<4)|isp.x;
+		uint16_t ph = (((isp.z<<4)|isp.x)<<8) | (isp.y);
 		uint16_t tid = face.textureId;
-		uint16_t lf = face.layer_frame;
-		uint16_t uv = face.uv;
-		data.quadInfo.push_back(Lp);
+		uint16_t lUu = (face.tint<<15) | (block<<10) | face.Uu;
+		uint16_t lVv = (sky<<10) | face.Vv;
+		data.quadInfo.push_back(ph);
 		data.quadInfo.push_back(tid);
-		data.quadInfo.push_back(lf);
-		data.quadInfo.push_back(uv);
+		data.quadInfo.push_back(lUu);
+		data.quadInfo.push_back(lVv);
 	}
 }
 

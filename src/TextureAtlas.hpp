@@ -7,11 +7,12 @@
 struct TextureData {
 	std::vector<unsigned char> data; //expected format RGBA8888
 	int width, height;
+	size_t frames;
 };
 
 struct TextureCoord {
 	double x, y, w, h;
-	int pixelX, pixelY, pixelW, pixelH;
+	unsigned int pixelX, pixelY, pixelW, pixelH;
 	size_t layer;
 };
 

@@ -101,6 +101,7 @@ void LoadTextures() {
 		data.data = std::move(textureAsset->textureData);
 		data.width = textureAsset->realWidth;
 		data.height = textureAsset->realHeight;
+		data.frames = textureAsset->frames;
 		textureData.push_back(data);
 		textureAsset->id = id++;
 	});
@@ -258,7 +259,6 @@ void ParseBlockModels() {
 				}
 				parsedFace.transform = faceTransform;
 				uint16_t textureId;
-				unsigned int textureFrames = 1;
 				textureName = face.second.texture;
 				if (model.Textures.empty()) {
 					AssetTreeNode *node = AssetManager::GetAssetByAssetName("/minecraft/textures/error");
@@ -266,7 +266,6 @@ void ParseBlockModels() {
 					if (node && node->type == AssetTreeNode::ASSET_TEXTURE)
 						assetTexture = reinterpret_cast<AssetTexture*>(node->asset.get());
 					textureId = assetTexture->id;
-					textureFrames = assetTexture->frames;
 				} else {
 					while (textureName[0] == '#') {
 						textureName.erase(0, 1);
@@ -279,16 +278,15 @@ void ParseBlockModels() {
 					if (node && node->type == AssetTreeNode::ASSET_TEXTURE)
 						assetTexture = reinterpret_cast<AssetTexture*>(node->asset.get());
 
-					textureFrames = assetTexture->frames;
 					textureId = assetTexture->id;
 				}
 				parsedFace.textureId = textureId;
-				parsedFace.layer_frame = (atlas->GetTexture(textureId).layer<<8) | textureFrames;
-				parsedFace.uv = 0;//FIXME
+				parsedFace.Uu = (face.second.uv.x2<<5)|face.second.uv.x1;
+				parsedFace.Vv = (face.second.uv.y2<<5)|face.second.uv.y1;
 				if (face.second.tintIndex)
-					parsedFace.color = glm::vec3(0.275, 0.63, 0.1);
+					parsedFace.tint = true;
 				else
-					parsedFace.color = glm::vec3(0, 0, 0);
+					parsedFace.tint = false;
 
 				model.parsedFaces.push_back(parsedFace);
 			}

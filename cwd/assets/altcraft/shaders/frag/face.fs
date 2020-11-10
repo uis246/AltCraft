@@ -1,4 +1,5 @@
 #version 330 core
+precision lowp float;
 
 in vec2 UvPosition;
 
@@ -31,12 +32,12 @@ vec3 hsv2rgb(vec3 c)
 
 void main() {
 	vec4 color = texture(textureAtlas, vec3(UvPosition, fs_in.Layer));
-//// 	if (color.a < 0.3)
-//// 		discard;
+	if (color.a < 0.3)
+		discard;
 
-// 	vec3 hsvColor = rgb2hsv(color.xyz);
-// 	hsvColor+=fs_in.Color;
-//	color = vec4(hsv2rgb(hsvColor),1);
+	vec3 hsvColor = rgb2hsv(color.xyz);
+	hsvColor+=fs_in.Color;
+	color = vec4(hsv2rgb(hsvColor),1);
 
 	color.rgb *= fs_in.Light;
 	gl_FragColor = color;

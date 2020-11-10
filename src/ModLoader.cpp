@@ -261,6 +261,8 @@ void ModLoader::ParseAssetBlockModel(AssetTreeNode &node) noexcept {
 					uv.x2 = face["uv"][2];
 					uv.y2 = face["uv"][3];
 					faceData.uv = uv;
+				} else {
+					faceData.uv = {0, 0, 16, 16};
 				}
 
 				FaceDirection cullface = FaceDirection::none;

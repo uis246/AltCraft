@@ -40,9 +40,8 @@ struct ParsedFace {
 	FaceDirection visibility;
 	glm::mat4 transform;
 	uint16_t textureId;
-	uint16_t layer_frame;
-	uint16_t uv;
-	glm::vec3 color;
+	uint16_t Uu, Vv;//10-bit
+	bool tint;
 };
 
 struct BlockFaces {
