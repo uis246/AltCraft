@@ -32,7 +32,7 @@ struct SectionsData {
 
 struct RendererSectionData {
 	std::vector<glm::vec3> verts;
-	std::vector<uint16_t> quadInfo;
+	std::vector<uint32_t> quadInfo;
 	size_t hash = ~0;
     Vector sectionPos;
 	bool forced = false;

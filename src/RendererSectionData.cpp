@@ -46,14 +46,19 @@ void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, co
 		for (const glm::vec4 &pos : poss) {
 			data.verts.push_back(glm::vec3(toApply * pos) + isp.glm());
 		}
-		uint16_t ph = (((isp.z<<4)|isp.x)<<8) | (isp.y);
-		uint16_t tid = face.textureId;
-		uint16_t lUu = (face.tint<<15) | (block<<10) | face.Uu;
-		uint16_t lVv = (sky<<10) | face.Vv;
-		data.quadInfo.push_back(ph);
-		data.quadInfo.push_back(tid);
-		data.quadInfo.push_back(lUu);
-		data.quadInfo.push_back(lVv);
+//		uint16_t ph = (((isp.z<<4)|isp.x)<<8) | (isp.y);
+		uint32_t xw = (face.x << 16) | face.w;
+		uint32_t yh = (face.y << 16) | face.h;
+
+		uint32_t pTLfUu = (((isp.z<<4)|isp.x) << 24) | (face.tint<<20) | (block<<16) | (face.frames<<10) | face.Uu;
+		uint32_t hLlVv = (isp.y<<24) | (sky<<16) | (face.layer<<10) | face.Vv;
+		//5+5+4+4=18
+		//32-18=30-16=20-6=14
+		//14-8=10-4=6
+		data.quadInfo.push_back(xw);
+		data.quadInfo.push_back(yh);
+		data.quadInfo.push_back(pTLfUu);
+		data.quadInfo.push_back(hLlVv);
 	}
 }
 

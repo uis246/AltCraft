@@ -41,6 +41,8 @@ struct ParsedFace {
 	glm::mat4 transform;
 	uint16_t textureId;
 	uint16_t Uu, Vv;//10-bit
+	uint16_t x, y, w, h;
+	uint8_t layer, frames;
 	bool tint;
 };
 

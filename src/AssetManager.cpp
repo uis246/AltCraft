@@ -258,7 +258,7 @@ void ParseBlockModels() {
 					break;
 				}
 				parsedFace.transform = faceTransform;
-				uint16_t textureId;
+				uint16_t textureId, frames;
 				textureName = face.second.texture;
 				if (model.Textures.empty()) {
 					AssetTreeNode *node = AssetManager::GetAssetByAssetName("/minecraft/textures/error");
@@ -266,6 +266,7 @@ void ParseBlockModels() {
 					if (node && node->type == AssetTreeNode::ASSET_TEXTURE)
 						assetTexture = reinterpret_cast<AssetTexture*>(node->asset.get());
 					textureId = assetTexture->id;
+					frames = assetTexture->frames;
 				} else {
 					while (textureName[0] == '#') {
 						textureName.erase(0, 1);
@@ -279,7 +280,16 @@ void ParseBlockModels() {
 						assetTexture = reinterpret_cast<AssetTexture*>(node->asset.get());
 
 					textureId = assetTexture->id;
+					frames = assetTexture->frames;
 				}
+				TextureCoord tc = atlas->GetTexture(textureId);
+				parsedFace.x = tc.pixelX;
+				parsedFace.y = tc.pixelY;
+				parsedFace.w = tc.pixelW;
+				parsedFace.h = tc.pixelH;
+				parsedFace.layer = tc.layer;
+
+				parsedFace.frames = frames;
 				parsedFace.textureId = textureId;
 				parsedFace.Uu = (face.second.uv.x2<<5)|face.second.uv.x1;
 				parsedFace.Vv = (face.second.uv.y2<<5)|face.second.uv.y1;

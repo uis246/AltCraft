@@ -223,8 +223,10 @@ RendererWorld::RendererWorld() {
 				return;
 			}
 			it->second.UpdateData(parsing[id].renderer);
-		} else
-			sections.emplace(std::make_pair(parsing[id].renderer.sectionPos, RendererSection(parsing[id].renderer)));
+		} else {
+			if (!parsing[id].renderer.quadInfo.empty())
+				sections.emplace(std::make_pair(parsing[id].renderer.sectionPos, RendererSection(parsing[id].renderer)));
+		}
 
 		parsing[id] = RendererWorld::SectionParsing();
     });

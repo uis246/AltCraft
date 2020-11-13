@@ -20,7 +20,7 @@ RendererSection::RendererSection(const RendererSectionData &data) {
 //		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_BUFFER, textures[TEXQUAD]);
 		glBindBuffer(GL_TEXTURE_BUFFER, buffers[BUFQUAD]);
-		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA16UI, buffers[BUFQUAD]);
+		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32UI, buffers[BUFQUAD]);
 //		glActiveTexture(GL_TEXTURE0);
 
 		glBindBuffer(GL_TEXTURE_BUFFER, 0);
@@ -37,14 +37,15 @@ RendererSection::RendererSection(RendererSection && other) {
 }
 
 RendererSection::~RendererSection() {  
-	for (int i = 0; i < BUFCOUNT; i++)
+	for (int i = 0; i < BUFCOUNT; i++) {
 		if (buffers[i] != 0) {
 			glBindBuffer(GL_TEXTURE_BUFFER, buffers[i]);
 			glBufferData(GL_TEXTURE_BUFFER, 0, 0, GL_STATIC_DRAW);
-        }
-
-	glDeleteBuffers(BUFCOUNT, buffers);
-	glDeleteTextures(TEXCOUNT, textures);
+			glDeleteBuffers(1, &buffers[i]);
+		}
+		if (textures[i] != 0)
+			glDeleteTextures(1, &textures[i]);
+	}
 }
 
 void swap(RendererSection & lhs, RendererSection & rhs) {
@@ -96,7 +97,7 @@ void RendererSection::UpdateData(const RendererSectionData & data) {
 
 	glBindBuffer(GL_TEXTURE_BUFFER, buffers[BUFQUAD]);
 	glBufferData(GL_TEXTURE_BUFFER, bufsizes[BUFQUAD], NULL, GL_STATIC_DRAW);//Orphan buffer
-	newSize = data.quadInfo.size() * sizeof(uint16_t);
+	newSize = data.quadInfo.size() * sizeof(uint32_t);
 	if (newSize > bufsizes[BUFQUAD]) {//Reallocate
 		glBufferData(GL_TEXTURE_BUFFER, newSize, data.quadInfo.data(), GL_STATIC_DRAW);
 		bufsizes[BUFQUAD] = newSize;

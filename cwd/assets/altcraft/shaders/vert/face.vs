@@ -10,34 +10,28 @@ uniform mat4 projView;
 //section.xyz*16
 uniform vec3 sectionOffset;
 
-//Texture pos format
-//xxxx yyyy wwww hhhh
-//uniform samplerBuffer texturePos;//Texture 2
-//Next texture pos format
-uniform usamplerBuffer texturePos;
-//xxww yyhh plpf
-//p - padding
-//Should be zero
-
 //xxxx yyyy zzzz
 uniform samplerBuffer pos;//Tex 3
 //3*4*4=12*4=48
 
 //Per quad info
-//RR GG BB AA
-//ph tt {T0lUv} {LVv}
-//p - block horisontal pos (z<<4|x)
-//h - block vertical pos
-//tt- texture id
-//lUu - uv with block light
-//LVv - uv with sky light
-//T - tint flag
+//RRRR GGGG BBBB AAAA
+//xxww yyhh pT(L1)f{Uu} h(L2)l{Vv}
+//{
+//Uu - 10 bit
+//f - 6 bit
+//L1 - 4 bit
+//T - 1 bit
+//p -  8 bit
+//}3 free
+//{
+//Vv - 10 bit
+//l - 6 bit
+//L2 - 4 bit
+//h - 8 bit
+//}4 free
 
 uniform usamplerBuffer quadInfo;//Tex 4
-
-//Indexed by horisontal position
-//(z<<4|x)
-// uniform usamplerBuffer biomes;
 
 out vec2 UvPosition;
 
@@ -60,13 +54,11 @@ void main()
 
 	vec2 uv_start = vec2(qinfo.zw & uint(0x1F)) / 16.0;
 	vec2 uv_end = vec2((qinfo.zw >> uint(5)) & uint(0x1F)) / 16.0;
-	vec2 light = vec2((qinfo.zw >> uint(10)) & uint(0xF)) / 15.0;
+	vec2 light = vec2((qinfo.zw >> uint(16)) & uint(0xF)) / 15.0;
 
-	uvec3 texf = texelFetch(texturePos, int(qinfo.y)).xyz;
-	uvec3 up = texf >> uint(16);
-	uvec3 low = texf & uint(0xFFFF);
-	vec4 tex = vec4(up.xy, low.xy) / 1024.0;
-	float frames = float(low.z);
+	vec4 tex = vec4((qinfo.xy >> uint(16)) & uint(0xFFFF), (qinfo.xy) & uint(0xFFFF)) / 1024.0;
+	uvec2 lf = uvec2((qinfo.zw >> uint(10)) & uint(0x3F));
+	float frames = float(lf.x);
 	tex.w = tex.w / frames;
 	tex.y += trunc(mod(GlobalTime * 4.0f, frames)) * tex.w;
 
@@ -75,6 +67,6 @@ void main()
 
 	UvPosition = tex.xy + tex.zw*mul;
 	vs_out.Light = clamp(light.x + (light.y * DayTime), MinLightLevel, 1.0);
-	vs_out.Layer = up.z;
-	vs_out.Color = vec3(0.275, 0.63, 0.1) * (qinfo.z>>15);
+	vs_out.Layer = lf.y;
+	vs_out.Color = vec3(0.275, 0.63, 0.1) * ((qinfo.z>>20)&uint(1));
 }

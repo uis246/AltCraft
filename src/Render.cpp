@@ -135,7 +135,7 @@ void Render::InitGlew() {
     glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);
 
-    glEnable(GL_BLEND);
+	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glCheckError();
     if (glActiveTexture == nullptr) {
@@ -145,11 +145,10 @@ void Render::InitGlew() {
 
 void Render::PrepareToRendering() {
     //TextureAtlas texture
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, AssetManager::GetTextureAtlasId());
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_BUFFER, AssetManager::GetTextureAtlasInfoId());
 	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, AssetManager::GetTextureAtlasId());
 
     ImGui_ImplSdlGL3_Init(window);
 
