@@ -175,7 +175,7 @@ void Section::SetBlock(unsigned int num, uint16_t block) {
 			}
 		}
 		if (index == -1) {//Not found
-			if (psz == ((uint)1<<bitsPerBlock)){
+			if (psz == ((size_t)1<<bitsPerBlock)){
 				//Compact palette
 				//Expand bPB
 				ExpandBPB();
