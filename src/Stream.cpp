@@ -3,6 +3,7 @@
 #include <easylogging++.h>
 
 #include "Utility.hpp"
+#include "platform/portable_endian.h"
 
 #define bedoubletoh(x) be64toh(*reinterpret_cast<uint64_t*>(&x))
 #define befloattoh(x) be32toh(*reinterpret_cast<uint32_t*>(&x))
@@ -15,8 +16,6 @@
 #define htobeS64(x) htobe64(*reinterpret_cast<uint64_t*>(&x))
 #define htobeS32(x) htobe32(*reinterpret_cast<uint32_t*>(&x))
 #define htobeS16(x) htobe16(*reinterpret_cast<uint16_t*>(&x))
-
-const int MAX_VARINT_LENGTH = 5;
 
 bool StreamInput::ReadBool() {
 	assert(position+1 <= this->size);
