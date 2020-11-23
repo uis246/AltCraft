@@ -11,7 +11,7 @@ uniform mat4 projView;
 uniform vec3 sectionOffset;
 
 //xxxx yyyy zzzz
-uniform samplerBuffer pos;//Tex 3
+uniform samplerBuffer pos;
 //3*4*4=12*4=48
 
 //Per quad info
@@ -43,10 +43,8 @@ out VS_OUT {
 
 void main()
 {
-	uint d = uint(gl_VertexID)/uint(3);
-	uint quad = d>>1;
-	uint m = d&uint(1);
-	uint vert = (uint(gl_VertexID)%uint(3)) ^ (m<<1 | m);
+	uint quad = uint(gl_InstanceID)+uint(gl_VertexID)/uint(4);
+	uint vert = uint(gl_VertexID)%uint(4);
 	vec2 mul = vec2(vert&uint(1), vert>>uint(1));//CW front
 	gl_Position = projView * vec4(texelFetch(pos, int(vert+(quad*uint(4)))).rgb+sectionOffset, 1.0);
 

@@ -10,7 +10,9 @@ RendererSection::RendererSection(const RendererSectionData &data) {
 	OPTICK_EVENT();
 	glGenBuffers(BUFCOUNT, buffers);
 	glGenTextures(TEXCOUNT, textures);
-    {
+	glGenVertexArrays(1, &vertexarray);
+	{
+		glBindVertexArray(vertexarray);
 		//Vertices
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_BUFFER, textures[TEXVERTS]);
@@ -21,12 +23,12 @@ RendererSection::RendererSection(const RendererSectionData &data) {
 		glBindTexture(GL_TEXTURE_BUFFER, textures[TEXQUAD]);
 		glBindBuffer(GL_TEXTURE_BUFFER, buffers[BUFQUAD]);
 		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32UI, buffers[BUFQUAD]);
-//		glActiveTexture(GL_TEXTURE0);
 
+//		glActiveTexture(GL_TEXTURE0);
+		glBindVertexArray(0);
 		glBindBuffer(GL_TEXTURE_BUFFER, 0);
-    }
-    glBindVertexArray(0);
-    glCheckError();
+	}
+	glCheckError();
 	
 	UpdateData(data);
 }
@@ -72,7 +74,8 @@ void RendererSection::Render() {
 		glBindTexture(GL_TEXTURE_BUFFER, textures[TEXQUAD]);
 	}
 
-	glDrawArrays(GL_TRIANGLES, 0, 6 * numOfFaces);
+//	glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, numOfFaces);
+	glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, numOfFaces);
 }
 
 Vector RendererSection::GetPosition() {

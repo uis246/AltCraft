@@ -127,7 +127,7 @@ void RendererWorld::ParseQeueueRemoveUnnecessary() {
 		bool skip = false;
 
 		for (size_t i = 0; i < RendererWorld::parsingBufferSize; i++) {
-			if (parsing[i].data.section && parsing[i].data.section->GetPosition() == vec && (parsing[i].renderer.hash == section.GetHash() || parsing[i].parsing)) {
+			if (parsing[i].data.section && parsing[i].data.section->GetPosition() == vec && parsing[i].renderer.hash == section.GetHash()) {
 				skip = true;
 				break;
 			}
@@ -183,7 +183,12 @@ void RendererWorld::UpdateAllSections(VectorF playerPos) {
     }	
 }
 
-GLuint emptyVAO=0;
+GLuint emptyVAO=0, EBO=0;
+
+static const GLuint idx[] = {
+	0, 1, 2,
+	1, 3, 2
+};
 
 RendererWorld::RendererWorld() {
 	OPTICK_EVENT();
@@ -192,6 +197,12 @@ RendererWorld::RendererWorld() {
 
 	if (!emptyVAO) {
 		glGenVertexArrays(1, &emptyVAO);
+		glGenBuffers(1, &EBO);
+		glBindVertexArray(emptyVAO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
+		glBindVertexArray(0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
     listener = std::make_unique<EventListener>();
@@ -473,13 +484,13 @@ void RendererWorld::Render(RenderState & renderState) {
 	blockShader->SetUniform("DayTime", mixLevel);
 	blockShader->SetUniform("projView", projView);
 	blockShader->SetUniform("GlobalTime", globalTime);
-    glCheckError();
+	glCheckError();
 
 	Frustum frustum(projView);
 
 	glBindVertexArray(emptyVAO);
 	GLint sectionPos = blockShader->GetUniformLocation("sectionOffset");
-    size_t culledSections = sections.size();
+	size_t culledSections = sections.size();
 	unsigned int renderedFaces = 0;
 	for (auto& section : sections) {
 		Vector pos = section.second.GetPosition() * 16;
@@ -490,11 +501,11 @@ void RendererWorld::Render(RenderState & renderState) {
 		};
 
 		bool isVisible = frustum.TestSphere(point, 16.0f);
-        
-        if (!isVisible) {
-            culledSections--;
-            continue;
-        }
+
+		if (!isVisible) {
+			culledSections--;
+			continue;
+		}
 		glUniform3f(sectionPos, pos.x, pos.y, pos.z);
 		section.second.Render();
 		renderedFaces += section.second.numOfFaces;
