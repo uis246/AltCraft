@@ -16,7 +16,6 @@ class RendererSection {
 	};
 	enum textures {
 		TEXVERTS = 0,
-		TEXQUAD,
 		TEXCOUNT
 	};
 	GLuint vertexarray = 0;

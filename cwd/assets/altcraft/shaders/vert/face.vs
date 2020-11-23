@@ -1,4 +1,5 @@
 #version 330 core
+#extension GL_ARB_shader_draw_parameters : require
 precision lowp float;
 
 uniform float GlobalTime;
@@ -31,24 +32,22 @@ uniform samplerBuffer pos;
 //h - 8 bit
 //}4 free
 
-uniform usamplerBuffer quadInfo;//Tex 4
+layout(location = 0) in uvec4 qinfo;//Tex 4
 
 out vec2 UvPosition;
+flat out uint Layer;
 
 out VS_OUT {
-	flat uint Layer;
 	flat float Light;
 	flat vec3 Color;
 } vs_out;
 
 void main()
 {
-	uint quad = uint(gl_InstanceID)+uint(gl_VertexID)/uint(4);
+	uint quad = uint(gl_InstanceID+gl_BaseInstanceARB)+uint(gl_VertexID)/uint(4);
 	uint vert = uint(gl_VertexID)%uint(4);
 	vec2 mul = vec2(vert&uint(1), vert>>uint(1));//CW front
 	gl_Position = projView * vec4(texelFetch(pos, int(vert+(quad*uint(4)))).rgb+sectionOffset, 1.0);
-
-	uvec4 qinfo = texelFetch(quadInfo, int(quad)).rgba;
 
 	vec2 uv_start = vec2(qinfo.zw & uint(0x1F)) / 16.0;
 	vec2 uv_end = vec2((qinfo.zw >> uint(5)) & uint(0x1F)) / 16.0;
@@ -65,6 +64,6 @@ void main()
 
 	UvPosition = tex.xy + tex.zw*mul;
 	vs_out.Light = clamp(light.x + (light.y * DayTime), MinLightLevel, 1.0);
-	vs_out.Layer = lf.y;
+	Layer = lf.y;
 	vs_out.Color = vec3(0.275, 0.63, 0.1) * ((qinfo.z>>20)&uint(1));
 }

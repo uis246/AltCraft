@@ -2,9 +2,9 @@
 precision lowp float;
 
 in vec2 UvPosition;
+flat in uint Layer;
 
 in VS_OUT {
-	flat uint Layer;
 	flat float Light;
 	flat vec3 Color;
 } fs_in;
@@ -31,7 +31,7 @@ vec3 hsv2rgb(vec3 c)
 }
 
 void main() {
-	vec4 color = texture(textureAtlas, vec3(UvPosition, fs_in.Layer));
+	vec4 color = texture(textureAtlas, vec3(UvPosition, Layer));
 	if (color.a < 0.3)
 		discard;
 

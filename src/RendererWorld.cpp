@@ -524,7 +524,6 @@ void RendererWorld::PrepareRender() {
 		blockShader = reinterpret_cast<AssetShader*>(blockNode->asset.get())->shader.get();
 	blockShader->Activate();
 	blockShader->SetUniform("textureAtlas", 0);
-	blockShader->SetUniform("texturePos", 2);
 	blockShader->SetUniform("pos", 3);
 	blockShader->SetUniform("quadInfo", 4);
 	blockShader->SetUniform("MinLightLevel", 0.2f);
