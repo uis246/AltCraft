@@ -6,8 +6,23 @@
 #include "Render.hpp"
 #include "RendererSectionData.hpp"
 
+static const GLfloat uv_coords[] = {
+	0.f, 0.f,
+	1.f, 0.f,
+	0.f, 1.f,
+	1.f, 1.f
+};
+
+GLuint RendererSection::VboUvs = 0;
+
 RendererSection::RendererSection(const RendererSectionData &data) {
 	OPTICK_EVENT();
+	if (!VboUvs) {
+		glGenBuffers(1, &VboUvs);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VboUvs);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(uv_coords), uv_coords, GL_STATIC_DRAW);
+	}
 	glGenBuffers(BUFCOUNT, buffers);
 	glGenTextures(TEXCOUNT, textures);
 	glGenVertexArrays(1, &vertexarray);
@@ -21,9 +36,14 @@ RendererSection::RendererSection(const RendererSectionData &data) {
 
 		GLuint QuadAttribPos = 0;
 		glBindBuffer(GL_ARRAY_BUFFER, buffers[BUFQUAD]);
-		glVertexAttribIPointer(QuadAttribPos, 4, GL_UNSIGNED_INT, 4*4, 0);
+		glVertexAttribIPointer(QuadAttribPos, 4, GL_UNSIGNED_INT, 4 * 4, 0);
 		glEnableVertexAttribArray(QuadAttribPos);
 		glVertexAttribDivisor(QuadAttribPos, 1);
+
+		GLuint UvAttribPos = 1;
+		glBindBuffer(GL_ARRAY_BUFFER, VboUvs);
+		glVertexAttribPointer(UvAttribPos, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
+		glEnableVertexAttribArray(UvAttribPos);
 
 		glBindVertexArray(0);
 		glBindBuffer(GL_TEXTURE_BUFFER, 0);

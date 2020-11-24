@@ -21,7 +21,7 @@ static const glm::vec4 poss[] = {
 	{1, 0, 1, 1}
 };
 
-void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, const Vector &isp, bool visibility[FaceDirection::none], BlockLightness light, BlockLightness skyLight) {
+void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, const Vector &isp, const Vector &section, bool visibility[FaceDirection::none], BlockLightness light, BlockLightness skyLight) {
 	for (const auto &face : model.faces) {
 		uint8_t block = _max(light.face[0], light.face[1], light.face[2], light.face[3], light.face[4], light.face[5]);
 		uint8_t sky = _max(skyLight.face[0], skyLight.face[1], skyLight.face[2], skyLight.face[3], skyLight.face[4], skyLight.face[5]);
@@ -44,7 +44,7 @@ void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, co
 
 		glm::mat4 toApply = model.transform * face.transform;
 		for (const glm::vec4 &pos : poss) {
-			data.verts.push_back(glm::vec3(toApply * pos) + isp.glm());
+			data.verts.push_back(glm::vec3(toApply * pos) + isp.glm() + section.glm());
 		}
 //		uint16_t ph = (((isp.z<<4)|isp.x)<<8) | (isp.y);
 		uint32_t xw = (face.x << 16) | face.w;
@@ -141,7 +141,7 @@ RendererSectionData ParseSection(const SectionsData &sections) {
 				BlockLightness skyLight = sections.GetSkyLight(vec);
 
 				BlockFaces *model = GetInternalBlockModel(block, idModels);
-				AddFacesByBlockModel(data, *model, vec, blockVisibility[y * 256 + z * 16 + x], light, skyLight);
+				AddFacesByBlockModel(data, *model, vec, data.sectionPos * 16, blockVisibility[y * 256 + z * 16 + x], light, skyLight);
 			}
 		}
 	}

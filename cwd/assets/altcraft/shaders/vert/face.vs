@@ -32,7 +32,12 @@ uniform samplerBuffer pos;
 //h - 8 bit
 //}4 free
 
-layout(location = 0) in uvec4 qinfo;//Tex 4
+//xx yy ww hh 4*2=8
+//p h l f 4*1=4 //12
+//T(L1){Uu} (L2){Vv} 2*2=4 //16
+
+layout(location = 0) in uvec4 qinfo;
+layout(location = 1) in vec2 uv;
 
 out vec2 UvPosition;
 flat out uint Layer;
@@ -44,10 +49,12 @@ out VS_OUT {
 
 void main()
 {
-	uint quad = uint(gl_InstanceID+gl_BaseInstanceARB)+uint(gl_VertexID)/uint(4);
-	uint vert = uint(gl_VertexID)%uint(4);
-	vec2 mul = vec2(vert&uint(1), vert>>uint(1));//CW front
-	gl_Position = projView * vec4(texelFetch(pos, int(vert+(quad*uint(4)))).rgb+sectionOffset, 1.0);
+// 	uint quad = uint(gl_InstanceID+gl_BaseInstanceARB)+uint(gl_VertexID)/uint(4);
+// 	uint vert = uint(gl_VertexID)%uint(4);
+// 	vec2 mul = vec2(vert&uint(1), vert>>uint(1));
+	uint quad = uint(gl_InstanceID+gl_BaseInstanceARB);
+	uint vert = uint(gl_VertexID);
+	gl_Position = projView * vec4(texelFetch(pos, int(vert+(quad*uint(4)))).rgb, 1.0);
 
 	vec2 uv_start = vec2(qinfo.zw & uint(0x1F)) / 16.0;
 	vec2 uv_end = vec2((qinfo.zw >> uint(5)) & uint(0x1F)) / 16.0;
@@ -62,7 +69,7 @@ void main()
 	tex.xy += uv_start * tex.zw;
 	tex.zw = (uv_end-uv_start) * tex.zw;
 
-	UvPosition = tex.xy + tex.zw*mul;
+	UvPosition = tex.xy + tex.zw*uv;
 	vs_out.Light = clamp(light.x + (light.y * DayTime), MinLightLevel, 1.0);
 	Layer = lf.y;
 	vs_out.Color = vec3(0.275, 0.63, 0.1) * ((qinfo.z>>20)&uint(1));

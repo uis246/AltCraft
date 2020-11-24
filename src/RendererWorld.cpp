@@ -185,24 +185,29 @@ void RendererWorld::UpdateAllSections(VectorF playerPos) {
 
 GLuint emptyVAO=0, EBO=0;
 
-static const GLuint idx[] = {
-	0, 1, 2,
-	1, 3, 2
-};
-
 RendererWorld::RendererWorld() {
 	OPTICK_EVENT();
     MaxRenderingDistance = 2;
     numOfWorkers = _max(1, (signed int) std::thread::hardware_concurrency() - 2);
 
 	if (!emptyVAO) {
+		GLuint *idx = reinterpret_cast<GLuint*>(malloc(65536/5*5));
+		for(size_t i = 0; i < 65536/5; i++) {
+			idx[i*5] = i*4;
+			idx[i*5 + 1] = i*4 + 1;
+			idx[i*5 + 2] = i*4 + 2;
+			idx[i*5 + 3] = i*4 + 3;
+			idx[i*5 + 4] = 65535;
+		}
+		glPrimitiveRestartIndex(65535);
 		glGenVertexArrays(1, &emptyVAO);
 		glGenBuffers(1, &EBO);
 		glBindVertexArray(emptyVAO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 65536/5*5, idx, GL_STATIC_DRAW);
 		glBindVertexArray(0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		free(idx);
 	}
 
     listener = std::make_unique<EventListener>();
@@ -489,7 +494,7 @@ void RendererWorld::Render(RenderState & renderState) {
 	Frustum frustum(projView);
 
 	glBindVertexArray(emptyVAO);
-	GLint sectionPos = blockShader->GetUniformLocation("sectionOffset");
+//	GLint sectionPos = blockShader->GetUniformLocation("sectionOffset");
 	size_t culledSections = sections.size();
 	unsigned int renderedFaces = 0;
 	for (auto& section : sections) {
@@ -506,7 +511,7 @@ void RendererWorld::Render(RenderState & renderState) {
 			culledSections--;
 			continue;
 		}
-		glUniform3f(sectionPos, pos.x, pos.y, pos.z);
+//		glUniform3f(sectionPos, pos.x, pos.y, pos.z);
 		section.second.Render();
 		renderedFaces += section.second.numOfFaces;
 	}
@@ -525,7 +530,7 @@ void RendererWorld::PrepareRender() {
 	blockShader->Activate();
 	blockShader->SetUniform("textureAtlas", 0);
 	blockShader->SetUniform("pos", 3);
-	blockShader->SetUniform("quadInfo", 4);
+//	blockShader->SetUniform("quadInfo", 4);
 	blockShader->SetUniform("MinLightLevel", 0.2f);
 
 	TextureCoord sunTexture = AssetManager::GetTexture("/minecraft/textures/environment/sun");

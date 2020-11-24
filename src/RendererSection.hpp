@@ -23,7 +23,7 @@ class RendererSection {
 	GLuint textures[TEXCOUNT] = { 0 };
 	GLsizeiptr bufsizes[BUFCOUNT] = { 0 };
 	
-	static GLuint VboVertices, VboUvs;
+	static GLuint VboUvs;
 
 	size_t hash;
     Vector sectionPos;
