@@ -24,29 +24,49 @@ RendererSection::RendererSection(const RendererSectionData &data) {
 		glBufferData(GL_ARRAY_BUFFER, sizeof(uv_coords), uv_coords, GL_STATIC_DRAW);
 	}
 	glGenBuffers(BUFCOUNT, buffers);
-	glGenTextures(TEXCOUNT, textures);
 	glGenVertexArrays(1, &vertexarray);
 	{
 		glBindVertexArray(vertexarray);
-		//Vertices
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_BUFFER, textures[TEXVERTS]);
-		glBindBuffer(GL_TEXTURE_BUFFER, buffers[BUFVERTS]);
-		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32F, buffers[BUFVERTS]);
+
+		glBindBuffer(GL_ARRAY_BUFFER, buffers[BUFQUAD]);
+		GLuint TexAttribPos = 6;
+		glVertexAttribIPointer(TexAttribPos, 4, GL_UNSIGNED_SHORT, 4 * 4, 0);
+		glEnableVertexAttribArray(TexAttribPos);
+		glVertexAttribDivisor(TexAttribPos, 1);
 
 		GLuint QuadAttribPos = 0;
-		glBindBuffer(GL_ARRAY_BUFFER, buffers[BUFQUAD]);
-		glVertexAttribIPointer(QuadAttribPos, 4, GL_UNSIGNED_INT, 4 * 4, 0);
+		glVertexAttribIPointer(QuadAttribPos, 2, GL_UNSIGNED_SHORT, 4 * 4, reinterpret_cast<void*>(3 * 4));
 		glEnableVertexAttribArray(QuadAttribPos);
 		glVertexAttribDivisor(QuadAttribPos, 1);
 
-		GLuint UvAttribPos = 1;
+		GLuint PhlfAttribPos = 7;
+		glVertexAttribIPointer(PhlfAttribPos, 4, GL_UNSIGNED_BYTE, 4 * 4, reinterpret_cast<void*>(2 * 4));
+		glEnableVertexAttribArray(PhlfAttribPos);
+		glVertexAttribDivisor(PhlfAttribPos, 1);
+
 		glBindBuffer(GL_ARRAY_BUFFER, VboUvs);
+		GLuint UvAttribPos = 1;
 		glVertexAttribPointer(UvAttribPos, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
 		glEnableVertexAttribArray(UvAttribPos);
 
+		//Vertices
+		glBindBuffer(GL_ARRAY_BUFFER, buffers[BUFVERTS]);
+		GLuint PositionsAttribPos = 2;
+		glVertexAttribPointer(PositionsAttribPos+0, 3, GL_FLOAT, GL_FALSE, 3 * 4 * sizeof(GLfloat), 0);
+		glVertexAttribPointer(PositionsAttribPos+1, 3, GL_FLOAT, GL_FALSE, 3 * 4 * sizeof(GLfloat), reinterpret_cast<void*>(3 * 1 * sizeof(GLfloat)));
+		glVertexAttribPointer(PositionsAttribPos+2, 3, GL_FLOAT, GL_FALSE, 3 * 4 * sizeof(GLfloat), reinterpret_cast<void*>(3 * 2 * sizeof(GLfloat)));
+		glVertexAttribPointer(PositionsAttribPos+3, 3, GL_FLOAT, GL_FALSE, 3 * 4 * sizeof(GLfloat), reinterpret_cast<void*>(3 * 3 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(PositionsAttribPos+0);
+		glEnableVertexAttribArray(PositionsAttribPos+1);
+		glEnableVertexAttribArray(PositionsAttribPos+2);
+		glEnableVertexAttribArray(PositionsAttribPos+3);
+		glVertexAttribDivisor(PositionsAttribPos+0, 1);
+		glVertexAttribDivisor(PositionsAttribPos+1, 1);
+		glVertexAttribDivisor(PositionsAttribPos+2, 1);
+		glVertexAttribDivisor(PositionsAttribPos+3, 1);
+
 		glBindVertexArray(0);
-		glBindBuffer(GL_TEXTURE_BUFFER, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 	glCheckError();
 	
@@ -63,14 +83,12 @@ RendererSection::~RendererSection() {
 		glBindBuffer(GL_TEXTURE_BUFFER, buffers[0]);
 		glBufferData(GL_TEXTURE_BUFFER, 0, 0, GL_STATIC_DRAW);
 		glDeleteBuffers(BUFCOUNT, buffers);
-		glDeleteTextures(TEXCOUNT, textures);
 		glDeleteVertexArrays(1, &vertexarray);
 	}
 }
 
 void swap(RendererSection & lhs, RendererSection & rhs) {
 	std::swap(lhs.buffers, rhs.buffers);
-	std::swap(lhs.textures, rhs.textures);
 	std::swap(lhs.vertexarray, rhs.vertexarray);
 	std::swap(lhs.bufsizes, rhs.bufsizes);
     std::swap(lhs.hash, rhs.hash);
@@ -84,10 +102,7 @@ void RendererSection::Render() {
 		return;
 	//Bind vertices texture
 	glBindVertexArray(vertexarray);
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_BUFFER, textures[TEXVERTS]);
 
-//	glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, numOfFaces);
 	glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, numOfFaces);
 }
 
@@ -101,15 +116,14 @@ size_t RendererSection::GetHash() {
 
 void RendererSection::UpdateData(const RendererSectionData & data) {
 	OPTICK_EVENT();
-	glActiveTexture(GL_TEXTURE4);
-	glBindBuffer(GL_TEXTURE_BUFFER, buffers[BUFVERTS]);
-	glBufferData(GL_TEXTURE_BUFFER, bufsizes[BUFVERTS], NULL, GL_STATIC_DRAW);//Orphan buffer
+	glBindBuffer(GL_ARRAY_BUFFER, buffers[BUFVERTS]);
+	glBufferData(GL_ARRAY_BUFFER, bufsizes[BUFVERTS], NULL, GL_STATIC_DRAW);//Orphan buffer
 	GLsizeiptr newSize = data.verts.size() * sizeof(glm::vec3);
 	if (newSize > bufsizes[BUFVERTS]) {//Reallocate
-		glBufferData(GL_TEXTURE_BUFFER, newSize, data.verts.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, newSize, data.verts.data(), GL_STATIC_DRAW);
 		bufsizes[BUFVERTS] = newSize;
 	} else
-		glBufferSubData(GL_TEXTURE_BUFFER, 0, newSize, data.verts.data());
+		glBufferSubData(GL_ARRAY_BUFFER, 0, newSize, data.verts.data());
 
 	glBindBuffer(GL_ARRAY_BUFFER, buffers[BUFQUAD]);
 	glBufferData(GL_ARRAY_BUFFER, bufsizes[BUFQUAD], NULL, GL_STATIC_DRAW);//Orphan buffer
@@ -121,7 +135,6 @@ void RendererSection::UpdateData(const RendererSectionData & data) {
 		glBufferSubData(GL_ARRAY_BUFFER, 0, newSize, data.quadInfo.data());
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_TEXTURE_BUFFER, 0);
 	glCheckError();
 
 	numOfFaces = data.verts.size()/4;

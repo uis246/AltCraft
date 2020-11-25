@@ -14,13 +14,8 @@ class RendererSection {
 		BUFQUAD,
 		BUFCOUNT
 	};
-	enum textures {
-		TEXVERTS = 0,
-		TEXCOUNT
-	};
 	GLuint vertexarray = 0;
 	GLuint buffers[BUFCOUNT] = { 0 };
-	GLuint textures[TEXCOUNT] = { 0 };
 	GLsizeiptr bufsizes[BUFCOUNT] = { 0 };
 	
 	static GLuint VboUvs;

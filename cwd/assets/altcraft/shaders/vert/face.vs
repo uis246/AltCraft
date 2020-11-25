@@ -9,15 +9,14 @@ uniform mat4 projView;
 
 //Section offset
 //section.xyz*16
-uniform vec3 sectionOffset;
+// uniform vec3 sectionOffset;
 
 //xxxx yyyy zzzz
-uniform samplerBuffer pos;
 //3*4*4=12*4=48
 
 //Per quad info
-//RRRR GGGG BBBB AAAA
-//xxww yyhh pT(L1)f{Uu} h(L2)l{Vv}
+//RRRR GGGG
+//T(L1){Uu} (L2){Vv}
 //{
 //Uu - 10 bit
 //f - 6 bit
@@ -36,8 +35,14 @@ uniform samplerBuffer pos;
 //p h l f 4*1=4 //12
 //T(L1){Uu} (L2){Vv} 2*2=4 //16
 
-layout(location = 0) in uvec4 qinfo;
+layout(location = 0) in uvec2 qinfo;
 layout(location = 1) in vec2 uv;
+layout(location = 2) in vec3 positions[4];
+//3
+//4
+//5
+layout(location = 6) in uvec4 utex;
+layout(location = 7) in uvec4 phlf;
 
 out vec2 UvPosition;
 flat out uint Layer;
@@ -47,22 +52,16 @@ out VS_OUT {
 	flat vec3 Color;
 } vs_out;
 
-void main()
-{
-// 	uint quad = uint(gl_InstanceID+gl_BaseInstanceARB)+uint(gl_VertexID)/uint(4);
-// 	uint vert = uint(gl_VertexID)%uint(4);
-// 	vec2 mul = vec2(vert&uint(1), vert>>uint(1));
-	uint quad = uint(gl_InstanceID+gl_BaseInstanceARB);
-	uint vert = uint(gl_VertexID);
-	gl_Position = projView * vec4(texelFetch(pos, int(vert+(quad*uint(4)))).rgb, 1.0);
+void main() {
+// 	uint vert = uint(gl_VertexID);
+	gl_Position = projView * vec4(positions[gl_VertexID], 1.0);
 
-	vec2 uv_start = vec2(qinfo.zw & uint(0x1F)) / 16.0;
-	vec2 uv_end = vec2((qinfo.zw >> uint(5)) & uint(0x1F)) / 16.0;
-	vec2 light = vec2((qinfo.zw >> uint(16)) & uint(0xF)) / 15.0;
+	vec2 uv_start = vec2(qinfo & uint(0x1F)) / 16.0;
+	vec2 uv_end = vec2((qinfo >> uint(5)) & uint(0x1F)) / 16.0;
+	vec2 light = vec2((qinfo >> uint(10)) & uint(0xF)) / 15.0;
 
-	vec4 tex = vec4((qinfo.xy >> uint(16)) & uint(0xFFFF), (qinfo.xy) & uint(0xFFFF)) / 1024.0;
-	uvec2 lf = uvec2((qinfo.zw >> uint(10)) & uint(0x3F));
-	float frames = float(lf.x);
+	vec4 tex = vec4(utex) / 1024.0;
+	float frames = float(phlf.w);
 	tex.w = tex.w / frames;
 	tex.y += trunc(mod(GlobalTime * 4.0f, frames)) * tex.w;
 
@@ -71,6 +70,6 @@ void main()
 
 	UvPosition = tex.xy + tex.zw*uv;
 	vs_out.Light = clamp(light.x + (light.y * DayTime), MinLightLevel, 1.0);
-	Layer = lf.y;
-	vs_out.Color = vec3(0.275, 0.63, 0.1) * ((qinfo.z>>20)&uint(1));
+	Layer = phlf.z;
+	vs_out.Color = vec3(0.275, 0.63, 0.1) * ((qinfo.x>>14)&uint(1));
 }

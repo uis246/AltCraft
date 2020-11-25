@@ -47,18 +47,35 @@ void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, co
 			data.verts.push_back(glm::vec3(toApply * pos) + isp.glm() + section.glm());
 		}
 //		uint16_t ph = (((isp.z<<4)|isp.x)<<8) | (isp.y);
-		uint32_t xw = (face.x << 16) | face.w;
-		uint32_t yh = (face.y << 16) | face.h;
+		uint32_t xy, wh, phlf;
+		{
+			uint16_t *xyp=reinterpret_cast<uint16_t*>(&xy),
+					*whp=reinterpret_cast<uint16_t*>(&wh);
+			uint16_t *x=xyp, *y=xyp+1, *w=whp, *h=whp+1;
+			*x = face.x;
+			*y = face.y;
+			*w = face.w;
+			*h = face.h;
 
-		uint32_t pTLfUu = (((isp.z<<4)|isp.x) << 24) | (face.tint<<20) | (block<<16) | (face.frames<<10) | face.Uu;
-		uint32_t hLlVv = (isp.y<<24) | (sky<<16) | (face.layer<<10) | face.Vv;
-		//5+5+4+4=18
-		//32-18=30-16=20-6=14
-		//14-8=10-4=6
-		data.quadInfo.push_back(xw);
-		data.quadInfo.push_back(yh);
-		data.quadInfo.push_back(pTLfUu);
-		data.quadInfo.push_back(hLlVv);
+			uint8_t *P=reinterpret_cast<uint8_t*>(&phlf),
+					*H=P+1, *L=P+2, *F=P+3;
+			*P = (isp.z<<4)|isp.x;
+			*H = isp.y;
+			*L = face.layer;
+			*F = face.frames;
+		}
+		uint32_t TLUuLVv;
+		{
+			uint16_t *TLUu=reinterpret_cast<uint16_t*>(&TLUuLVv), *LVv=TLUu+1;
+
+			*TLUu = (face.tint<<14) | (block<<10) | face.Uu;
+			*LVv = (sky<<10) | face.Vv;
+		}
+
+		data.quadInfo.push_back(xy);
+		data.quadInfo.push_back(wh);
+		data.quadInfo.push_back(phlf);
+		data.quadInfo.push_back(TLUuLVv);
 	}
 }
 
