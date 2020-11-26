@@ -127,7 +127,7 @@ void RendererWorld::ParseQeueueRemoveUnnecessary() {
 		bool skip = false;
 
 		for (size_t i = 0; i < RendererWorld::parsingBufferSize; i++) {
-			if (parsing[i].data.section && parsing[i].data.section->GetPosition() == vec && parsing[i].renderer.hash == section.GetHash()) {
+			if (parsing[i].data.section && parsing[i].data.section->GetPosition() == vec && (parsing[i].renderer.hash == section.GetHash() || parsing[i].parsing)) {
 				skip = true;
 				break;
 			}
@@ -506,8 +506,6 @@ void RendererWorld::PrepareRender() {
 		blockShader = reinterpret_cast<AssetShader*>(blockNode->asset.get())->shader.get();
 	blockShader->Activate();
 	blockShader->SetUniform("textureAtlas", 0);
-	blockShader->SetUniform("pos", 3);
-//	blockShader->SetUniform("quadInfo", 4);
 	blockShader->SetUniform("MinLightLevel", 0.2f);
 
 	TextureCoord sunTexture = AssetManager::GetTexture("/minecraft/textures/environment/sun");

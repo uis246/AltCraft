@@ -46,7 +46,6 @@ void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, co
 		for (const glm::vec4 &pos : poss) {
 			data.verts.push_back(glm::vec3(toApply * pos) + isp.glm() + section.glm());
 		}
-//		uint16_t ph = (((isp.z<<4)|isp.x)<<8) | (isp.y);
 		uint32_t xy, wh, phlf;
 		{
 			uint16_t *xyp=reinterpret_cast<uint16_t*>(&xy),

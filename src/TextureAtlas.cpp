@@ -86,26 +86,8 @@ TextureAtlas::TextureAtlas(std::vector<TextureData> &textures) {
 	//OpenGL
 	int mipLevelCount = 1;
 
-	//Create TBO
-	glGenBuffers(1, &this->tbo);
-	//Create 2 textures
-	//Texture atlas and texture coords
-	glGenTextures(2, this->textures);
-
-	uint32_t *coordBuffer = reinterpret_cast<uint32_t*>(alloca(texturesCount * 3 * sizeof(uint32_t)));
-	for (size_t i = 0; i < texturesCount; i++) {
-		TextureCoord *coord = &textureCoords[i];
-		coordBuffer[i*3] = (coord->pixelX<<16)|coord->pixelW;
-		coordBuffer[i*3 + 1] = (coord->pixelY<<16)|coord->pixelH;
-		coordBuffer[i*3 + 2] = (coord->layer<<16)|textures[i].frames;
-	}
-	//Fill texture coords
-	glBindTexture(GL_TEXTURE_BUFFER, this->textures[1]);
-	glBindBuffer(GL_TEXTURE_BUFFER, tbo);
-	glBufferData(GL_TEXTURE_BUFFER, texturesCount * 3 * sizeof(uint32_t), coordBuffer, GL_STATIC_DRAW);
-	glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32UI, tbo);
-
-	glCheckError();
+	//Texture atlas
+	glGenTextures(1, this->textures);
 
 	//Fill texture atlas
 	glBindTexture(GL_TEXTURE_2D_ARRAY, this->textures[0]);
@@ -120,7 +102,7 @@ TextureAtlas::TextureAtlas(std::vector<TextureData> &textures) {
 	//Uploading texture data
 	for (size_t i = 0; i < texturesCount; i++) {
 		size_t bytesPerLine = textureCoords[i].pixelW * 4;
-		for (int y = 0; y < textureCoords[i].pixelH / 2; y++) {
+		for (size_t y = 0; y < textureCoords[i].pixelH / 2; y++) {
 			int invY = textureCoords[i].pixelH - y - 1;
 			unsigned char *src = textures[i].data.data() + y * bytesPerLine;
 			unsigned char *dst = textures[i].data.data() + invY * bytesPerLine;

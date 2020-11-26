@@ -1,35 +1,13 @@
 #version 330 core
-#extension GL_ARB_shader_draw_parameters : require
-precision lowp float;
+precision mediump float;
+precision mediump int;
 
 uniform float GlobalTime;
 uniform float DayTime;
 uniform float MinLightLevel;
 uniform mat4 projView;
 
-//Section offset
-//section.xyz*16
-// uniform vec3 sectionOffset;
-
-//xxxx yyyy zzzz
-//3*4*4=12*4=48
-
 //Per quad info
-//RRRR GGGG
-//T(L1){Uu} (L2){Vv}
-//{
-//Uu - 10 bit
-//f - 6 bit
-//L1 - 4 bit
-//T - 1 bit
-//p -  8 bit
-//}3 free
-//{
-//Vv - 10 bit
-//l - 6 bit
-//L2 - 4 bit
-//h - 8 bit
-//}4 free
 
 //xx yy ww hh 4*2=8
 //p h l f 4*1=4 //12
@@ -52,24 +30,27 @@ out VS_OUT {
 	flat vec3 Color;
 } vs_out;
 
+//Intel SNB: VS vec4 shader: 55 instructions. 0 loops. 196 cycles. 0:0 spills:fills, 1 sends. Compacted 880 to 864 bytes (2%)
+
 void main() {
-// 	uint vert = uint(gl_VertexID);
 	gl_Position = projView * vec4(positions[gl_VertexID], 1.0);
 
-	vec2 uv_start = vec2(qinfo & uint(0x1F)) / 16.0;
-	vec2 uv_end = vec2((qinfo >> uint(5)) & uint(0x1F)) / 16.0;
-	vec2 light = vec2((qinfo >> uint(10)) & uint(0xF)) / 15.0;
+	vec4 subUV = vec4(
+		uvec4(qinfo, qinfo >> uint(5)) & uint(0x1F)
+		) / 16.0;
 
 	vec4 tex = vec4(utex) / 1024.0;
 	float frames = float(phlf.w);
-	tex.w = tex.w / frames;
+	tex.w /= frames;
 	tex.y += trunc(mod(GlobalTime * 4.0f, frames)) * tex.w;
 
-	tex.xy += uv_start * tex.zw;
-	tex.zw = (uv_end-uv_start) * tex.zw;
+	tex.xy += subUV.xy * tex.zw;
+	tex.zw = (subUV.zw-subUV.xy) * tex.zw;
 
 	UvPosition = tex.xy + tex.zw*uv;
-	vs_out.Light = clamp(light.x + (light.y * DayTime), MinLightLevel, 1.0);
 	Layer = phlf.z;
-	vs_out.Color = vec3(0.275, 0.63, 0.1) * ((qinfo.x>>14)&uint(1));
+
+	vec2 light = vec2((qinfo >> uint(10)) & uint(0xF)) / 15.0;
+	vs_out.Light = clamp(light.x + (light.y * DayTime), MinLightLevel, 1.0);
+	vs_out.Color = vec3(0.275, 0.63, 0.1) * (qinfo.x>>14);
 }
