@@ -133,7 +133,7 @@ struct Entity {
     double pitch = 0;
     double width = 1.0;
     double height = 1.0;
-    glm::vec3 renderColor;
+    glm::vec3 renderColor = glm::vec3(0, 0, 1);
     int entityType=0;
     EntityType type;
     bool isSolid = true;

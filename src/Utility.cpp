@@ -1,10 +1,11 @@
 #include "Utility.hpp"
+#include "Platform.hpp"
 
 #include <thread>
 
-#include <optick.h>
 #include <easylogging++.h>
 
+//NOTE: use glCheckError only in debugging
 GLenum glCheckError_(const char *file, int line) {
 	OPTICK_EVENT();
     GLenum errorCode;
@@ -32,8 +33,7 @@ GLenum glCheckError_(const char *file, int line) {
             case GL_INVALID_FRAMEBUFFER_OPERATION:
                 error = "INVALID_FRAMEBUFFER_OPERATION";
                 break;
-        }
-        static int t = 0;
+	}
         LOG(ERROR) << "OpenGL error: " << error << " at " << file << ":" << line;
     }
     return errorCode;

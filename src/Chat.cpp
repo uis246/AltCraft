@@ -89,9 +89,7 @@ Component RecurParseComponent(json j) {
 }
 
 Chat::Chat(const std::string &json) {
-	static const size_t s = sizeof(Component);
 	nlohmann::json j = nlohmann::json::parse(json);
-	volatile size_t f = s + 1;
 	component = RecurParseComponent(j);
 }
 
@@ -105,7 +103,7 @@ void RecurPlainTextAppend(const Component& component, std::string& str) {
 			str += "<";
 			RecurPlainTextAppend(component.with[0], str);
 			str += "> ";
-			for (int i = 1; i < component.with.size(); i++)
+			for (size_t i = 1; i < component.with.size(); i++)
 				RecurPlainTextAppend(component.with[i], str);
 		} else {
 			str += component.translate;

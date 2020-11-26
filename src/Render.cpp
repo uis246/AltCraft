@@ -2,7 +2,6 @@
 
 #include <imgui.h>
 #include <easylogging++.h>
-#include <optick.h>
 
 #include "imgui_impl_sdl_gl3.h"
 #include "Shader.hpp"
@@ -88,8 +87,8 @@ Render::~Render() {
 void Render::InitSdl(unsigned int WinWidth, unsigned int WinHeight, std::string WinTitle) {
     LOG(INFO) << "Creating window: " << WinWidth << "x" << WinHeight << " \"" << WinTitle << "\"";
 
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
-        throw std::runtime_error("SDL initalization failed: " + std::string(SDL_GetError()));
+	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+		throw std::runtime_error("SDL initalization failed: " + std::string(SDL_GetError()));
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -437,8 +436,8 @@ void Render::RenderGui() {
             "Player health: %.1f/%.1f",
             GetGameState()->GetPlayerStatus().health, 20.0f);
 
-        ImGui::Text(
-            "Selected block: %d %d %d : %.1f",
+	ImGui::Text(//NOTE: shold be selected block uint64?
+	    "Selected block: %lld %lld %lld : %.1f",
             selectionStatus.selectedBlock.x,
 			selectionStatus.selectedBlock.y,
 			selectionStatus.selectedBlock.z,

@@ -35,22 +35,22 @@ class Event {
 	std::shared_ptr<EventDataBase> data;
 
 public:
-	const size_t id;
+	mutable size_t id;
 
 	template<typename T>
 	Event(size_t eventId, const T &value) :
-		id(eventId),
-		data(std::make_shared<EventData<T>>(value)) {}
+		data(std::make_shared<EventData<T>>(value)),
+		id(eventId) {}
 
 	~Event() = default;
 
 	Event(const Event &other) = default;
 
-	Event &operator=(const Event &) = default;
+	Event& operator=(const Event &) = default;
 
 	Event(Event &&) = delete;
 
-	Event &operator=(Event &&) = delete;
+	Event& operator=(Event &&) = delete;
 
 	template<typename T>
 	const T& get() const {

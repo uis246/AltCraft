@@ -266,6 +266,8 @@ void GameState::UpdatePacket(std::shared_ptr<PacketCB> ptr) {
 		case JoinGame: {
 			auto packet = std::static_pointer_cast<PacketJoinGame>(ptr);
 			Entity entity;
+			//FIXME: player should be handled separately
+			entity.type = EntityType::Mob;
 			entity.entityId = packet->EntityId;
 			entity.width = 0.6;
 			entity.height = 1.8;

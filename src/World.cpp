@@ -2,7 +2,6 @@
 
 #include <bitset>
 #include <glm/glm.hpp>
-#include <optick.h>
 
 #include "Event.hpp"
 #include "DebugInfo.hpp"

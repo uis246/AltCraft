@@ -2,7 +2,6 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <optick.h>
 
 #include "DebugInfo.hpp"
 #include "Frustum.hpp"
@@ -315,7 +314,7 @@ RendererWorld::~RendererWorld() {
     }
     LOG(INFO) << "Total faces to render: " << faces;
     isRunning = false;
-    for (int i = 0; i < numOfWorkers; i++)
+    for (size_t i = 0; i < numOfWorkers; i++)
         workers[i].join();
     DebugInfo::renderSections = 0;
     DebugInfo::readyRenderer = 0;
@@ -359,7 +358,7 @@ void RendererWorld::Render(RenderState & renderState) {
 	entityShader->Activate();
 	entityShader->SetUniform("projection", projection);
 	entityShader->SetUniform("view", view);
-    glCheckError();
+	glCheckError();
 
     renderState.SetActiveVao(RendererEntity::GetVao());
     for (auto& it : entities) {
@@ -378,9 +377,9 @@ void RendererWorld::Render(RenderState & renderState) {
 			model = glm::scale(model,glm::vec3(1.01f,1.01f,1.01f));
 			entityShader->SetUniform("model", model);
 			entityShader->SetUniform("color", glm::vec3(0, 0, 0));
-			glCheckError();
 			glDrawArrays(GL_LINES, 0, 24);
         }
+	glCheckError();
     }
 
     //Render raycast hit
@@ -397,13 +396,12 @@ void RendererWorld::Render(RenderState & renderState) {
 				entityShader->SetUniform("color", glm::vec3(0.7f, 0, 0));
             else
 				entityShader->SetUniform("color", glm::vec3(0, 0, 0.7f));
-            glCheckError();
             glDrawArrays(GL_LINE_STRIP, 0, 36);
         }
+	glCheckError();
     }
 
 	glLineWidth(1.0);
-	glCheckError();
 
 	//Render sky
 	renderState.TimeOfDay = GetGameState()->GetTimeStatus().timeOfDay;
@@ -491,7 +489,6 @@ void RendererWorld::Render(RenderState & renderState) {
 		section.second.Render();
 		renderedFaces += section.second.numOfFaces;
 	}
-	glCheckError();
 	glBindVertexArray(0);
     this->culledSections = culledSections;
 	DebugInfo::renderFaces.store(renderedFaces, std::memory_order_relaxed);

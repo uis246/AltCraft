@@ -106,7 +106,7 @@ TextureAtlas::TextureAtlas(std::vector<TextureData> &textures) {
 			int invY = textureCoords[i].pixelH - y - 1;
 			unsigned char *src = textures[i].data.data() + y * bytesPerLine;
 			unsigned char *dst = textures[i].data.data() + invY * bytesPerLine;
-			for (int j = 0; j < bytesPerLine; j++) {
+			for (size_t j = 0; j < bytesPerLine; j++) {
 				std::swap(*(src + j), *(dst + j));
 			}
 		}
