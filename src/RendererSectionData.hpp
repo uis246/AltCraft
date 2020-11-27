@@ -23,7 +23,7 @@ struct SectionsData {
 	Section *north = nullptr;
 	Section *south = nullptr;
 
-	BlockId GetBlockId(const Vector &pos) const;
+	BlockId GetBlockId(const Vector &pos, bool locked = false) const;
 	
 	BlockLightness GetLight(const Vector &pos) const;
 

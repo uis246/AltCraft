@@ -100,7 +100,7 @@ Section::Section(Vector pos, unsigned char bitsPerBlock, std::vector<unsigned sh
 	std::atomic_thread_fence(std::memory_order_release);
 }
 
-BlockId Section::GetBlockId(Vector pos) const {
+BlockId Section::GetBlockId(Vector pos, bool locked) const {
 	if (!blocks)
 		return {0, 0};
 
@@ -109,8 +109,8 @@ BlockId Section::GetBlockId(Vector pos) const {
 
 	uint16_t value;
 
-
-	mutex.lock_shared();//Prevent expanding and use acquire memory orded
+	if (!locked)
+		mutex.lock_shared();//Prevent expanding and use acquire memory orded
 	if (bitsPerBlock <= 8) {//4 or 8
 		uint8_t *block = reinterpret_cast<uint8_t*>(blocks);//Make endianess independent
 		unsigned int realIndex = virtualIndex >> (3 - this->pow);
@@ -130,7 +130,8 @@ BlockId Section::GetBlockId(Vector pos) const {
 	} else {//16
 		value = blocks[virtualIndex];
 	}
-	mutex.unlock_shared();
+	if (!locked)
+		mutex.unlock_shared();
 
 
 	ret.id = value >> 4;

@@ -89,17 +89,18 @@ BlockFaces *GetInternalBlockModel(const BlockId& id, std::vector<std::pair<Block
 
 std::array<bool[FaceDirection::none], 4096> GetBlockVisibilityData(const SectionsData &sections, std::vector<std::pair<BlockId, BlockFaces*>> &idModels) {
 	std::array<bool[FaceDirection::none], 4096> arr;
+	sections.section->mutex.lock_shared();
 	for (int y = 0; y < 16; y++) {
 		for (int z = 0; z < 16; z++) {
 			for (int x = 0; x < 16; x++) {
 				Vector vec(x, y, z);
 
-				BlockId blockIdDown = sections.GetBlockId(vec + FaceDirectionVector[FaceDirection::down]);
-				BlockId blockIdUp = sections.GetBlockId(vec + FaceDirectionVector[FaceDirection::up]);
-				BlockId blockIdNorth = sections.GetBlockId(vec + FaceDirectionVector[FaceDirection::north]);
-				BlockId blockIdSouth = sections.GetBlockId(vec + FaceDirectionVector[FaceDirection::south]);
-				BlockId blockIdWest = sections.GetBlockId(vec + FaceDirectionVector[FaceDirection::west]);
-				BlockId blockIdEast = sections.GetBlockId(vec + FaceDirectionVector[FaceDirection::east]);
+				BlockId blockIdDown = sections.GetBlockId(vec + FaceDirectionVector[FaceDirection::down], true);
+				BlockId blockIdUp = sections.GetBlockId(vec + FaceDirectionVector[FaceDirection::up], true);
+				BlockId blockIdNorth = sections.GetBlockId(vec + FaceDirectionVector[FaceDirection::north], true);
+				BlockId blockIdSouth = sections.GetBlockId(vec + FaceDirectionVector[FaceDirection::south], true);
+				BlockId blockIdWest = sections.GetBlockId(vec + FaceDirectionVector[FaceDirection::west], true);
+				BlockId blockIdEast = sections.GetBlockId(vec + FaceDirectionVector[FaceDirection::east], true);
 
 				auto blockModelDown = GetInternalBlockModel(blockIdDown, idModels);
 				auto blockModelUp = GetInternalBlockModel(blockIdUp, idModels);
@@ -117,18 +118,21 @@ std::array<bool[FaceDirection::none], 4096> GetBlockVisibilityData(const Section
 			}
 		}
 	}
+	sections.section->mutex.unlock_shared();
 	return arr;
 }
 
 std::array<BlockId, 4096> SetBlockIdData(const SectionsData &sections) {
 	std::array<BlockId, 4096> blockIdData;
+	sections.section->mutex.lock_shared();
 	for (int y = 0; y < 16; y++) {
 		for (int z = 0; z < 16; z++) {
 			for (int x = 0; x < 16; x++) {
-				blockIdData[y * 256 + z * 16 + x] = sections.section->GetBlockId(Vector(x, y, z));
+				blockIdData[y * 256 + z * 16 + x] = sections.section->GetBlockId(Vector(x, y, z), true);
 			}
 		}
 	}
+	sections.section->mutex.unlock_shared();
 	return blockIdData;
 }
 
@@ -167,7 +171,7 @@ RendererSectionData ParseSection(const SectionsData &sections) {
 	return data;
 }
 
-BlockId SectionsData::GetBlockId(const Vector &pos) const {
+BlockId SectionsData::GetBlockId(const Vector &pos, bool locked) const {
 	if (pos.x < 0)
 		return east->GetBlockId(Vector(15, pos.y, pos.z));
 
@@ -186,7 +190,7 @@ BlockId SectionsData::GetBlockId(const Vector &pos) const {
 	if (pos.z > 15)
 		return north->GetBlockId(Vector(pos.x, pos.y, 0));
 
-	return section->GetBlockId(pos);
+	return section->GetBlockId(pos, locked);
 }
 
 BlockLightness SectionsData::GetLight(const Vector &pos) const {
