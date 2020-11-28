@@ -30,24 +30,25 @@ out VS_OUT {
 	flat vec3 Color;
 } vs_out;
 
-//Intel SNB: VS vec4 shader: 55 instructions. 0 loops. 196 cycles. 0:0 spills:fills, 1 sends. Compacted 880 to 864 bytes (2%)
+//Intel SNB: VS vec4 shader: 54 instructions. 0 loops. 194 cycles. 0:0 spills:fills, 1 sends. Compacted 864 to 848 bytes (2%)
 
 void main() {
 	gl_Position = projView * vec4(positions[gl_VertexID], 1.0);
 
-	vec4 subUV = vec4(
-		uvec4(qinfo, qinfo >> uint(5)) & uint(0x1F)
-		) / 16.0;
-
-	vec4 tex = vec4(utex) / 1024.0;
+	vec4 tex = vec4(utex) * 0.0009765625 /* /1024.0 */;
 	float frames = float(phlf.w);
 	tex.w /= frames;
 	tex.y += trunc(mod(GlobalTime * 4.0f, frames)) * tex.w;
 
-	tex.xy += subUV.xy * tex.zw;
-	tex.zw = (subUV.zw-subUV.xy) * tex.zw;
+	vec4 subUV = vec4(
+		uvec4(qinfo, qinfo >> uint(5)) & uint(0x1F)
+		) * 0.0625 /* /16.0 */;
 
-	UvPosition = tex.xy + tex.zw*uv;
+// 	tex.xy += subUV.xy * tex.zw;
+// 	tex.zw = subUV.zw * tex.zw * uv;
+// 	UvPosition = tex.xy + tex.zw;
+
+	UvPosition = tex.xy + subUV.xy*tex.zw + subUV.zw*tex.zw*uv;
 	Layer = phlf.z;
 
 	vec2 light = vec2((qinfo >> uint(10)) & uint(0xF)) / 15.0;

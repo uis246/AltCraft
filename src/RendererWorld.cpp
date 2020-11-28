@@ -356,8 +356,7 @@ void RendererWorld::Render(RenderState & renderState) {
 	if (entityNode->type==AssetTreeNode::ASSET_SHADER)
 		entityShader = reinterpret_cast<AssetShader*>(entityNode->asset.get())->shader.get();
 	entityShader->Activate();
-	entityShader->SetUniform("projection", projection);
-	entityShader->SetUniform("view", view);
+	entityShader->SetUniform("projView", projView);
 	glCheckError();
 
     renderState.SetActiveVao(RendererEntity::GetVao());
@@ -410,8 +409,7 @@ void RendererWorld::Render(RenderState & renderState) {
 	if (skyNode->type==AssetTreeNode::ASSET_SHADER)
 		skyShader = reinterpret_cast<AssetShader*>(skyNode->asset.get())->shader.get();
 	skyShader->Activate();
-	skyShader->SetUniform("projection", projection);
-	skyShader->SetUniform("view", view);
+	skyShader->SetUniform("projView", projection);
 	glm::mat4 model = glm::mat4(1.0);
 	model = glm::translate(model, GetGameState()->GetPlayer()->pos.glm());
 	const float scale = 1000000.0f;
