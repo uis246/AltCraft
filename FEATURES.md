@@ -1,12 +1,18 @@
 ## Implemented and planned features
 
+#### Protocol
+- [ ] NBT tags
+- [x] Compression
+    - [x] Decompression
+    - [ ] Compression itself
+
 #### Rendering
 - [ ] FOV changing
 - [x] Texture atlas
 - [x] Blocks
 	- [x] Models
 	- [x] Texturing
-- [ ] Entities
+- [x] Entities
 	- [ ] Models
 	- [ ] Texturing
 

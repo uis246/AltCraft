@@ -5,21 +5,13 @@ Current protocol version: [340](https://wiki.vg/index.php?title=Protocol&oldid=1
 ## [Features](FEATURES.md)
 #### Protocol
 - [x] Compression
-    - [x] Decompression
-    - [ ] Compression itself
 - [ ] Encryption
-- [ ] NBT tags
 - [ ] Inventory
 - [x] Multiple dimensions
 - [x] Plugin channels
 - Extensions
 	- [ ] Transperent protocol-level proxy
 	- [ ] FML protocol
-
-#### Client
-- [x] Rendering
-- [x] World editing
-- [ ] Sound
 
 ## Building
 1. Install C++ compiler, CMake 3.5, SDL2, SDL2_net(exclude Linux), libZLIB, Lua5 and OpenAL.
@@ -35,6 +27,7 @@ Current protocol version: [340](https://wiki.vg/index.php?title=Protocol&oldid=1
 >Windows: Visual Studio 2017 and vcpkg.
 2. Generate project-files for your compiler by CMake.
 ```
+    git submodule update --init
     mkdir build && cd build
     cmake ..
 ```
