@@ -1,5 +1,6 @@
 #include "Chunk.hpp"
 #include "Event.hpp"
+#include "Packet.hpp"
 
 #include <easylogging++.h>
 

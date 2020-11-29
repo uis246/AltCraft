@@ -6,7 +6,7 @@
 #include "Vector.hpp"
 #include "Platform.hpp"
 
-class BlockInfo;
+struct BlockInfo;
 
 struct Plugin {
 	int errors;

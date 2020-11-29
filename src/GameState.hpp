@@ -3,7 +3,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <mutex>
 
 #include <glm/mat4x4.hpp>
 
@@ -12,8 +11,8 @@
 #include "Window.hpp"
 #include "Platform.hpp"
 
-class Packet;
-class Entity;
+struct Packet;
+struct Entity;
 
 struct AC_API TimeStatus {
 	double interpolatedTimeOfDay = 0;

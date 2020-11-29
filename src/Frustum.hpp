@@ -8,9 +8,9 @@ class Frustum {
         LEFT,
         BOTTOM,
         TOP,
-		FAR,
+	FAR,
         NEAR,
-		SIDE_COUNT,
+	SIDE_COUNT,
     };
 
 	glm::vec4 planes[SIDE_COUNT];

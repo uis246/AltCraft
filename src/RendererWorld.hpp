@@ -1,8 +1,6 @@
 #pragma once
 
-#include <map>
 #include <vector>
-#include <mutex>
 #include <queue>
 #include <memory>
 #include <thread>
@@ -11,8 +9,8 @@
 #include "RendererEntity.hpp"
 #include "RendererSky.hpp"
 #include "RendererSectionData.hpp"
-#include "Chunk.hpp"
 
+class Chunk;
 class Frustum;
 class GameState;
 class Texture;

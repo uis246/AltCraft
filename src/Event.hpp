@@ -2,9 +2,7 @@
 
 #include <typeinfo>
 #include <memory>
-#include <functional>
 #include <queue>
-#include <map>
 #include <list>
 #include <mutex>
 

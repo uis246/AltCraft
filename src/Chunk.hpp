@@ -3,7 +3,10 @@
 #include <memory>
 
 #include "Section.hpp"
-#include "Packet.hpp"
+
+class StreamInput;
+struct PacketChunkData;
+struct PacketMultiBlockChange;
 
 class Chunk{
 	uint8_t biome[256];

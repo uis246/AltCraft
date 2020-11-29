@@ -334,6 +334,8 @@ void GameState::UpdatePacket(std::shared_ptr<PacketCB> ptr) {
 			break;
 		case OpenSignEditor:
 			break;
+		case CraftRecipeResponse:
+			break;
 		case PlayerAbilitiesCB:
 			break;
 		case CombatEvent:

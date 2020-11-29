@@ -24,6 +24,8 @@
 #define OPTICK_SET_STATE_CHANGED_CALLBACK(CALLBACK)
 #endif
 
+#define AC_THREAD_SET_NAME(name) OPTICK_THREAD(name)
+
 #ifdef _WIN32
 #	define AC_API __declspec(dllexport)
 #	define AC_INTERNAL
@@ -39,9 +41,13 @@
 
 #ifdef __linux__
 #	include <pthread.h>
+#	undef AC_THREAD_SET_NAME
 #	define AC_THREAD_SET_NAME(name) OPTICK_THREAD(name);pthread_setname_np(pthread_self(), name)
-#else
-#	define AC_THREAD_SET_NAME(name) OPTICK_THREAD(name)
+#endif
+
+#if USE_SDT
+//TODO
+#	include <sys/sdt.h>
 #endif
 
 #if defined(__M_IX86)||defined(__i386__)||defined(__amd64__)||defined(_M_AMD64)||defined(__arm__)

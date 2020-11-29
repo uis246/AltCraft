@@ -1,7 +1,5 @@
 #pragma once
 
-#include <map>
-#include <queue>
 #include <memory>
 #include <vector>
 #include <list>
@@ -12,13 +10,12 @@
 #include "Block.hpp"
 #include "Vector.hpp"
 #include "Chunk.hpp"
-#include "Section.hpp"
 #include "Platform.hpp"
 
-class PacketChunkData;
-class PacketBlockChange;
-class PacketMultiBlockChange;
-class PacketUnloadChunk;
+struct PacketChunkData;
+struct PacketBlockChange;
+struct PacketMultiBlockChange;
+struct PacketUnloadChunk;
 class StreamInput;
 
 struct RaycastResult {
