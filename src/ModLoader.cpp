@@ -5,9 +5,6 @@
 #include <easylogging++.h>
 #include <nlohmann/json.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#define STBI_NO_STDIO
-#define STB_IMAGE_IMPLEMENTATION
-#define STBI_ONLY_PNG
 #include <stb_image.h>
 
 static std::vector<std::shared_ptr<ModLoader::Mod>> mods;
