@@ -81,6 +81,7 @@ public:
 
 class StreamROBuffer : public StreamInput {
 	std::vector<uint8_t> bufferVector;
+
 public:
 	StreamROBuffer(uint8_t *data, size_t size);
 	StreamROBuffer(size_t size);
@@ -90,8 +91,7 @@ public:
 
 class StreamWOBuffer : public StreamOutput {
 	std::vector<uint8_t> bufferVector;
+
 public:
 	StreamWOBuffer(size_t size, size_t offset = 0);
-
-	size_t GetReadedLength();
 };

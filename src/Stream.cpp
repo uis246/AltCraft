@@ -352,7 +352,3 @@ StreamWOBuffer::StreamWOBuffer(size_t size, size_t offset) : bufferVector(size) 
 	this->position = offset;
 	buffer = bufferVector.data();
 }
-
-size_t StreamWOBuffer::GetReadedLength() {
-	return position;
-}

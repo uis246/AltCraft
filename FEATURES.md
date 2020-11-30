@@ -2,9 +2,6 @@
 
 #### Protocol
 - [ ] NBT tags
-- [x] Compression
-    - [x] Decompression
-    - [ ] Compression itself
 
 #### Rendering
 - [ ] FOV changing

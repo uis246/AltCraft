@@ -89,14 +89,43 @@ void Network::Connect(unsigned char *buffPtr, size_t buffLen) {
 
 void Network::SendPacket(PacketSB &packet, int compressionThreshold, bool more) {
 	uint32_t len = packet.GetLen() + VarIntLen(packet.GetPacketId());
-	if (compressionThreshold >= 0) {
-//		FIXME: implement packet compression
-//		if (len < compressionThreshold)
-		StreamWOBuffer buffer((len + VarIntLen(0))+VarIntLen(len + VarIntLen(0)));
+	if (compressionThreshold >= 0) { //If compression enabled
+		uint32_t header_size = VarIntLen(len + VarIntLen(0)) + VarIntLen(0);
+
+		//Prepare packet without compression
+		StreamWOBuffer buffer(len + header_size);
 		buffer.WriteVarInt(len + VarIntLen(0));
 		buffer.WriteVarInt(0);
 		buffer.WriteVarInt(packet.GetPacketId());
 		packet.ToStream(&buffer);
+
+		if (len > (unsigned int)compressionThreshold) {
+			StreamWOBuffer compressed(10 + len);
+
+			//Compress
+			size_t compressed_len = len;
+			int ret = compress2(compressed.buffer + 10, &compressed_len, buffer.buffer + header_size, len, 9);
+			switch (ret) {
+				case Z_BUF_ERROR://Deflated buffer bigger than inflated
+					compressed_len = 0;
+				case Z_OK:
+					break;
+				default:
+					throw std::runtime_error("Zlib decompression error: " + std::to_string(ret));
+			}
+			header_size = VarIntLen(compressed_len + VarIntLen(len)) + VarIntLen(len);
+			compressed.position = 10 - header_size;
+
+			//Send compressed compressed < uncompressed
+			if (compressed_len && compressed_len + header_size < len) {//This is wrong, I know. Let's try to avoid server decompression overhead.
+				compressed.WriteVarInt(compressed_len + VarIntLen(len));
+				compressed.WriteVarInt(len);
+				socket->SendData(compressed.buffer + 10 - header_size, header_size + compressed_len, more);
+				return;
+			}
+			//Send uncompressed otherwise
+		}
+
 		socket->SendData(buffer.buffer, buffer.size, more);
 	} else {
 		StreamWOBuffer buffer(len+VarIntLen(len));
