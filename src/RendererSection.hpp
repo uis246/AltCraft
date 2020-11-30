@@ -15,9 +15,9 @@ class RendererSection {
 		BUFCOUNT
 	};
 	GLuint vertexarray = 0;
-	GLuint buffers[BUFCOUNT] = { 0 };
-	GLsizeiptr bufsizes[BUFCOUNT] = { 0 };
-	
+	GLuint VBO = 0;
+	GLsizeiptr bufsize = 0;
+
 	static GLuint VboUvs;
 
 	size_t hash;
