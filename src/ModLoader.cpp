@@ -195,8 +195,6 @@ void ModLoader::ParseAssetBlockModel(AssetTreeNode &node) noexcept {
 	if (modelData.find("ambientocclusion") != modelData.end())
 		model.AmbientOcclusion = modelData["ambientocclusion"].get<bool>();
 
-	//models.Display
-
 	if (modelData.find("textures") != modelData.end()) {
 		for (nlohmann::json::iterator texture = modelData["textures"].begin(); texture != modelData["textures"].end(); ++texture) {
 			model.Textures[texture.key()] = texture.value().get<std::string>();
@@ -223,7 +221,7 @@ void ModLoader::ParseAssetBlockModel(AssetTreeNode &node) noexcept {
 				element.rotationOrigin = rotOrig;
 				element.rotationAxis = (it["rotation"]["axis"].get<std::string>() == "x") ? BlockModel::ElementData::Axis::x : ((it["rotation"]["axis"].get<std::string>() == "y") ? BlockModel::ElementData::Axis::y : BlockModel::ElementData::Axis::z);
 				if (it["rotation"].find("angle") != it["rotation"].end())
-					element.rotationAngle = it["rotation"]["angle"].get<int>();
+					element.rotationAngle = it["rotation"]["angle"].get<float>();
 
 				if (it["rotation"].find("rescale") != it["rotation"].end())
 					element.rotationRescale = it["rotation"]["rescale"].get<bool>();
@@ -256,9 +254,12 @@ void ModLoader::ParseAssetBlockModel(AssetTreeNode &node) noexcept {
 					uv.y1 = face["uv"][1];
 					uv.x2 = face["uv"][2];
 					uv.y2 = face["uv"][3];
+					//TODO: make normal uv instead this dirty hack
+					uv.y1 = 16 - uv.y1;
+					uv.y2 = 16 - uv.y2;
 					faceData.uv = uv;
 				} else {
-					faceData.uv = {0, 0, 16, 16};
+					faceData.uv = {0, 16, 16, 0};
 				}
 
 				FaceDirection cullface = FaceDirection::none;

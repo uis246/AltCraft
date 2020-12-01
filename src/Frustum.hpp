@@ -1,6 +1,8 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
 
 class Frustum {
     enum FrustumSide {
@@ -19,10 +21,6 @@ public:
 	Frustum(const glm::mat4 &vpMat);
 
 	~Frustum() = default;
-
-	inline static float GetDistanceToPoint(const glm::vec4 &plane, const glm::vec3 &pos) {
-		return plane.x * pos.x + plane.y * pos.y + plane.z * pos.z + plane.w;
-	}
 
 	bool TestPoint(const glm::vec3 &pos);
 

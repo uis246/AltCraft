@@ -87,7 +87,7 @@ struct BlockModel {
             y,
             z,
         } rotationAxis = Axis::x;
-        int rotationAngle = 0;
+	float rotationAngle = 0;
         bool rotationRescale = false;
 
         bool shade = true;

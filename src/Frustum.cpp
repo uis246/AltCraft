@@ -1,5 +1,9 @@
 #include "Frustum.hpp"
 
+inline static float GetDistanceToPoint(const glm::vec4 &plane, const glm::vec3 &pos) {
+	return plane.x * pos.x + plane.y * pos.y + plane.z * pos.z + plane.w;
+}
+
 Frustum::Frustum(const glm::mat4 &vpMat) {
 	planes[RIGHT] = glm::vec4(
 		vpMat[0][3] - vpMat[0][0],

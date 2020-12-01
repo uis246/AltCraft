@@ -53,14 +53,11 @@ endif()
 
 #Configure easlylogging++
 set(LOGGER_DEFINITIONS "-DELPP_THREAD_SAFE -DELPP_FEATURE_PERFORMANCE_TRACKING")
-if (LINUX)
-    set(LOGGER_DENITIONS "${LOGGER_DEFINITIPNS} -DELPP_FEATURE_CRASH_LOG -DELPP_STL_LOGGING")
-endif ()
-add_definitions(${LOGGER_DEFINITIONS} -D_USE_MATH_DEFINES)
 
 #Set compiler's flags and setup platfrom-dependent libraries
 if(CMAKE_COMPILER_IS_GNUCXX)
-    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -no-pie")
+    set(LOGGER_DENITIONS "${LOGGER_DEFINITIPNS} -DELPP_FEATURE_CRASH_LOG")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -no-pie")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -Wall -pedantic -Wextra -Wno-error=unused-parameter -fdata-sections -ffunction-sections -Wl,--gc-sections -fvisibility=hidden")
     set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG")
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
@@ -78,6 +75,8 @@ if(MSVC AND CMAKE_BUILD_TYPE MATCHES Release)
 	target_compile_definitions(AltCraft PRIVATE USE_SDL_MAIN)
 	set_target_properties(AltCraft PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
 endif(MSVC AND CMAKE_BUILD_TYPE MATCHES Release)
+
+add_definitions(${LOGGER_DEFINITIONS} -D_USE_MATH_DEFINES)
 
 set(AUDIO_LIBRARY "OpenAL" CACHE STRING "Audio API")
 set_property(CACHE AUDIO_LIBRARY PROPERTY STRINGS "OpenAL")

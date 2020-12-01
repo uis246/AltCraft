@@ -9,10 +9,10 @@
 static constexpr GLsizei stride = (4 * sizeof(uint32_t)) + (4 * 3 * sizeof(GLfloat));
 
 static const GLfloat uv_coords[] = {
-	0.f, 0.f,
-	1.f, 0.f,
 	0.f, 1.f,
-	1.f, 1.f
+	1.f, 1.f,
+	0.f, 0.f,
+	1.f, 0.f
 };
 
 GLuint RendererSection::VboUvs = 0;

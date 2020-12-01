@@ -1,7 +1,6 @@
 #include "World.hpp"
 
 #include <bitset>
-#include <glm/glm.hpp>
 
 #include "Event.hpp"
 #include "DebugInfo.hpp"

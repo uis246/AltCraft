@@ -1,8 +1,5 @@
 #include "Shader.hpp"
 
-#include <fstream>
-#include <sstream>
-
 #include <easylogging++.h>
 
 #include "Utility.hpp"

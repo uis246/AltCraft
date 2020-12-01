@@ -189,10 +189,10 @@ void ParseBlockModels() {
 				glm::mat4 rotationMat = glm::mat4(1.0);
 				rotationMat = glm::translate(rotationMat, rotateOrigin.glm());
 
-				rotationMat = glm::rotate(rotationMat, glm::radians((float)element.rotationAngle), *targetAxis);
+				rotationMat = glm::rotate(rotationMat, glm::radians(element.rotationAngle), *targetAxis);
 				if (element.rotationRescale) {
 					glm::vec3 scaleFactor{ 1.0f,1.0f,1.0f };
-					double coef = 1.0f / cos(glm::radians((double)element.rotationAngle));
+					double coef = 1.0f / cos(glm::radians(element.rotationAngle));
 					switch (element.rotationAxis) {
 					case BlockModel::ElementData::Axis::x:
 						scaleFactor.y *= coef;
