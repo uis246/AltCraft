@@ -144,6 +144,7 @@ void LoadScripts() {
 }
 
 
+//TODO: reimplement model meshing
 void ParseBlockModels() {
 	std::string textureName;
 
@@ -152,7 +153,13 @@ void ParseBlockModels() {
 			return;
 
 		BlockModel &model = reinterpret_cast<AssetBlockModel*>(node.asset.get())->blockModel;
-		for (const auto& element : model.Elements) {
+		for (const BlockModel::ElementData& element : model.Elements) {
+			static const glm::vec4 poss[] = {
+				{0, 0, 0, 1},
+				{1, 0, 0, 1},
+				{1, 0, 1, 1},
+				{0, 0, 1, 1},
+			};
 			Vector t = element.to - element.from;
 			VectorF elementSize(VectorF(t.x, t.y, t.z) / 16.0f);
 			VectorF elementOrigin(VectorF(element.from.x, element.from.y, element.from.z) / 16.0f);
@@ -257,7 +264,12 @@ void ParseBlockModels() {
 				default:
 					break;
 				}
-				parsedFace.transform = faceTransform;
+
+
+				parsedFace.vertices[0] = faceTransform * poss[0];
+				parsedFace.vertices[1] = faceTransform * poss[1];
+				parsedFace.vertices[2] = faceTransform * poss[2];
+				parsedFace.vertices[3] = faceTransform * poss[3];
 				uint16_t textureId, frames;
 				textureName = face.second.texture;
 				if (model.Textures.empty()) {

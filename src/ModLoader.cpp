@@ -4,14 +4,13 @@
 
 #include <easylogging++.h>
 #include <nlohmann/json.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <stb_image.h>
 
 static std::vector<std::shared_ptr<ModLoader::Mod>> mods;
 
 void ModLoader::LoadMod(AssetTreeNode &node) noexcept {
 	for (auto& it : node.childs) {
-		if		(it->name == "code")
+		if	(it->name == "code")
 			LoadCode(*it);
 
 		else if	(it->name == "shaders")

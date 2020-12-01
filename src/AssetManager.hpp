@@ -7,9 +7,6 @@
 #include <memory>
 
 #include <GL/glew.h>
-#include <glm/vec4.hpp>
-#include <glm/vec3.hpp>
-#include <glm/mat4x4.hpp>
 
 #include "Vector.hpp"
 #include "Block.hpp"
@@ -38,7 +35,7 @@ static const Vector FaceDirectionVector[] = {
 
 struct ParsedFace {
 	FaceDirection visibility;
-	glm::mat4 transform;
+	glm::vec3 vertices[4];
 	uint16_t textureId;
 	uint16_t Uu, Vv;//10-bit
 	uint16_t x, y, w, h;

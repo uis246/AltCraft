@@ -14,14 +14,7 @@ inline const BlockId& GetBlockId(int x, int y, int z, const std::array<BlockId, 
 	return blockIdData[y * 256 + z * 16 + x];
 }
 
-static const glm::vec4 poss[] = {
-	{0, 0, 0, 1},
-	{0, 0, 1, 1},
-	{1, 0, 0, 1},
-	{1, 0, 1, 1}
-};
-
-void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, const Vector &isp, const Vector &section, bool visibility[FaceDirection::none], BlockLightness light, BlockLightness skyLight) {
+void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, const Vector &isp, const glm::vec3 &offset, bool visibility[FaceDirection::none], BlockLightness light, BlockLightness skyLight) {
 	for (const auto &face : model.faces) {
 		uint8_t block = _max(light.face[0], light.face[1], light.face[2], light.face[3], light.face[4], light.face[5]);
 		uint8_t sky = _max(skyLight.face[0], skyLight.face[1], skyLight.face[2], skyLight.face[3], skyLight.face[4], skyLight.face[5]);
@@ -42,10 +35,11 @@ void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, co
 				continue;
 		}
 
-		glm::mat4 toApply = model.transform * face.transform;
-		for (const glm::vec4 &pos : poss) {
-			data.verts.push_back(glm::vec3(toApply * pos) + isp.glm() + section.glm());
-		}
+		//Reorder vertices
+		data.verts.push_back(glm::vec3(model.transform * glm::vec4(face.vertices[0], 1)) + offset);
+		data.verts.push_back(glm::vec3(model.transform * glm::vec4(face.vertices[3], 1)) + offset);
+		data.verts.push_back(glm::vec3(model.transform * glm::vec4(face.vertices[1], 1)) + offset);
+		data.verts.push_back(glm::vec3(model.transform * glm::vec4(face.vertices[2], 1)) + offset);
 		uint32_t xy, wh, phlf;
 		{
 			uint16_t *xyp=reinterpret_cast<uint16_t*>(&xy),
@@ -161,7 +155,7 @@ RendererSectionData ParseSection(const SectionsData &sections) {
 				BlockLightness skyLight = sections.GetSkyLight(vec);
 
 				BlockFaces *model = GetInternalBlockModel(block, idModels);
-				AddFacesByBlockModel(data, *model, vec, data.sectionPos * 16, blockVisibility[y * 256 + z * 16 + x], light, skyLight);
+				AddFacesByBlockModel(data, *model, vec, data.sectionPos * 16 + vec, blockVisibility[y * 256 + z * 16 + x], light, skyLight);
 			}
 		}
 	}

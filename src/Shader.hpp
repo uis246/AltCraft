@@ -5,13 +5,12 @@
 #include <string>
 
 #include <GL/glew.h>
-#include <glm/glm.hpp>
+//TODO: use Vector.hpp
 #include <glm/gtc/type_ptr.hpp>
 
 class Shader {
 	std::map<std::string, GLint> uniforms;
 	GLuint program = 0;
-
 
 public:
 	Shader(const Shader &) = delete;
