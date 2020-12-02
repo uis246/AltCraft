@@ -27,6 +27,7 @@ public:
 	mutable std::shared_mutex mutex;
 
 	Section(Vector pos, unsigned char bitsPerBlock, std::vector<unsigned short> palette, std::vector<uint8_t> blockData, const std::vector<unsigned char> &lightData, const std::vector<unsigned char> &skyData);
+	Section(Vector pos, bool hasSkyLight);
 	~Section();
     
 	Section() = default;

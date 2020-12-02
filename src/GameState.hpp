@@ -103,7 +103,7 @@ public:
 		return player;
 	}
 
-	AC_API inline const World &GetWorld() const {
+	AC_API inline World &GetWorld() {
 		return world;
 	}
 

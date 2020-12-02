@@ -52,7 +52,7 @@ void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, co
 
 			uint8_t *P=reinterpret_cast<uint8_t*>(&phlf),
 					*H=P+1, *L=P+2, *F=P+3;
-			*P = (isp.z<<4)|isp.x;
+			*P = (isp.z<<4)|isp.x;//NOTE: or store biomeid
 			*H = isp.y;
 			*L = face.layer;
 			*F = face.frames;

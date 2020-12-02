@@ -38,7 +38,7 @@ AC_API void RegisterNewDimension(int dimensionId, Dimension newDimension);
 AC_API void RegisterNewBiome(int dimensionId, Biome newBiome);
 
 class World {
-    int dimension = 0;
+	int dimension = 0;
 
 	std::map<Vector2I32, std::shared_ptr<Chunk>> chunks;
 
@@ -50,6 +50,7 @@ class World {
 
 public:
 
+	static bool dirtysectionslist;//Do not reset
 	World() = default;
 
 	World(int dimensionId);
@@ -64,7 +65,7 @@ public:
 
     bool isPlayerCollides(double X, double Y, double Z) const;
 
-    std::vector<Vector> GetSectionsList() const;
+    std::vector<Vector> GetSectionsList();
 
 	const std::shared_ptr<Chunk> GetChunkPtr(Vector2I32 chunkPos) const;
     const Section &GetSection(Vector sectionPos) const;
@@ -88,10 +89,6 @@ public:
 	AC_API BlockId GetBlockId(Vector pos) const;
 
 	AC_API void SetBlockId(Vector pos, BlockId block);
-
-    void SetBlockLight(Vector pos, unsigned char light);
-
-    void SetBlockSkyLight(Vector pos, unsigned char light);
 
     const Section *GetSectionPtr(Vector position) const;
 

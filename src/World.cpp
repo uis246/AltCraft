@@ -9,6 +9,7 @@
 
 static std::map<int, Dimension> registeredDimensions;
 static std::map<int, Biome> registeredBiomes;
+bool World::dirtysectionslist = false;
 
 void RegisterNewDimension(int dimensionId, Dimension newDimension) {
 	registeredDimensions[dimensionId] = newDimension;
@@ -32,7 +33,7 @@ void World::ParseChunkData(std::shared_ptr<PacketChunkData> packet) {
 	if (it != chunks.end()) {
 		chunk = it->second;
 		if (packet->GroundUpContinuous)
-			LOG(ERROR) << "New chunk not created " << chunkPosition << " potential memory leak";
+			LOG(ERROR) << "New chunk " << chunkPosition << " not created. Potential memory leak";
 	} else {
 		chunk = std::make_shared<Chunk>(Vector2I32(packet->ChunkX, packet->ChunkZ), registeredDimensions[dimension].skylight);
 		chunks.insert(std::make_pair(chunkPosition, chunk));
@@ -40,7 +41,7 @@ void World::ParseChunkData(std::shared_ptr<PacketChunkData> packet) {
 	chunk->ParseChunk(packet.get());
 
 	if (packet->GroundUpContinuous)
-		UpdateChunkSectionsList();
+		dirtysectionslist = true;
 
 	for (int i = 0; i < 16; i++)
 		if (bitmask[i])
@@ -49,7 +50,9 @@ void World::ParseChunkData(std::shared_ptr<PacketChunkData> packet) {
 
 }
 
-std::vector<Vector> World::GetSectionsList() const {
+std::vector<Vector> World::GetSectionsList() {
+	if (dirtysectionslist)
+		UpdateChunkSectionsList();
 	return sectionsList;
 }
 
@@ -254,8 +257,7 @@ void World::ParseChunkData(std::shared_ptr<PacketBlockChange> packet) {
 
     Vector sectionPos(std::floor(packet->Position.x / 16.0),
                       std::floor(packet->Position.y / 16.0),
-                      std::floor(packet->Position.z / 16.0));
-    PUSH_EVENT("ChunkChanged", sectionPos);
+		      std::floor(packet->Position.z / 16.0));
 }
 
 void World::ParseChunkData(std::shared_ptr<PacketMultiBlockChange> packet) {
@@ -276,9 +278,10 @@ void World::ParseChunkData(std::shared_ptr<PacketUnloadChunk> packet) {
 		return;
 	chunk->second->Unload();
 	chunks.erase(pos);
-	UpdateChunkSectionsList();
+	dirtysectionslist = true;
 }
 
+//TODO: use chunk list instead section list
 void World::UpdateChunkSectionsList() {
 	sectionsList.clear();
 	for (auto& it : chunks) {
@@ -319,14 +322,6 @@ void World::SetBlockId(Vector pos, BlockId block) {
 	std::shared_ptr<Chunk> chunk = it->second;
 
 	chunk->SetBlockId(blockPos, block);
-}
-
-void World::SetBlockLight(Vector pos, unsigned char light) {
-
-}
-
-void World::SetBlockSkyLight(Vector pos, unsigned char light) {
-
 }
 
 const Section *World::GetSectionPtr(Vector position) const {

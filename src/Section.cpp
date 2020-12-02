@@ -27,11 +27,23 @@ void Section::CalculateHash() const {
     hash =  std::hash<std::string>{}(str);
 }
 
+Section::Section(Vector pos, bool hasSkyLight) {
+	this->bitsPerBlock = 4, this->pow = 2;
+	this->worldPosition = pos;
+	size_t sz = 16*16*16/2;
+	this->blocks = reinterpret_cast<uint16_t*>(malloc(sz));
+	palette.push_back(0);
+	memset(this->blocks, 0, sz);
+	sz = hasSkyLight ? 2048 : 4096;
+	light = reinterpret_cast<struct lightData*>(malloc(sz));
+	memset(this->light, 0, sz);
+}
+
 Section::Section(Vector pos, unsigned char bitsPerBlock, std::vector<unsigned short> palette, std::vector<uint8_t> blockData, const std::vector<unsigned char> &lightData, const std::vector<unsigned char> &skyData)
 	: hasSkyLight(!skyData.empty()) {
 	//Align blocks
 	if (bitsPerBlock < 4) {
-		LOG(ERROR) << "bitsPerBlock < 4 for chunk " << pos;
+		LOG(ERROR) << "bitsPerBlock < 4 for section " << pos;
 		return;
 	} else if (bitsPerBlock == 4)
 		this->bitsPerBlock = 4, this->pow = 2;
@@ -40,11 +52,11 @@ Section::Section(Vector pos, unsigned char bitsPerBlock, std::vector<unsigned sh
 	else if (bitsPerBlock <= 16)
 		this->bitsPerBlock = 16, this->pow = 4;
 	else {
-		LOG(ERROR) << "bitsPerBlock > 16 for chunk " << pos;
+		LOG(ERROR) << "bitsPerBlock > 16 for section " << pos;
 		return;
 	}
 
-    this->worldPosition = pos;
+	this->worldPosition = pos;
 	this->palette = std::move(palette);
 	size_t sz = (16*16*16/2) << (this->pow - 2);
 	this->blocks = reinterpret_cast<uint16_t*>(malloc(sz));

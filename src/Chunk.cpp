@@ -1,6 +1,7 @@
 #include "Chunk.hpp"
 #include "Event.hpp"
 #include "Packet.hpp"
+#include "World.hpp"
 
 #include <easylogging++.h>
 
@@ -13,11 +14,8 @@ void Chunk::ParseChunk(PacketChunkData *packet) {
 	std::bitset<16> bitmask(static_cast<uint16_t>(packet->PrimaryBitMask));
 	for (unsigned char i = 0; i < 16; i++) {
 		if (bitmask[i]) {
-			std::unique_ptr<Section> *section = &sections[i];
-			if (!packet->GroundUpContinuous && !*section)
-				LOG(WARNING) << "Chunk updating empty section";
-
-			section->reset(ParseSection(&chunkData, i));
+			//FIXME: force update of neighbour section
+			sections[i].reset(ParseSection(&chunkData, i));
 		}
 	}
 	if (packet->GroundUpContinuous) {
@@ -25,7 +23,7 @@ void Chunk::ParseChunk(PacketChunkData *packet) {
 	}
 }
 
-static void add(Vector section, std::vector<Vector> *changedForce){
+inline static void add(Vector section, std::vector<Vector> *changedForce){
 	if (std::find(changedForce->begin(), changedForce->end(), section) == changedForce->end())
 		changedForce->push_back(section);
 }
@@ -43,9 +41,9 @@ void Chunk::UpdateBlock(Vector blockPos, std::vector<Vector> *changedForce) {
 	else if (blockPos.x == 15)
 		x = {sectionPos + Vector(1, 0, 0), true};
 
-	if (blockPos.y == 0)
+	if (blockPos.y % 16 == 0)
 		y = {sectionPos + Vector(0, -1, 0), true};
-	else if (blockPos.y == 15)
+	else if (blockPos.y % 16 == 15)
 		y = {sectionPos + Vector(0, 1, 0), true};
 
 	if (blockPos.z == 0)
@@ -62,13 +60,13 @@ void Chunk::UpdateBlock(Vector blockPos, std::vector<Vector> *changedForce) {
 }
 
 void Chunk::ParseChunkData(PacketMultiBlockChange *packet) {
-	std::vector<Vector> changedSections, changedForce;
+	std::vector<Vector> changedForce;
+	std::vector<uint8_t> changedSections;
 	for (auto& it : packet->Records) {
 		int x = (it.HorizontalPosition >> 4 & 15);
 		uint8_t y = it.YCoordinate;
 		int z = (it.HorizontalPosition & 15);
 
-		Vector worldPos(x, y, z);
 		uint8_t h = y / 16;
 
 		Section *section = sections[h].get();
@@ -84,13 +82,12 @@ void Chunk::ParseChunkData(PacketMultiBlockChange *packet) {
 
 		if (std::find(changedSections.begin(), changedSections.end(), h) == changedSections.end())
 			changedSections.push_back(h);
-
 	}
 
-	for (auto& sectionPos : changedSections)
-		PUSH_EVENT("ChunkChanged", sectionPos);
+	for (uint8_t height : changedSections)
+		PUSH_EVENT("ChunkChanged", Vector(pos.x, height, pos.z));
 
-	for (auto& sectionPos : changedForce)
+	for (Vector& sectionPos : changedForce)
 		PUSH_EVENT("ChunkChangedForce", sectionPos);
 }
 
@@ -117,24 +114,27 @@ void Chunk::SetBlockId(Vector blockPos, BlockId block) noexcept {
 	Vector sectionPos = Vector(pos.x, blockPos.y / 16, pos.z);
 	Section* sectionPtr = sections[sectionPos.y].get();
 	if (!sectionPtr) {
+		sectionPtr = new Section(sectionPos, hasSkyLight);
+		sections[sectionPos.y].reset(sectionPtr);
+		World::dirtysectionslist = true;
 		LOG(ERROR) << "Updating unloaded section " << sectionPos;
-		return;
 	}
 
-	sectionPtr->SetBlockId(Vector(blockPos.x, blockPos.y % 16, blockPos.z), block);
+	Vector isp(blockPos.x, blockPos.y % 16, blockPos.z);
+	sectionPtr->SetBlockId(isp, block);
 
 	PUSH_EVENT("ChunkChanged", sectionPos);
-	if (blockPos.x == 0)
+	if (isp.x == 0)
 		PUSH_EVENT("ChunkChangedForce", sectionPos + Vector(-1, 0, 0));
-	else if (blockPos.x == 15)
+	else if (isp.x == 15)
 		PUSH_EVENT("ChunkChangedForce", sectionPos + Vector(1, 0, 0));
-	if (blockPos.y == 0)
+	if (isp.y == 0)
 		PUSH_EVENT("ChunkChangedForce", sectionPos + Vector(0, -1, 0));
-	else if (blockPos.y == 15)
+	else if (isp.y == 15)
 		PUSH_EVENT("ChunkChangedForce", sectionPos + Vector(0, 1, 0));
-	if (blockPos.z == 0)
+	if (isp.z == 0)
 		PUSH_EVENT("ChunkChangedForce", sectionPos + Vector(0, 0, -1));
-	else if (blockPos.z == 15)
+	else if (isp.z == 15)
 		PUSH_EVENT("ChunkChangedForce", sectionPos + Vector(0, 0, 1));
 }
 
