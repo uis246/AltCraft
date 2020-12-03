@@ -1,10 +1,9 @@
 #pragma once
 #include "AssetManager.hpp"
 
-#include <experimental/filesystem>
+#include <filesystem>
 
 namespace ModLoader {
-	namespace fs = std::experimental::filesystem::v1;
 	struct Mod{
 		std::string modid;
 		std::string dirname;
@@ -31,7 +30,7 @@ namespace ModLoader {
 	void ParseAssetLua(AssetTreeNode &node) noexcept;
 	void ParseAssetSound(AssetTreeNode &node) noexcept;
 
-	void WalkDirEntry(const fs::directory_entry &dirEntry, AssetTreeNode *node) noexcept;
+	void WalkDirEntry(const std::filesystem::directory_entry &dirEntry, AssetTreeNode *node) noexcept;
 
 	void RecursiveWalkAssetFiles(AssetTreeNode &assetNode, std::function<void(AssetTreeNode&)> fnc) noexcept;
 	void RecursiveWalkAssetPath(const std::string &assetPath, std::function<void(AssetTreeNode&)> fnc) noexcept;

@@ -6,6 +6,8 @@
 #include <nlohmann/json.hpp>
 #include <stb_image.h>
 
+namespace fs = std::filesystem;
+
 static std::vector<std::shared_ptr<ModLoader::Mod>> mods;
 
 void ModLoader::LoadMod(AssetTreeNode &node) noexcept {

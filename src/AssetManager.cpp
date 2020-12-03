@@ -1,8 +1,7 @@
 #include "AssetManager.hpp"
 #include "ModLoader.hpp"
 
-#include <fstream>
-#include <experimental/filesystem>
+#include <filesystem>
 
 #include <nlohmann/json.hpp>
 #include <easylogging++.h>
@@ -12,7 +11,7 @@
 #include "Utility.hpp"
 #include "Plugin.hpp"
 
-namespace fs = std::experimental::filesystem::v1;
+namespace fs = std::filesystem;
 
 const fs::path pathToAssets = "./assets/";
 const std::string pathToAssetsList = "./items.json";
