@@ -180,6 +180,8 @@ void Render::UpdateKeyboard() {
 void Render::RenderFrame() {
 	OPTICK_EVENT();
 
+	Framebuffer::GetDefault().Clear();
+
 	if (renderWorld) {
 		framebuffer->Clear();
 		if (isWireframe)
@@ -188,8 +190,8 @@ void Render::RenderFrame() {
 		if (isWireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		framebuffer->RenderTo(Framebuffer::GetDefault());
-	} else
-		Framebuffer::GetDefault().Clear();
+	}
+
 
 	RenderGui();
 
@@ -687,7 +689,7 @@ void Render::InitEvents() {
         stateString = "Playing";
         renderWorld = true;
         SetState(State::Playing);
-		glClearColor(0, 0, 0, 1.0f);
+		glClearColor(0, 0, 0, 0);
 		GetGameState()->GetPlayer()->isFlying = this->fieldFlight;
 		PUSH_EVENT("SetMinLightLevel", fieldBrightness);
     });

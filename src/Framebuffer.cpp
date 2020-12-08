@@ -5,7 +5,7 @@
 #include "AssetManager.hpp"
 
 const GLuint magic = 316784;
-GLuint quadVao = magic, quadVbo = magic;
+GLuint quadVao = magic, quadVbo = magic, Framebuffer::activeFBO = magic;
 
 Framebuffer::Framebuffer(unsigned int width, unsigned int height, bool createDepthStencilBuffer) : width(width), height(height) {
 	OPTICK_EVENT();
@@ -76,13 +76,16 @@ Framebuffer::~Framebuffer() {
 
 void Framebuffer::Activate() {
 	OPTICK_EVENT();
-	glViewport(0, 0, width, height);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	if (activeFBO != fbo || activeFBO == magic) {
+		glViewport(0, 0, width, height);
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		activeFBO = fbo;
+	}
 }
 
 void Framebuffer::RenderTo(Framebuffer &target) {
 	OPTICK_EVENT();
-	target.Clear();
+	target.Activate();
 	AssetTreeNode *fbo = AssetManager::GetAssetByAssetName("/altcraft/shaders/fbo");
 	if (fbo->type == AssetTreeNode::ASSET_SHADER)
 		reinterpret_cast<AssetShader*>(fbo->asset.get())->shader->Activate();

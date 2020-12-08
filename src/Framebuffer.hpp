@@ -5,6 +5,7 @@
 class Framebuffer {
 	unsigned int width, height;
 	GLuint fbo, texColor = 0, rboDepthStencil = 0;
+	static GLuint activeFBO;
 public:
 	Framebuffer(unsigned int width, unsigned int height, bool createDepthStencilBuffer);
 	~Framebuffer();	
