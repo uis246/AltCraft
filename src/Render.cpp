@@ -136,6 +136,15 @@ void Render::InitGlew() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glDisable(GL_MULTISAMPLE);
+	glDisable(GL_DITHER);
+	//Disable blending on unused render targets
+	glDisablei(GL_BLEND, 1);
+	glDisablei(GL_BLEND, 2);
+	glDisablei(GL_BLEND, 3);
+	glDisablei(GL_BLEND, 4);
+	glDisablei(GL_BLEND, 5);
+	glDisablei(GL_BLEND, 6);
+	glDisablei(GL_BLEND, 7);
     glCheckError();
     if (glActiveTexture == nullptr) {
         throw std::runtime_error("GLEW initialization failed with unknown reason");
