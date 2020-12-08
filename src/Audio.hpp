@@ -17,7 +17,7 @@ namespace Audio {
 
 	void LoadOGG(void *mapping, size_t mlen, void **bufferPtr, int *channels, int *freq, size_t *blen) noexcept;
 
-        void PlaySound(Vector3<float> pos, buffer_t buffer, bool relative = false, bool loop = false) noexcept;
+	void Play(Vector3<float> pos, buffer_t buffer, bool relative = false, bool loop = false) noexcept;
 
-        void GCSounds() noexcept;
+	void GCSounds() noexcept;
 }

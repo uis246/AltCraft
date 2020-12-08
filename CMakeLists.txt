@@ -71,12 +71,17 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     endif()
 endif()
 
-if(MSVC AND CMAKE_BUILD_TYPE MATCHES Release)
-	target_compile_definitions(AltCraft PRIVATE USE_SDL_MAIN)
-	set_target_properties(AltCraft PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
-endif(MSVC AND CMAKE_BUILD_TYPE MATCHES Release)
+if(MSVC)
+    set(PLATFORM_LIBRARIES "ws2_32")
+    add_definitions("-D_USE_MATH_DEFINES -DNOMINMAX")
 
-add_definitions(${LOGGER_DEFINITIONS} -D_USE_MATH_DEFINES)
+    if(CMAKE_BUILD_TYPE MATCHES Release)
+        target_compile_definitions(AltCraft PRIVATE USE_SDL_MAIN)
+        set_target_properties(AltCraft PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+    endif()
+endif(MSVC)
+
+add_definitions(${LOGGER_DEFINITIONS})
 
 set(AUDIO_LIBRARY "OpenAL" CACHE STRING "Audio API")
 set_property(CACHE AUDIO_LIBRARY PROPERTY STRINGS "OpenAL")

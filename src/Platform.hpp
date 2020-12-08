@@ -60,8 +60,13 @@
 #endif
 
 #ifndef __GNUC__
-#define mv64(x, i) (x&(0xFF<<(i*8)))>>((7-i)*8)
-#define bswap_64(x) ( mv64(x, 0) | mv64(x, 1) | mv64(x, 2) | mv64(x, 3) | mv64(x, 4) | mv64(x, 5) | mv64(x, 6) | mv64(x, 7))
+#	ifndef WIN32
+#		error This does not works
+#		define mv64(x, i) (x&(0xFF<<(i*8)))>>((7-i)*8)
+#		define bswap_64(x) ( mv64(x, 0) | mv64(x, 1) | mv64(x, 2) | mv64(x, 3) | mv64(x, 4) | mv64(x, 5) | mv64(x, 6) | mv64(x, 7))
+#	else
+#		define bswap_64(x) _byteswap_uint64(x)
+#	endif
 #else
-#include <byteswap.h>
+#	include <byteswap.h>
 #endif

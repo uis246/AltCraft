@@ -1,9 +1,9 @@
+#include "platform/portable_endian.h"
 #include "Stream.hpp"
 
 #include <easylogging++.h>
 
 #include "Utility.hpp"
-#include "platform/portable_endian.h"
 
 #define bedoubletoh(x) be64toh(*reinterpret_cast<uint64_t*>(&x))
 #define befloattoh(x) be32toh(*reinterpret_cast<uint32_t*>(&x))

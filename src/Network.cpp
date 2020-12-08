@@ -103,7 +103,7 @@ void Network::SendPacket(PacketSB &packet, int compressionThreshold, bool more) 
 			StreamWOBuffer compressed(10 + len);
 
 			//Compress
-			size_t compressed_len = len;
+			unsigned long compressed_len = len;
 			int ret = compress2(compressed.buffer + 10, &compressed_len, buffer.buffer + header_size, len, 9);
 			switch (ret) {
 				case Z_BUF_ERROR://Deflated buffer bigger than inflated

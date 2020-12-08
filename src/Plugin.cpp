@@ -94,7 +94,7 @@ void PluginSystem::Init() noexcept {
 	lua.open_libraries();
 
 	lua["package"]
-		#if SOL_LUA_VESION_I_ < 502
+		#if SOL_LUA_VERSION < 502
 			["loaders"]
 		#else
 			["searchers"]

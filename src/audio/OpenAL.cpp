@@ -92,7 +92,7 @@ void Audio::UpdateListener(Vector3<float> direction, Vector3<float> up, Vector3<
 	alListenerfv(AL_ORIENTATION, listPos);
 }
 
-void Audio::PlaySound(Vector3<float> pos, buffer_t buffer, bool relative, bool loop) noexcept {
+void Audio::Play(Vector3<float> pos, buffer_t buffer, bool relative, bool loop) noexcept {
 	ALuint source;
 	alGenSources(1, &source);
 	if(alCheckError()==AL_OUT_OF_MEMORY)
