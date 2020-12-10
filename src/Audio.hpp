@@ -15,7 +15,7 @@ namespace Audio {
 
 	void UpdateListener(Vector3<float> direction, Vector3<float> up, Vector3<float> pos, Vector3<float> speed) noexcept;
 
-	void LoadOGG(void *mapping, size_t mlen, void **bufferPtr, int *channels, int *freq, size_t *blen) noexcept;
+	void LoadOGG(void *mapping, int mlen, void **bufferPtr, int *channels, int *freq, size_t *blen) noexcept;
 
 	void Play(Vector3<float> pos, buffer_t buffer, bool relative = false, bool loop = false) noexcept;
 
