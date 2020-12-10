@@ -16,7 +16,7 @@ EventListener::~EventListener() {
 
 void EventListener::HandleEvent() {
 	OPTICK_EVENT();
-	if (!NotEmpty())
+	if (Empty())
 		return;
 
 	std::lock_guard<std::recursive_mutex> eventsLock (eventsMutex);
@@ -30,11 +30,14 @@ void EventListener::HandleEvent() {
 
 void EventListener::HandleAllEvents() {
 	OPTICK_EVENT();
-	if (!NotEmpty())
-		return;
 
+	//This mutexes will locked in PollEvents
 	std::lock_guard<std::recursive_mutex> eventsLock (eventsMutex);
 	std::lock_guard<std::recursive_mutex> handlersLock (handlersMutex);
+
+	if (Empty())
+		return;
+
 	while (!events.empty()) {
 		Event event = events.front();
 		events.pop();
@@ -44,11 +47,10 @@ void EventListener::HandleAllEvents() {
 	}
 }
 
-bool EventListener::NotEmpty() {
-	PollEvents();
+bool EventListener::Empty() {
 	std::lock_guard<std::recursive_mutex> eventsLock (eventsMutex);
-	bool ret = !events.empty();
-	return ret;
+	PollEvents();
+	return events.empty();
 }
 
 void EventListener::RegisterHandler(size_t eventId, const EventListener::HandlerType &data) {
@@ -58,12 +60,13 @@ void EventListener::RegisterHandler(size_t eventId, const EventListener::Handler
 
 void EventListener::PollEvents() {
 	OPTICK_EVENT();
+	std::lock_guard<std::recursive_mutex> eventsLock (eventsMutex);
+	std::lock_guard<std::recursive_mutex> handlersLock (handlersMutex);//To prevent inverse lock order
+
 	std::lock_guard<std::recursive_mutex> rawLock (rawEventsMutex);
 	if (rawEvents.empty())
 		return;
 
-	std::lock_guard<std::recursive_mutex> eventsLock (eventsMutex);
-	std::lock_guard<std::recursive_mutex> handlersLock (handlersMutex);
 	while (!rawEvents.empty()) {
 		Event event = rawEvents.front();
 		rawEvents.pop();

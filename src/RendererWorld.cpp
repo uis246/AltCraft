@@ -34,7 +34,7 @@ void RendererWorld::WorkerFunction(size_t workerId) {
 
     LoopExecutionTimeController timer(std::chrono::milliseconds(50));
     while (isRunning) {
-        while (tasksListener.NotEmpty() && isRunning)
+	while (!tasksListener.Empty() && isRunning)
             tasksListener.HandleEvent();
         timer.Update();
     }
@@ -394,7 +394,7 @@ void RendererWorld::Render(RenderState & renderState) {
 				entityShader->SetUniform("color", glm::vec3(0.7f, 0, 0));
             else
 				entityShader->SetUniform("color", glm::vec3(0, 0, 0.7f));
-            glDrawArrays(GL_LINE_STRIP, 0, 36);
+	    glDrawArrays(GL_LINES, 0, 24);
         }
 	glCheckError();
     }
