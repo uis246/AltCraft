@@ -127,6 +127,7 @@ void Render::InitGlew() {
     glViewport(0, 0, width, height);
 	glClearColor(0.8,0.8,0.8, 1.0f);
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);

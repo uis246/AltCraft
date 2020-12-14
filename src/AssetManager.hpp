@@ -36,11 +36,10 @@ static const Vector FaceDirectionVector[] = {
 struct ParsedFace {
 	FaceDirection visibility;
 	glm::vec3 vertices[4];
-	uint16_t textureId;
 	uint16_t Uu, Vv;//10-bit
 	uint16_t x, y, w, h;
 	uint8_t layer, frames;
-	bool tint;
+	bool tint, shade;
 };
 
 struct BlockFaces {

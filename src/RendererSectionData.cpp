@@ -16,8 +16,14 @@ inline const BlockId& GetBlockId(int x, int y, int z, const std::array<BlockId, 
 
 void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, const Vector &isp, const glm::vec3 &offset, bool visibility[FaceDirection::none], BlockLightness light, BlockLightness skyLight) {
 	for (const auto &face : model.faces) {
-		uint8_t block = _max(light.face[0], light.face[1], light.face[2], light.face[3], light.face[4], light.face[5]);
-		uint8_t sky = _max(skyLight.face[0], skyLight.face[1], skyLight.face[2], skyLight.face[3], skyLight.face[4], skyLight.face[5]);
+		uint8_t block, sky;
+		if(face.shade) {
+			block = _max(light.face[0], light.face[1], light.face[2], light.face[3], light.face[4], light.face[5]);
+			sky = _max(skyLight.face[0], skyLight.face[1], skyLight.face[2], skyLight.face[3], skyLight.face[4], skyLight.face[5]);
+		} else {
+			block = 15;
+			sky = 15;
+		}
 		if (face.visibility != FaceDirection::none) {
 			FaceDirection direction = face.visibility;
 			Vector directionVec = model.faceDirectionVector[direction];

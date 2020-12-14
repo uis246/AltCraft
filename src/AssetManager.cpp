@@ -301,9 +301,9 @@ void ParseBlockModels() {
 				parsedFace.layer = tc.layer;
 
 				parsedFace.frames = frames;
-				parsedFace.textureId = textureId;
 				parsedFace.Uu = (face.second.uv.x2<<5)|face.second.uv.x1;
 				parsedFace.Vv = (face.second.uv.y2<<5)|face.second.uv.y1;
+				parsedFace.shade = element.shade;
 				if (face.second.tintIndex)
 					parsedFace.tint = true;
 				else
