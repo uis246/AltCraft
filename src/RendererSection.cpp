@@ -17,7 +17,7 @@ static const GLfloat uv_coords[] = {
 
 GLuint RendererSection::VboUvs = 0;
 
-RendererSection::RendererSection(const RendererSectionData &data) {
+RendererSection::RendererSection(RendererSectionData &data) {
 	OPTICK_EVENT();
 	if (!VboUvs) {
 		glGenBuffers(1, &VboUvs);
@@ -122,7 +122,7 @@ size_t RendererSection::GetHash() {
     return hash;
 }
 
-void RendererSection::UpdateData(const RendererSectionData & data) {
+void RendererSection::UpdateData(RendererSectionData & data) {
 	OPTICK_EVENT();
 
 	numOfFaces = data.verts.size()/4;
@@ -157,4 +157,9 @@ void RendererSection::UpdateData(const RendererSectionData & data) {
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glCheckError();
+
+	data.quadInfo.clear();
+	data.quadInfo.shrink_to_fit();
+	data.verts.clear();
+	data.verts.shrink_to_fit();
 }

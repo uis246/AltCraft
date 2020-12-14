@@ -23,9 +23,9 @@ class RendererSection {
 	size_t hash;
     Vector sectionPos;
 
-    RendererSection(const RendererSection &other) = delete;
+    RendererSection(RendererSection &other) = delete;
 public:
-    RendererSection(const RendererSectionData &data);
+    RendererSection(RendererSectionData &data);
 
     RendererSection(RendererSection &&other);
 
@@ -41,5 +41,5 @@ public:
 
     friend void swap(RendererSection &lhs, RendererSection &rhs);
 
-	void UpdateData(const RendererSectionData &data);
+	void UpdateData(RendererSectionData &data);
 };

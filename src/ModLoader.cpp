@@ -117,6 +117,9 @@ void ModLoader::LoadModinfo(AssetTreeNode &node) noexcept {
 	}
 
 	LOG(INFO) << "Module " << (mod->name.empty() ? mod->modid : mod->name) << " loaded";
+
+	node.data.clear();
+	node.data.shrink_to_fit();
 }
 
 void ModLoader::LoadMcmeta(AssetTreeNode &node) {
@@ -138,6 +141,9 @@ void ModLoader::LoadMcmeta(AssetTreeNode &node) {
 		existing->description = pack["description"];
 		mods.push_back(existing);
 	}
+
+	node.data.clear();
+	node.data.shrink_to_fit();
 }
 
 void ModLoader::ParseAssetTexture(AssetTreeNode &node) noexcept {

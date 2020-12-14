@@ -216,16 +216,17 @@ void Section::ExpandBPB() noexcept {
 
 	size_t sz = (16*16*16/2) << (this->pow - 1);
 	uint16_t *expanded = reinterpret_cast<uint16_t*>(malloc(sz));
-	if (this->pow == 2) {//Expand to 8 bPB
+	if (this->pow == 2) {//Expand to 8 BpB from 4
 		uint8_t *old = reinterpret_cast<uint8_t*>(blocks);
 		uint8_t *new_blocks = reinterpret_cast<uint8_t*>(expanded);
 		for (size_t i = 0; i < 16*16*16; i++) {
 			uint8_t nibble = i&1;
 			new_blocks[i] = (old[i>>1] >> (nibble << 2)) & 0x0F;
 		}
-	} else if (this->pow == 3) {//Expand to 16 bPB
+	} else if (this->pow == 3) {//Expand to 16 BpB from 8
+		uint8_t *old = reinterpret_cast<uint8_t*>(blocks);
 		for (size_t i = 0; i < 16*16*16; i++) {
-			expanded[i] = palette[blocks[i]];
+			expanded[i] = palette[old[i]];
 		}
 	}
 

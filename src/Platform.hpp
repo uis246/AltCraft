@@ -33,10 +33,19 @@
 #	ifdef __GNUC__
 #		define AC_API __attribute__((visibility("default")))
 #		define AC_INTERNAL __attribute__((visibility("internal")))
+#		define bswap_64(x) __builtin_bswap64(x)
 #	else
 #		define AC_API
 #		define AC_INTERNAL
 #	endif
+#endif
+
+#if defined(_WIN32)&&defined(_MSC_VER)
+#	include <stdlib.h>
+#	define bswap_64(x) _byteswap_uint64(x)
+#elif !defined(__GNUC__)
+#	define mv64(x, i) ((x&((uint64_t)0xFF<<(i*8)))>>(i*8)<<((7-i)*8))
+#	define bswap_64(x) ( mv64(x, 0) | mv64(x, 1) | mv64(x, 2) | mv64(x, 3) | mv64(x, 4) | mv64(x, 5) | mv64(x, 6) | mv64(x, 7))
 #endif
 
 #ifdef __linux__
@@ -57,16 +66,4 @@
 #else
 #define floorASR(value, shmat, dest) (dest=std::floor(value / (float)(2 << shmat)))
 #define floorASRQ(value, shmat, dest) (dest=std::floor(value / (float)(2 << shmat)))
-#endif
-
-#ifndef __GNUC__
-#	ifndef WIN32
-#		error This does not works
-#		define mv64(x, i) (x&(0xFF<<(i*8)))>>((7-i)*8)
-#		define bswap_64(x) ( mv64(x, 0) | mv64(x, 1) | mv64(x, 2) | mv64(x, 3) | mv64(x, 4) | mv64(x, 5) | mv64(x, 6) | mv64(x, 7))
-#	else
-#		define bswap_64(x) _byteswap_uint64(x)
-#	endif
-#else
-#	include <byteswap.h>
 #endif
