@@ -58,7 +58,7 @@ void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, co
 
 			uint8_t *P=reinterpret_cast<uint8_t*>(&phlf),
 					*H=P+1, *L=P+2, *F=P+3;
-			*P = (isp.z<<4)|isp.x;//NOTE: or store biomeid
+			*P = (isp.z<<4)|isp.x;//FIXME: store biomeid
 			*H = isp.y;
 			*L = face.layer;
 			*F = face.frames;
@@ -67,7 +67,7 @@ void AddFacesByBlockModel(RendererSectionData &data, const BlockFaces &model, co
 		{
 			uint16_t *TLUu=reinterpret_cast<uint16_t*>(&TLUuLVv), *LVv=TLUu+1;
 
-			*TLUu = (face.tint<<14) | (block<<10) | face.Uu;
+			*TLUu = ((!face.tint)<<14) | (block<<10) | face.Uu;
 			*LVv = (sky<<10) | face.Vv;
 		}
 
