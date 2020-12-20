@@ -12,32 +12,39 @@
 //Options from setings
 unsigned int timeout=0;//msecs
 
-// Options in advanced mode
+// Options from advanced settings
 int tfo=0;//Since Linux 4.11
 int qack=1;
 int nonagle=1;
 int thin=1;
-//End adv options
-
-//End of options
 
 const static int zero=0, ka_timeout=40;
 
 
 Socket::Socket(std::string &address, uint16_t port) {
+	//Resolve server address
 	int result = getaddrinfo(address.c_str(), NULL, NULL, &ai);
 	if (result)
 		throw std::runtime_error("Hostname not resolved: " + std::to_string(result));
 
-	if (ai->ai_addr->sa_family == AF_INET)
+	//Set server port
+	if (ai->ai_family == AF_INET)
 		reinterpret_cast<sockaddr_in*>(ai->ai_addr)->sin_port=htons(port);
-	else if (ai->ai_addr->sa_family == AF_INET6)
-		reinterpret_cast<sockaddr_in*>(ai->ai_addr)->sin_port=htons(port);
-	else
+	else if (ai->ai_family == AF_INET6)
+		reinterpret_cast<sockaddr_in6*>(ai->ai_addr)->sin6_port=htons(port);
+	else {
+		freeaddrinfo(ai);
 		throw std::runtime_error("Unknown sockaddr family");
+	}
 
+	//Create socket
 	sock = socket(ai->ai_family, SOCK_STREAM, IPPROTO_TCP);
+	if (sock == -1) {
+		freeaddrinfo(ai);
+		throw std::runtime_error("Failed to create socket");
+	}
 
+	//Configure socket
 #	ifdef TCP_FASTOPEN_CONNECT
 	setsockopt(sock, IPPROTO_TCP, TCP_FASTOPEN_CONNECT, &tfo/*TCP Fast Open enabled in network settings*/, sizeof(tfo));
 #	endif
@@ -70,7 +77,16 @@ void Socket::Connect(unsigned char *buffPtr, size_t buffLen) {
 Socket::~Socket() noexcept {
 	freeaddrinfo(ai);
 
-	close(sock);
+	for (unsigned int i = 0; i < 3; i++) {
+		int ret = close(sock);
+		if(ret == -1) {//Some shit happen
+			if(errno == EBADF)//No such fd
+				break;//Just skip closing
+			else
+				continue;//Retry. AFAIK if socket closed close() will return EBABF
+		} else
+			break;//Everything ok
+	}
 }
 
 void Socket::ReadData(unsigned char *buffPtr, size_t buffLen) {
@@ -91,6 +107,12 @@ void Socket::ReadData(unsigned char *buffPtr, size_t buffLen) {
 void Socket::SendData(unsigned char *buffPtr, size_t buffLen, bool more) {
 	int result;
 	result = send(sock, buffPtr, buffLen, MSG_DONTWAIT | MSG_NOSIGNAL | (more ? MSG_MORE : 0));
-	if (result == -1)
+	if (result == -1) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			result = send(sock, buffPtr, buffLen, MSG_NOSIGNAL | (more ? MSG_MORE : 0));
+			if (result != -1)
+				return;
+		}
 		throw std::runtime_error("Data sending failed: " + std::string(std::strerror(errno)));
+	}
 }
