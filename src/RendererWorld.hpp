@@ -46,6 +46,7 @@ class RendererWorld {
 	std::chrono::time_point<std::chrono::high_resolution_clock> globalTimeStart;
     //Entities
     std::vector<RendererEntity> entities;
+    size_t prevousRenderedEntityCount = 0;
     //Sky
     Texture *skyTexture;
     RendererSky rendererSky;

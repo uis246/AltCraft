@@ -2,8 +2,6 @@
   "vert": "/altcraft/shaders/vert/entity",
   "frag": "/altcraft/shaders/frag/entity",
   "uniforms": [
-    "color",
-    "projView",
-    "model"
+    "projView"
   ]
 }

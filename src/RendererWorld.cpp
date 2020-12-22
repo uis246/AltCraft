@@ -351,8 +351,7 @@ void RendererWorld::Render(RenderState & renderState) {
 	}
 
 
-    //Render Entities
-    glLineWidth(3.0);
+	//Prepare Entities
 	Shader *entityShader = nullptr;
 	AssetTreeNode *entityNode = AssetManager::GetAssetByAssetName("/altcraft/shaders/entity");
 	if (entityNode->type==AssetTreeNode::ASSET_SHADER)
@@ -361,46 +360,58 @@ void RendererWorld::Render(RenderState & renderState) {
 	entityShader->SetUniform("projView", projView);
 	glCheckError();
 
-    renderState.SetActiveVao(RendererEntity::GetVao());
-    for (auto& it : entities) {
-        it.Render(renderState, &GetGameState()->GetWorld());
-    }
-	glCheckError();
+	renderState.SetActiveVao(RendererEntity::GetVao());
 
-    //Render selected block
-    const SelectionStatus& selectionStatus = GetGameState()->GetSelectionStatus();
-    if (selectionStatus.isBlockSelected) {
-        glLineWidth(2.0f);
-        {
-            glm::mat4 model = glm::mat4(1.0);
-			model = glm::translate(model, selectionStatus.selectedBlock.glm());
-			model = glm::translate(model,glm::vec3(0.5f,0.5f,0.5f));
-			model = glm::scale(model,glm::vec3(1.01f,1.01f,1.01f));
-			entityShader->SetUniform("model", model);
-			entityShader->SetUniform("color", glm::vec3(0, 0, 0));
-			glDrawArrays(GL_LINES, 0, 24);
-        }
-	glCheckError();
-    }
+	const SelectionStatus& selectionStatus = GetGameState()->GetSelectionStatus();
+	size_t count = entities.size();
 
-    //Render raycast hit
+	uint8_t *buffer = new uint8_t[(count + selectionStatus.isBlockSelected) * RendererEntity::InstanceSize()];
+
+	for (size_t i = 0; i < count; i++)
+		entities[i].AppendInstance(buffer + (i * RendererEntity::InstanceSize()), &GetGameState()->GetWorld());
+
+	//Prepare selected block
+	if(selectionStatus.isBlockSelected) {
+		glm::mat4 model = glm::mat4(1.0);
+		model = glm::translate(model, selectionStatus.selectedBlock.glm());
+		model = glm::translate(model,glm::vec3(0.5f,0.5f,0.5f));
+		model = glm::scale(model,glm::vec3(1.01f,1.01f,1.01f));
+
+		RendererEntity::AppendStatic(buffer+(count * RendererEntity::InstanceSize()), model, glm::vec3(0, 0, 0));
+		count++;
+	}
+
+	//Prepare raycast hit
 	const bool renderHit = false;
-    if (renderHit) {
-	VectorF hit = selectionStatus.raycastHit;
-        glLineWidth(2.0f);
-        {
-            glm::mat4 model;
-			model = glm::translate(model, hit.glm());
-            model = glm::scale(model,glm::vec3(0.3f,0.3f,0.3f));
-			entityShader->SetUniform("model", model);
-			if (selectionStatus.isBlockSelected)
-				entityShader->SetUniform("color", glm::vec3(0.7f, 0, 0));
-            else
-				entityShader->SetUniform("color", glm::vec3(0, 0, 0.7f));
-	    glDrawArrays(GL_LINES, 0, 24);
-        }
+	if (renderHit) {
+		VectorF hit = selectionStatus.raycastHit;
+		glm::mat4 model;
+		glm::vec3 color;
+		model = glm::translate(model, hit.glm());
+		model = glm::scale(model,glm::vec3(0.3f,0.3f,0.3f));
+		entityShader->SetUniform("model", model);
+		if (selectionStatus.isBlockSelected)
+			color = glm::vec3(0.7f, 0, 0);
+		else
+			color = glm::vec3(0, 0, 0.7f);
+
+		RendererEntity::AppendStatic(buffer+(count * RendererEntity::InstanceSize()), model, color);
+		count++;
+	}
+
+	//Upload data
+	GLuint entityVBO = RendererEntity::GetColoMatVBO();
+	glBindBuffer(GL_ARRAY_BUFFER, entityVBO);
+	glBufferData(GL_ARRAY_BUFFER, prevousRenderedEntityCount * RendererEntity::InstanceSize(), NULL, GL_STREAM_DRAW);
+	prevousRenderedEntityCount = count;
+	glBufferData(GL_ARRAY_BUFFER, count * RendererEntity::InstanceSize(), buffer, GL_STREAM_DRAW);
 	glCheckError();
-    }
+	delete[] buffer;
+
+	//Render entities and selected block
+	glLineWidth(2.0f);
+	RendererEntity::RenderBatch(count);
+	glCheckError();
 
 	glLineWidth(1.0);
 
