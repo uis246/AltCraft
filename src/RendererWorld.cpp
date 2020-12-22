@@ -147,16 +147,18 @@ void RendererWorld::ParseQeueueRemoveUnnecessary() {
 
 void RendererWorld::UpdateAllSections(VectorF playerPos) {
 	OPTICK_EVENT();
-    Vector playerChunk(std::floor(GetGameState()->GetPlayer()->pos.x / 16), 0, std::floor(GetGameState()->GetPlayer()->pos.z / 16));
+	Vector playerSection(std::floor(playerPos.x / 16), std::floor(playerPos.y / 16.0), std::floor(playerPos.z / 16));
+	Vector2I32 playerChunk(playerSection.x, playerSection.z);
 
-    std::vector<Vector> suitableChunks;
-    auto chunks = GetGameState()->GetWorld().GetSectionsList();
-    for (auto& it : chunks) {
-        double distance = (Vector(it.x, 0, it.z) - playerChunk).GetLength();
-        if (distance > MaxRenderingDistance)
-            continue;
-        suitableChunks.push_back(it);
-    }
+	std::vector<Vector> suitableChunks;
+	auto chunks = GetGameState()->GetWorld().GetSectionsList();
+	for (auto& it : chunks) {
+		Vector2I32 diff = (Vector2I32(it.x, it.z) - playerChunk).abs();
+		int distance = std::max(diff.x, diff.z);
+		if (distance > MaxRenderingDistance)
+			continue;
+		suitableChunks.push_back(it);
+	}
 
     std::vector<Vector> toRemove;
 
@@ -169,16 +171,15 @@ void RendererWorld::UpdateAllSections(VectorF playerPos) {
 		PUSH_EVENT("DeleteSectionRender", it);
     }
 
-    playerChunk.y = std::floor(GetGameState()->GetPlayer()->pos.y / 16.0);
-    std::sort(suitableChunks.begin(), suitableChunks.end(), [playerChunk](Vector lhs, Vector rhs) {
-        double leftLengthToPlayer = (playerChunk - lhs).GetLength();
-        double rightLengthToPlayer = (playerChunk - rhs).GetLength();
+    std::sort(suitableChunks.begin(), suitableChunks.end(), [playerSection](Vector lhs, Vector rhs) {
+	double leftLengthToPlayer = (playerSection - lhs).GetLength();
+	double rightLengthToPlayer = (playerSection - rhs).GetLength();
         return leftLengthToPlayer < rightLengthToPlayer;
     });
 
     for (auto& it : suitableChunks) {
 		PUSH_EVENT("ChunkChanged", it);
-    }	
+    }
 }
 
 RendererWorld::RendererWorld() {
@@ -233,23 +234,24 @@ RendererWorld::RendererWorld() {
         }
     });
 
-    listener->RegisterHandler("ChunkChanged", [this](const Event& eventData) {
+	listener->RegisterHandler("ChunkChanged", [this](const Event& eventData) {
 		OPTICK_EVENT("EV_ChunkChanged");
 		auto vec = eventData.get<Vector>();
 		if (vec == Vector())
 			return;
 
-        Vector playerChunk(std::floor(GetGameState()->GetPlayer()->pos.x / 16), 0, std::floor(GetGameState()->GetPlayer()->pos.z / 16));
+		Vector2I32 playerChunk(std::floor(GetGameState()->GetPlayer()->pos.x / 16), std::floor(GetGameState()->GetPlayer()->pos.z / 16));
 
-        double distanceToChunk = (Vector(vec.x, 0, vec.z) - playerChunk).GetLength();
-        if (MaxRenderingDistance != 1000 && distanceToChunk > MaxRenderingDistance) {
-            return;
-        }
+		Vector2I32 diff = (Vector2I32(vec.x, vec.z) - playerChunk).abs();
+		int distanceToChunk = std::max(diff.x, diff.z);
+		if (MaxRenderingDistance != 1000 && distanceToChunk > MaxRenderingDistance) {
+			return;
+		}
 
 		parseQueue.push(vec);
 
 		parseQueueNeedRemoveUnnecessary = true;
-    });
+	});
 
 	listener->RegisterHandler("ChunkChangedForce", [this](const Event& eventData) {
 		OPTICK_EVENT("EV_ChunkChangedForce");
@@ -257,9 +259,10 @@ RendererWorld::RendererWorld() {
 		if (vec == Vector())
 			return;
 
-		Vector playerChunk(std::floor(GetGameState()->GetPlayer()->pos.x / 16), 0, std::floor(GetGameState()->GetPlayer()->pos.z / 16));
+		Vector2I32 playerChunk(std::floor(GetGameState()->GetPlayer()->pos.x / 16), std::floor(GetGameState()->GetPlayer()->pos.z / 16));
 
-		double distanceToChunk = (Vector(vec.x, 0, vec.z) - playerChunk).GetLength();
+		Vector2I32 diff = (Vector2I32(vec.x, vec.z) - playerChunk).abs();
+		int distanceToChunk = std::max(diff.x, diff.z);
 		if (MaxRenderingDistance != 1000 && distanceToChunk > MaxRenderingDistance) {
 			return;
 		}
@@ -329,9 +332,9 @@ void RendererWorld::Render(RenderState & renderState) {
     glm::mat4 view = GetGameState()->GetViewMatrix();
 	glm::mat4 projView = projection * view;
 
-	{//Set listener position
 	Entity *player = GetGameState()->GetPlayer();
 
+	{//Set listener position
 	float playerYaw = Entity::DecodeYaw(player->yaw);
 	float playerYawR = playerYaw * (M_PI / 180.f);
 
@@ -410,7 +413,7 @@ void RendererWorld::Render(RenderState & renderState) {
 	skyShader->Activate();
 	skyShader->SetUniform("projView", projection);
 	glm::mat4 model = glm::mat4(1.0);
-	model = glm::translate(model, GetGameState()->GetPlayer()->pos.glm());
+	model = glm::translate(model, player->pos.glm());
 	const float scale = 1000000.0f;
 	model = glm::scale(model, glm::vec3(scale, scale, scale));
 	float shift = GetGameState()->GetTimeStatus().interpolatedTimeOfDay / 24000.0f;

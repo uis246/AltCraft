@@ -56,7 +56,7 @@ public:
     void Render(RenderState& renderState);
     void PrepareRender();
 
-    double MaxRenderingDistance;
+    int MaxRenderingDistance;
 
     void Update(double timeToUpdate);
 

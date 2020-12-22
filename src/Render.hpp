@@ -35,7 +35,7 @@ class Render {
     std::string stateString;
 	char fieldUsername[512];
 	char fieldServerAddr[512];
-	float fieldDistance;
+	int fieldDistance;
 	float fieldSensetivity;
 	float fieldTargetFps;
 	bool fieldWireframe;

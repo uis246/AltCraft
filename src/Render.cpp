@@ -64,7 +64,7 @@ Render::Render(unsigned int windowWidth, unsigned int windowHeight,
 Render::~Render() {
 	Settings::Write("username", fieldUsername);
 	Settings::Write("serverAddr", fieldServerAddr);
-	Settings::WriteDouble("renderDistance", fieldDistance);
+	Settings::WriteInt("renderDistance", fieldDistance);
 	Settings::WriteDouble("targetFps", fieldTargetFps);
 	Settings::WriteDouble("mouseSensetivity", fieldSensetivity);
 	Settings::WriteBool("vsync", fieldVsync);
@@ -619,7 +619,7 @@ void Render::RenderGui() {
             }
             ImGui::Separator();
 
-			ImGui::SliderFloat("Render distance", &fieldDistance, 1.0f, 16.0f);
+			ImGui::SliderInt("Render distance", &fieldDistance, 1, 16);
 
 			ImGui::SliderFloat("Brightness", &fieldBrightness, 0.0f, 1.0f);
 

@@ -164,6 +164,10 @@ struct AC_API Vector2 {
 		return dot(rhs) / GetLength() / rhs.GetLength();
 	}
 
+	Vector2 abs() {
+		return Vector2(std::abs(x), std::abs(z));
+	}
+
 	Vector2<double> normalize() {
 		auto length = GetLength();
 
