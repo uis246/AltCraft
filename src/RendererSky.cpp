@@ -105,32 +105,27 @@ const GLfloat uv_coords[] = {
 };
 
 RendererSky::RendererSky() {
-    glGenBuffers(1, &VboVert);
-    glBindBuffer(GL_ARRAY_BUFFER, VboVert);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glGenVertexArrays(1, &Vao);
+	glGenBuffers(2, VBOs);
 
-    glGenBuffers(1, &VboUv);
-    glBindBuffer(GL_ARRAY_BUFFER, VboUv);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(uv_coords), uv_coords, GL_STATIC_DRAW);
-    glGenVertexArrays(1, &Vao);
+	glBindVertexArray(Vao);
+	{
+	glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
 
-    glBindVertexArray(Vao);
-    {
-        glBindBuffer(GL_ARRAY_BUFFER, VboVert);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-        glEnableVertexAttribArray(0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, VboUv);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
-        glEnableVertexAttribArray(1);
-    }
-    glBindVertexArray(0);
-    glCheckError();
+	glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(uv_coords), uv_coords, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(1);
+	}
+	glBindVertexArray(0);
+	glCheckError();
 }
 
 RendererSky::~RendererSky() {
-    glDeleteBuffers(1, &VboVert);
-    glDeleteBuffers(1, &VboUv);
+    glDeleteBuffers(2, VBOs);
     glDeleteVertexArrays(1, &Vao);
     //glCheckError();
 }

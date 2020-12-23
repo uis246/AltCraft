@@ -5,7 +5,7 @@
 class RenderState;
 
 class RendererSky {
-    GLuint VboVert, VboUv, Vao;
+    GLuint VBOs[2], Vao;
 public:
     RendererSky();
     ~RendererSky();
