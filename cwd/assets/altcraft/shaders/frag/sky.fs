@@ -40,7 +40,7 @@ void main() {
 	vec4 sunColor = texture(textureAtlas, vec3(transformed.xy, sunTextureLayer));
 	vec4 sun = mix(vec4(0,0,0,1),sunColor,clamp(1-distanceToSun*2.0f,0,1));
 	outputColor += sun;
- 
+
 	vec4 moonColor = texture(textureAtlas, vec3(transformed.zw, moonTextureLayer));
 	vec4 moon = mix(vec4(0,0,0,1),moonColor,clamp(1-distanceToMoon*2.0f,0,1));
 	outputColor += moon;

@@ -422,7 +422,7 @@ void RendererWorld::Render(RenderState & renderState) {
 	if (skyNode->type==AssetTreeNode::ASSET_SHADER)
 		skyShader = reinterpret_cast<AssetShader*>(skyNode->asset.get())->shader.get();
 	skyShader->Activate();
-	skyShader->SetUniform("projView", projection);
+	skyShader->SetUniform("projView", projView);
 	glm::mat4 model = glm::mat4(1.0);
 	model = glm::translate(model, player->pos.glm());
 	const float scale = 1000000.0f;
@@ -444,11 +444,10 @@ void RendererWorld::Render(RenderState & renderState) {
 	const float moonriseLength = moonriseMax - moonriseMin;
 
 	float mixLevel = 0;
-	float dayTime = GetGameState()->GetTimeStatus().interpolatedTimeOfDay;
+	long long dayTime = GetGameState()->GetTimeStatus().interpolatedTimeOfDay;
 	if (dayTime < 0)
 		dayTime *= -1;
-	while (dayTime > 24000)
-		dayTime -= 24000;
+	dayTime %= 24000;
 	if ((dayTime > 0 && dayTime < moonriseMin) || dayTime > sunriseMax) //day
 		mixLevel = 1.0;
 	if (dayTime > moonriseMax && dayTime < sunriseMin) //night
