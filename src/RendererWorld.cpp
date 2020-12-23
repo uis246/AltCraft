@@ -526,10 +526,10 @@ void RendererWorld::PrepareRender() {
 		sky = reinterpret_cast<AssetShader*>(skyNode->asset.get())->shader.get();
 	sky->Activate();
 	sky->SetUniform("textureAtlas", 0);	
-	sky->SetUniform("sunTexture", glm::vec4(sunTexture.x, sunTexture.y, sunTexture.w, sunTexture.h));
 	sky->SetUniform("sunTextureLayer", (float)sunTexture.layer);
-	sky->SetUniform("moonTexture", glm::vec4(moonTexture.x, moonTexture.y, moonTexture.w, moonTexture.h));
 	sky->SetUniform("moonTextureLayer", (float)moonTexture.layer);
+	sky->SetUniform("texturePositions", glm::vec4(sunTexture.x, sunTexture.y, moonTexture.x, moonTexture.y));
+	sky->SetUniform("textureSizes", glm::vec4(sunTexture.w, sunTexture.h, moonTexture.w, moonTexture.h));
 }
 
 void RendererWorld::Update(double timeToUpdate) {
