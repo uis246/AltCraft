@@ -1,5 +1,10 @@
 #version 330 core
+#extension ARB_shader_image_load_store: enable
 precision lowp float;
+
+#ifdef GL_ARB_shader_image_load_store
+layout(early_fragment_tests) in;
+#endif
 
 in vec2 UvPosition;
 flat in uint Layer;
