@@ -12,8 +12,8 @@ public:
 	Socket(std::string &addr, uint16_t port);
 	~Socket() noexcept;
 
-	void ReadData(unsigned char *buffPtr, size_t buffLen);
-	void SendData(unsigned char *buffPtr, size_t buffLen, bool more = false);
+	void ReadData(uint8_t *buffPtr, size_t buffLen);
+	void SendData(uint8_t *buffPtr, size_t buffLen, bool more = false);
 
-	void Connect(unsigned char *buffPtr, size_t buffLen);
+	void Connect(uint8_t *buffPtr, size_t buffLen);
 };

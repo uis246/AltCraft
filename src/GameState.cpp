@@ -84,7 +84,7 @@ void GameState::Update(double deltaTime) {
 }
 
 void GameState::UpdatePacket(std::shared_ptr<PacketCB> ptr) {
-	switch ((PacketNamePlayCB)ptr->GetPacketId()) {
+	switch (ptr->GetPacketId()) {
 		case SpawnObject: {
 			auto packet = std::static_pointer_cast<PacketSpawnObject>(ptr);
 			Entity entity = CreateObject(static_cast<ObjectType>(packet->Type));

@@ -57,7 +57,7 @@ Socket::Socket(std::string &address, uint16_t port) {
 	setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, &ka_timeout, sizeof(ka_timeout));
 }
 
-void Socket::Connect(unsigned char *buffPtr, size_t buffLen) {
+void Socket::Connect(uint8_t *buffPtr, size_t buffLen) {
 	int result;
 
 	result = sendto(sock, buffPtr, buffLen, MSG_FASTOPEN | MSG_NOSIGNAL, ai->ai_addr, ai->ai_addrlen);
@@ -89,22 +89,23 @@ Socket::~Socket() noexcept {
 	}
 }
 
-void Socket::ReadData(unsigned char *buffPtr, size_t buffLen) {
+void Socket::ReadData(uint8_t *buffPtr, size_t buffLen) {
 	int result;
 	size_t totalReceived = 0;
-	do {
-		result = recv(sock, buffPtr, buffLen, MSG_WAITALL | MSG_NOSIGNAL);
+	while (totalReceived < buffLen) {
+		result = recv(sock, buffPtr + totalReceived, buffLen - totalReceived, MSG_WAITALL | MSG_NOSIGNAL);
 		if (result == -1) {
 			if(errno == EINTR)
 				continue;
 			else
 				throw std::runtime_error("Data receiving failed: " + std::string(std::strerror(errno)));
-		}
+		} else if (result == 0)
+			throw std::runtime_error("Connection closed by server");
 		totalReceived += result;
-	} while (totalReceived < buffLen);
+	}
 }
 
-void Socket::SendData(unsigned char *buffPtr, size_t buffLen, bool more) {
+void Socket::SendData(uint8_t *buffPtr, size_t buffLen, bool more) {
 	int result;
 	result = send(sock, buffPtr, buffLen, MSG_DONTWAIT | MSG_NOSIGNAL | (more ? MSG_MORE : 0));
 	if (result == -1) {

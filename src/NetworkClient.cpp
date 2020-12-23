@@ -94,7 +94,7 @@ void NetworkClient::ExecNs() {
 				if (packet->GetPacketId() != PacketNamePlayCB::KeepAliveCB) {
 					PUSH_EVENT("ReceivedPacket", packet);
 				}
-				else {
+				else {//Send keepalive back
 					timeOfLastKeepAlivePacket = std::chrono::steady_clock::now();
 					auto packetKeepAlive = std::static_pointer_cast<PacketKeepAliveCB>(packet);
 					auto packetKeepAliveSB = std::make_shared<PacketKeepAliveSB>(packetKeepAlive->KeepAliveId);

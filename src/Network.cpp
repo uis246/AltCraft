@@ -118,16 +118,18 @@ void Network::SendPacket(PacketSB &packet, int compressionThreshold, bool more) 
 
 			//Send compressed compressed < uncompressed
 			if (compressed_len && compressed_len + header_size < len) {//This is wrong, I know. Let's try to avoid server decompression overhead.
+				//Write header
 				compressed.WriteVarInt(compressed_len + VarIntLen(len));
 				compressed.WriteVarInt(len);
 				socket->SendData(compressed.buffer + 10 - header_size, header_size + compressed_len, more);
 				return;
 			}
-			//Send uncompressed otherwise
 		}
 
+		//Send uncompressed if compressed not sent
 		socket->SendData(buffer.buffer, buffer.size, more);
 	} else {
+		//Compression disabled. Just send
 		StreamWOBuffer buffer(len+VarIntLen(len));
 		buffer.WriteVarInt(len);
 		buffer.WriteVarInt(packet.GetPacketId());

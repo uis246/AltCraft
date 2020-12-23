@@ -16,7 +16,7 @@ Socket::~Socket() noexcept {
 	SDLNet_Quit();
 }
 
-void Socket::ReadData(unsigned char *buffPtr, size_t buffLen) {
+void Socket::ReadData(uint8_t *buffPtr, size_t buffLen) {
 	size_t totalReceived = 0;
 	while (buffLen > totalReceived) {
 		size_t received = SDLNet_TCP_Recv(socket, buffPtr + totalReceived, buffLen - totalReceived);
@@ -26,7 +26,7 @@ void Socket::ReadData(unsigned char *buffPtr, size_t buffLen) {
 	}
 }
 
-void Socket::SendData(unsigned char *buffPtr, size_t buffLen, bool more) {
+void Socket::SendData(uint8_t *buffPtr, size_t buffLen, bool more) {
 	if (more || !buffer.empty()) {
 		std::copy(buffPtr, buffPtr + buffLen, std::back_inserter(buffer));
 		if (!more)
@@ -37,7 +37,7 @@ void Socket::SendData(unsigned char *buffPtr, size_t buffLen, bool more) {
 	}
 }
 
-void Socket::Connect(unsigned char *buffPtr, size_t buffLen) {
+void Socket::Connect(uint8_t *buffPtr, size_t buffLen) {
 	socket = SDLNet_TCP_Open(&server);
 	if (!socket)
 		LOG(WARNING) << "Connection failed: " << std::string(SDLNet_GetError());
