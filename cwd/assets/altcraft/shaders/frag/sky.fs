@@ -1,5 +1,5 @@
 #version 330 core
-#extension ARB_shader_image_load_store: enable
+#extension GL_ARB_shader_image_load_store: enable
 
 #ifdef GL_ARB_shader_image_load_store
 layout(early_fragment_tests) in;
