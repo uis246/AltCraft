@@ -27,9 +27,9 @@ layout(location = 7) in uvec4 bhlf;//biome height layer frames
 out vec2 UvPosition;
 flat out uint Layer;
 
-flat out vec4 ColorLight;
+flat out vec3 ColorMultiplier;
 
-//Intel SNB: VS vec4 shader: 54 instructions. 0 loops. 180 cycles. 0:0 spills:fills, 1 sends. Compacted 864 to 848 bytes (2%)
+//Intel SNB: VS vec4 shader: 55 instructions. 0 loops. 178 cycles. 0:0 spills:fills, 1 sends. Compacted 880 to 864 bytes (2%)
 
 void main() {
 	gl_Position = projView * vec4(positions[gl_VertexID], 1.0);
@@ -47,5 +47,5 @@ void main() {
 
 	vec2 light = vec2((qinfo >> uint(10)) & uint(0xF)) * (1 / 15.0) * vec2(1, DayTime);
 	float Light = clamp(length(light), MinLightLevel, 1.0);
-	ColorLight = vec4(clamp(vec3(0.514, 0.710, 0.576)+float(qinfo.x>>14), 0, 1), Light);
+	ColorMultiplier = clamp(vec3(0.514, 0.710, 0.576)+float(qinfo.x>>14), 0, 1) * Light;
 }
