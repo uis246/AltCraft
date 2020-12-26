@@ -1,8 +1,28 @@
 #include "RendererUI.hpp"
 
+#include "AssetManager.hpp"
+#include "Utility.hpp"
+
 RendererUI::RendererUI() {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(BUFCOUNT, VBOs);
+
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBOs[BUFVERTS]);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBOs[BUFELEMENTS]);
+
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (GLvoid*)(0));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (GLvoid*)(2*sizeof(float)));
+	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (GLvoid*)(5*sizeof(float)));
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_VERTEX_ARRAY, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 RendererUI::~RendererUI() {
 	glDeleteVertexArrays(1, &VAO);
@@ -10,9 +30,6 @@ RendererUI::~RendererUI() {
 }
 
 void RendererUI::PrepareRender() noexcept {
-	if(!dirtry && !permanentDirty)
-		return;//All buffers up to date
-
 	struct LayerStore *layer;
 	layer = layers.data();
 
@@ -25,17 +42,31 @@ void RendererUI::PrepareRender() noexcept {
 	elements = rbuf.index.size();
 
 	//Upload buffers
-	glBindBuffer(GL_VERTEX_ARRAY, VBOs[0]);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBOs[1]);
+//	glBindBuffer(GL_VERTEX_ARRAY, VBOs[BUFVERTS]);
+//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBOs[BUFELEMENTS]);
 	//TODO: buffer re-specification
-	glBufferData(GL_VERTEX_ARRAY, rbuf.buffer.size() * sizeof(float), rbuf.buffer.data(), GL_STREAM_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, rbuf.buffer.size() * sizeof(float), rbuf.buffer.data(), GL_STREAM_DRAW);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements * sizeof(GLushort), rbuf.index.data(), GL_STREAM_DRAW);
-	glBindBuffer(GL_VERTEX_ARRAY, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+//	glBindBuffer(GL_VERTEX_ARRAY, 0);
+//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void RendererUI::Render() noexcept {//Just draw
+void RendererUI::Render() noexcept {
+	glBindVertexArray(VAO);
+	glCheckError();
+
+	if(dirtry || permanentDirty)
+		PrepareRender();//Update geometry if outdated
+
+	Shader *textShader = nullptr;
+	AssetTreeNode *textNode = AssetManager::GetAssetByAssetName("/altcraft/shaders/text");
+	if (textNode->type==AssetTreeNode::ASSET_SHADER)
+		textShader = reinterpret_cast<AssetShader*>(textNode->asset.get())->shader.get();
+	textShader->Activate();
+	glCheckError();
+
 	glDrawElements(GL_TRIANGLES, elements, elementType, 0);
+	glCheckError();
 }
 
 

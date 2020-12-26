@@ -24,9 +24,10 @@ enum ModKeysMask {
 enum Layer {
 	GLOBAL_OVERLAY = 0,//Render alwaya
 	WORLD_OVERLAY,//Render over world
-	MENU_WORLD_OVERLAY,//Same as WORLD_OVERLAY, but with mouse ungrab
+	MENU_WORLD,//Same as WORLD_OVERLAY, but with mouse ungrab
 	MENU_ONLY,//Stops world rendering, skips lower layer of menu
 	MENU_OVERLAY//Stops world rendering, doesn't skip lower layer of menu
+	//TODO: skip MENU_OVERLAY when no MENU_ONLY or MENU_WORLD
 };
 
 struct AC_API IOState {

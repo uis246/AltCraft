@@ -10,17 +10,19 @@
 #include "Utility.hpp"
 #include "Renderer.hpp"
 #include "Event.hpp"
+#include "RendererUI.hpp"
 
 class RendererWorld;
 class Framebuffer;
 
 class Render {
-    SDL_Window *window;
-    SDL_GLContext glContext;
+	RendererUI *ui;
+	SDL_GLContext glContext;
+	SDL_Window *window;
 
-    bool renderGui = false;
+	bool renderGui = false;
 	bool isMouseCaptured = false;
-    int prevMouseX, prevMouseY;
+	int prevMouseX, prevMouseY;
 	float mouseXDelta, mouseYDelta;
     std::unique_ptr<RendererWorld> world; 
     bool renderWorld = false;

@@ -16,6 +16,7 @@
 #include "Framebuffer.hpp"
 #include "Plugin.hpp"
 #include "Audio.hpp"
+#include "GameUI.hpp"
 
 Render::Render(unsigned int windowWidth, unsigned int windowHeight,
                std::string windowTitle) {
@@ -25,8 +26,7 @@ Render::Render(unsigned int windowWidth, unsigned int windowHeight,
 
     InitSdl(windowWidth, windowHeight, windowTitle);
     glCheckError();
-    InitGlew();
-    glCheckError();
+	InitGlew();
 	AssetManager::InitAssetManager();
 	glCheckError();
     PrepareToRendering();
@@ -77,6 +77,7 @@ Render::~Render() {
 	PluginSystem::Deinit();
 	Audio::Deinit();
 
+	delete ui;
 	framebuffer.reset();
     ImGui_ImplSdlGL3_Shutdown();
     SDL_GL_DeleteContext(glContext);
@@ -157,6 +158,14 @@ void Render::PrepareToRendering() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, AssetManager::GetTextureAtlasId());
 
+	ui = new RendererUI();
+
+	struct LayerInfo info;
+	info.layer = GLOBAL_OVERLAY;
+	info.onEvent = GameUI::MainScreen::onEvent;
+	info.renderUpdate = GameUI::MainScreen::renderUpdate;
+	ui->PushLayer(info);
+
 	ImGui_ImplSdlGL3_Init(window);
 
 	int width, height;
@@ -204,6 +213,7 @@ void Render::RenderFrame() {
 
 
 	RenderGui();
+	ui->Render();
 
 	if (world) {
 		world->Update(GetTime()->RemainTimeMs());
@@ -731,7 +741,7 @@ void Render::InitEvents() {
         chatMessages.push_back(msg);
     });
 
-    listener.RegisterHandler("StateUpdated", [this](const Event& eventData) {
+    listener.RegisterHandler("StateUpdated", [this](const Event&) {
         switch (GetState()) {
             case State::Playing:
                 SetMouseCapture(true);

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "RendererUI.hpp"
+struct IOState;
+struct RenderBuffer;
 
 //Implementation of in-game ui
 namespace GameUI {
