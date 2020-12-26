@@ -2,6 +2,7 @@
 #include "ModLoader.hpp"
 
 #include <vector>
+#include <functional>
 
 #include <easylogging++.h>
 #include <sol.hpp>
@@ -16,6 +17,14 @@
 static std::vector<Plugin> plugins;
 static sol::state lua;
 
+struct Plugin {
+	int errors;
+	const std::string modid;
+	std::function<void()> onLoad;
+	std::function<void()> onUnload;
+	std::function<void(std::string)> onChangeState;
+	std::function<void(double)> onTick;
+};
 
 namespace PluginApi {
 	AC_API void LogWarning(std::string text) {

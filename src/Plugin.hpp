@@ -1,21 +1,12 @@
 #pragma once
 
 #include <string>
-#include <functional>
 
 #include "Vector.hpp"
 #include "Platform.hpp"
 
 struct BlockInfo;
-
-struct Plugin {
-	int errors;
-	const std::string modid;
-	std::function<void()> onLoad;
-	std::function<void()> onUnload;
-	std::function<void(std::string)> onChangeState;
-	std::function<void(double)> onTick;
-};
+struct Plugin;
 
 namespace PluginSystem {
 	AC_API void RegisterPlugin(Plugin &plugin);

@@ -55,7 +55,7 @@
 #endif
 
 #if USE_SDT
-//TODO
+//TODO: systemtap trace probes
 #	include <sys/sdt.h>
 #endif
 
