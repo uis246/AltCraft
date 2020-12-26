@@ -44,7 +44,9 @@ struct AC_API RenderBuffer {//TODO
 };
 
 struct AC_API LayerInfo {
+	//Handle buttons, gamepad, other iteraction with player
 	void (*onEvent)(struct IOState *state, void *custom);
+	//Update geometry
 	void (*renderUpdate)(struct RenderBuffer *buf, void *custom);
 	enum Layer layer;
 };
