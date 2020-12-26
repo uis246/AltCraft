@@ -14,14 +14,14 @@ namespace GameUI {
 		//Test code
 		//Vert 0
 		//Position
-		buf->buffer.push_back(0);
-		buf->buffer.push_back(0);
+		buf->buffer.push_back(-1);
+		buf->buffer.push_back(-1);
 
 		//Color
+		buf->buffer.push_back(1);
 		buf->buffer.push_back(0);
-		buf->buffer.push_back(0);
-		buf->buffer.push_back(0);
-		buf->buffer.push_back(0);
+		buf->buffer.push_back(1);
+		buf->buffer.push_back(0.5f);
 
 		//Uv
 		buf->buffer.push_back(0);
@@ -31,13 +31,13 @@ namespace GameUI {
 		//Vert 1
 		//Position
 		buf->buffer.push_back(1);
-		buf->buffer.push_back(0);
+		buf->buffer.push_back(-1);
 
 		//Color
 		buf->buffer.push_back(1);
 		buf->buffer.push_back(0);
 		buf->buffer.push_back(0);
-		buf->buffer.push_back(0);
+		buf->buffer.push_back(0.5f);
 
 		//Uv
 		buf->buffer.push_back(1);
@@ -46,14 +46,14 @@ namespace GameUI {
 
 		//Vert 2
 		//Position
-		buf->buffer.push_back(0);
+		buf->buffer.push_back(-1);
 		buf->buffer.push_back(1);
 
 		//Color
 		buf->buffer.push_back(0);
 		buf->buffer.push_back(1);
 		buf->buffer.push_back(0);
-		buf->buffer.push_back(0);
+		buf->buffer.push_back(0.5f);
 
 		//Uv
 		buf->buffer.push_back(0);

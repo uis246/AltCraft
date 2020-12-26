@@ -42,17 +42,18 @@ void RendererUI::PrepareRender() noexcept {
 	elements = rbuf.index.size();
 
 	//Upload buffers
-//	glBindBuffer(GL_VERTEX_ARRAY, VBOs[BUFVERTS]);
-//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBOs[BUFELEMENTS]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOs[BUFVERTS]);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBOs[BUFELEMENTS]);
 	//TODO: buffer re-specification
 	glBufferData(GL_ARRAY_BUFFER, rbuf.buffer.size() * sizeof(float), rbuf.buffer.data(), GL_STREAM_DRAW);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements * sizeof(GLushort), rbuf.index.data(), GL_STREAM_DRAW);
-//	glBindBuffer(GL_VERTEX_ARRAY, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 //	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void RendererUI::Render() noexcept {
 	glBindVertexArray(VAO);
+	glDisable(GL_CULL_FACE);
 	glCheckError();
 
 	if(dirtry || permanentDirty)
@@ -63,9 +64,11 @@ void RendererUI::Render() noexcept {
 	if (textNode->type==AssetTreeNode::ASSET_SHADER)
 		textShader = reinterpret_cast<AssetShader*>(textNode->asset.get())->shader.get();
 	textShader->Activate();
-	glCheckError();
 
 	glDrawElements(GL_TRIANGLES, elements, elementType, 0);
+	glCheckError();
+
+	glEnable(GL_CULL_FACE);
 	glCheckError();
 }
 
