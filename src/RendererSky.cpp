@@ -130,7 +130,7 @@ RendererSky::~RendererSky() {
     //glCheckError();
 }
 
-void RendererSky::Render(RenderState &renderState) {
+void RendererSky::Render(RenderState &renderState) noexcept {
 	OPTICK_EVENT();
     renderState.SetActiveVao(Vao);
     glDrawArrays(GL_TRIANGLES, 0, 36);

@@ -93,6 +93,7 @@ RendererEntity::~RendererEntity() {
 void RendererEntity::RenderBatch(const int count) noexcept {
 	OPTICK_EVENT();
 
+	//Batch, batch, batch
 	glDrawElementsInstanced(GL_LINES, 24, GL_UNSIGNED_SHORT, 0, count);
 }
 

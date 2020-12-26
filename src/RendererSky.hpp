@@ -9,5 +9,5 @@ class RendererSky {
 public:
     RendererSky();
     ~RendererSky();
-    void Render(RenderState &renderState);
+    void Render(RenderState &renderState) noexcept;
 };

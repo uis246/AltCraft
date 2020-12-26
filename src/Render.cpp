@@ -36,7 +36,7 @@ Render::Render(unsigned int windowWidth, unsigned int windowHeight,
 	//Read settings
 	strcpy(fieldUsername, Settings::Read("username", "HelloOne").c_str());
 	strcpy(fieldServerAddr, Settings::Read("serverAddr", "127.0.0.1").c_str());
-	fieldDistance = Settings::ReadDouble("renderDistance", 2.0);
+	fieldDistance = Settings::ReadInt("renderDistance", 2);
 	fieldTargetFps = Settings::ReadDouble("targetFps", 60.0);
 	fieldSensetivity = Settings::ReadDouble("mouseSensetivity", 0.1);
 	fieldVsync = Settings::ReadBool("vsync", false);
