@@ -2,6 +2,7 @@
 #include "AssetManager.hpp"
 
 #include <filesystem>
+#include <functional>
 
 namespace ModLoader {
 	struct Mod{
