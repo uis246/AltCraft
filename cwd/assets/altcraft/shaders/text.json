@@ -1,0 +1,6 @@
+{
+  "vert": "/altcraft/shaders/vert/text",
+  "frag": "/altcraft/shaders/frag/text",
+  "uniforms": [],
+  "_comment": "projection"
+}
