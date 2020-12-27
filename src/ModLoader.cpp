@@ -16,19 +16,19 @@ void ModLoader::LoadMod(AssetTreeNode &node) noexcept {
 			LoadCode(*it);
 
 		else if	(it->name == "shaders")
-			RecursiveWalkAssetFiles(*it.get(), ParseAssetShader);
+			RecursiveLoadAssetFiles(*it.get(), ParseAssetShader);
 
 		else if	(it->name == "blockstates")
-			RecursiveWalkAssetFiles(*it.get(), ParseAssetBlockState);
+			RecursiveLoadAssetFiles(*it.get(), ParseAssetBlockState);
 
 		else if	(it->name == "models")
 			LoadModels(*it.get());
 
 		else if	(it->name == "textures")
-			RecursiveWalkAssetFiles(*it.get(), ParseAssetTexture);
+			RecursiveLoadAssetFiles(*it.get(), ParseAssetTexture);
 
 		else if	(it->name == "sounds")
-			RecursiveWalkAssetFiles(*it.get(), ParseAssetSound);
+			RecursiveLoadAssetFiles(*it.get(), ParseAssetSound);
 
 		else if (it->name == "acmod")
 			LoadModinfo(*it.get());
@@ -48,7 +48,7 @@ void ModLoader::LoadMod(AssetTreeNode &node) noexcept {
 void ModLoader::LoadModels(AssetTreeNode &node) noexcept {
 	for (auto& it : node.childs) {
 		if		(it->name == "block")
-			RecursiveWalkAssetFiles(*it.get(), ParseAssetBlockModel);
+			RecursiveLoadAssetFiles(*it.get(), ParseAssetBlockModel);
 
 		else
 			LOG(WARNING)<<"Unknown model type \"" << it->name << "\" from " << node.parent->name;
@@ -57,7 +57,7 @@ void ModLoader::LoadModels(AssetTreeNode &node) noexcept {
 void ModLoader::LoadCode(AssetTreeNode &node) noexcept {
 	for (auto& it : node.childs) {
 		if	      (it->name == "lua"){
-			RecursiveWalkAssetFiles(*it, ParseAssetLua);
+			RecursiveLoadAssetFiles(*it, ParseAssetLua);
 		}else
 			LOG(WARNING) << "Unknown code type \"" << it->name << "\" from " << node.name;
 	}
@@ -426,7 +426,7 @@ void ModLoader::WalkDirEntry(const fs::directory_entry &dirEntry, AssetTreeNode 
 }
 
 
-void ModLoader::RecursiveWalkAssetFiles(AssetTreeNode &assetNode, std::function<void(AssetTreeNode&)> fnc) noexcept {
+void ModLoader::RecursiveLoadAssetFiles(AssetTreeNode &assetNode, std::function<void(AssetTreeNode&)> fnc) noexcept {
 
 	std::function<void(AssetTreeNode&)> walkAssetRecur = [&](AssetTreeNode &node) {
 		for (auto& it : node.childs) {
@@ -440,14 +440,24 @@ void ModLoader::RecursiveWalkAssetFiles(AssetTreeNode &assetNode, std::function<
 	walkAssetRecur(assetNode);
 }
 
+void ModLoader::RecursiveWalkAssetFiles(AssetTreeNode &assetNode, std::function<void(AssetTreeNode&)> fnc) noexcept {
+
+	std::function<void(AssetTreeNode&)> walkAssetRecur = [&](AssetTreeNode &node) {
+		fnc(node);
+		for (auto& it : node.childs)
+			walkAssetRecur(*it.get());
+	};
+
+	walkAssetRecur(assetNode);
+}
+
 void ModLoader::RecursiveWalkAssetPath(const std::string & assetPath, std::function<void(AssetTreeNode&)> fnc) noexcept {
 	AssetTreeNode *assetNode = AssetManager::GetAssetByAssetName(assetPath);
 
 	std::function<void(AssetTreeNode&)> walkAssetRecur = [&](AssetTreeNode &node) {
 		fnc(node);
-		for (auto& it : node.childs) {
+		for (auto& it : node.childs)
 			walkAssetRecur(*it.get());
-		}
 	};
 
 	walkAssetRecur(*assetNode);

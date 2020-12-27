@@ -89,13 +89,26 @@ void LoadAssets() {
 	ModLoader::WalkDirEntry(fs::directory_entry(pathToAssets), assetTree.get());
 }
 
+static void RecursiveWalkType(const std::string &assetType, std::function<void(AssetTreeNode&)> fnc) noexcept {
+	AssetTreeNode *assetNode = assetTree.get();
+
+	for (auto &module : assetNode->childs) {
+		for (auto &type : module->childs) {
+			if (type->name == assetType) {
+				ModLoader::RecursiveWalkAssetFiles(*type.get(), fnc);
+				break;
+			}
+		}
+	}
+}
+
 void LoadTextures() {
 	std::vector<TextureData> textureData;
 	size_t id = 0;
-	ModLoader::RecursiveWalkAssetPath("/minecraft/textures/", [&](AssetTreeNode &node) {
-		TextureData data;
+	RecursiveWalkType("textures", [&](AssetTreeNode &node) {
 		if (node.type != AssetTreeNode::ASSET_TEXTURE)
 			return;
+		TextureData data;
 		AssetTexture *textureAsset = reinterpret_cast<AssetTexture*>(node.asset.get());
 		data.data = std::move(textureAsset->textureData);
 		data.width = textureAsset->realWidth;

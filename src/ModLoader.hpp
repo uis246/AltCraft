@@ -33,6 +33,7 @@ namespace ModLoader {
 
 	void WalkDirEntry(const std::filesystem::directory_entry &dirEntry, AssetTreeNode *node) noexcept;
 
+	void RecursiveLoadAssetFiles(AssetTreeNode &assetNode, std::function<void(AssetTreeNode&)> fnc) noexcept;
 	void RecursiveWalkAssetFiles(AssetTreeNode &assetNode, std::function<void(AssetTreeNode&)> fnc) noexcept;
 	void RecursiveWalkAssetPath(const std::string &assetPath, std::function<void(AssetTreeNode&)> fnc) noexcept;
 
