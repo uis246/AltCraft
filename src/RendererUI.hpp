@@ -37,10 +37,10 @@ struct AC_API IOState {
 
 struct AC_API RenderBuffer {//TODO
 	std::vector<GLushort> index;
-	std::vector<float> buffer;
+	std::vector<GLfloat> buffer;
 	//vec2 - position
-	//vec4 - color multiplier
 	//vec3 - UvLayer
+	//vec4 - color multiplier
 	//9 floats = 36 bytes
 };
 

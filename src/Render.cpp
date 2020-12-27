@@ -17,6 +17,7 @@
 #include "Plugin.hpp"
 #include "Audio.hpp"
 #include "GameUI.hpp"
+#include "UIHelper.hpp"
 
 Render::Render(unsigned int windowWidth, unsigned int windowHeight,
                std::string windowTitle) {
@@ -32,6 +33,7 @@ Render::Render(unsigned int windowWidth, unsigned int windowHeight,
     PrepareToRendering();
     glCheckError();
 	Audio::Init();
+	UIHelper::InitHelper();
 
 	//Read settings
 	strcpy(fieldUsername, Settings::Read("username", "HelloOne").c_str());
@@ -212,8 +214,8 @@ void Render::RenderFrame() {
 	}
 
 
-	RenderGui();
 	ui->Render();
+	RenderGui();
 
 	if (world) {
 		world->Update(GetTime()->RemainTimeMs());

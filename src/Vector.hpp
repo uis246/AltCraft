@@ -257,4 +257,5 @@ struct AC_API Vector2 {
 using VectorF = Vector3<double>;
 using Vector = Vector3<signed long long>;
 
+using Vector2F = Vector2<float>;
 using Vector2I32 = Vector2<int32_t>;

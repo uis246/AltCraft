@@ -1,25 +1,18 @@
 #pragma once
 
 #include "Platform.hpp"
+#include "Vector.hpp"
 
 //UI helper
-//C function declaration
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+class AC_API UIHelper final {
+	size_t element;
+	struct RenderBuffer *buffer;
+public:
+	static void InitHelper() noexcept;
 
-//struct AC_API UIHLPRect {
-//	int x, y;
-//	int w, h;
-//};
-//struct AC_API UIHLPColor {
-//	float r, g, b, a;
-//};
+	UIHelper(struct RenderBuffer *buffer) noexcept;
 
-//Add rectangle filled with color
-//AC_API void UI_AddColoredRect(struct RenderBuffer *buf, struct UIHLPRect rect, struct UIHLPColor color);
-
-#ifdef __cplusplus
-}
-#endif
+	//Add rectangle filled with color
+	void AddColoredRect(Vector2F from, Vector2F to, Vector3<float> color);
+};
