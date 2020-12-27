@@ -155,13 +155,50 @@ void Render::InitGlew() {
     }
 }
 
+static GLfloat xvert[] = {
+	//Position	UV
+	0, -2*9,	0, -9,
+	0, 2*9,		0, 9,
+	-2*9, 0,	-9, 0,
+	2*9, 0,		9, 0
+};
+
+static GLuint xVAO = 0, xVBO;
+
 void Render::PrepareToRendering() {
+	if (xVAO == 0) {
+		//Upload crosshair buffer
+		glCreateVertexArrays(1, &xVAO);
+		glCreateBuffers(1, &xVBO);
+
+		glBindVertexArray(xVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, xVBO);
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(xvert), xvert, GL_STATIC_DRAW);
+
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+
+		Shader *xShader = nullptr;
+		AssetTreeNode *xNode = AssetManager::GetAssetByAssetName("/altcraft/shaders/xhair");
+		if (xNode->type==AssetTreeNode::ASSET_SHADER)
+			xShader = reinterpret_cast<AssetShader*>(xNode->asset.get())->shader.get();
+		xShader->Activate();
+		xShader->SetUniform("inputTexture", 1);
+	}
+
 	//Bind TextureAtlas
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, AssetManager::GetTextureAtlasId());
 
 	ui = new RendererUI();
 
+	//Add start menu
 	struct LayerInfo info;
 	info.layer = GLOBAL_OVERLAY;
 	info.onEvent = GameUI::MainScreen::onEvent;
@@ -210,12 +247,17 @@ void Render::RenderFrame() {
 		world->Render(renderState);
 		if (isWireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		//Render to backbuffer
 		framebuffer->RenderTo(Framebuffer::GetDefault());
+
+		//Render crosshair
+		RenderXhair(renderState);
 	}
 
 
-	ui->Render();
-	RenderGui();
+//	ui->Render();
+	RenderGui(renderState);
 
 	if (world) {
 		world->Update(GetTime()->RemainTimeMs());
@@ -390,7 +432,22 @@ void Render::Update() {
     listener.HandleAllEvents();
 }
 
-void Render::RenderGui() {
+void Render::RenderXhair(RenderState &state) {
+	Shader *xShader = nullptr;
+	AssetTreeNode *xNode = AssetManager::GetAssetByAssetName("/altcraft/shaders/xhair");
+	if (xNode->type==AssetTreeNode::ASSET_SHADER)
+		xShader = reinterpret_cast<AssetShader*>(xNode->asset.get())->shader.get();
+	xShader->Activate();
+	xShader->SetUniform("ratio", glm::vec2(1.f / state.WindowWidth, 1.f / state.WindowHeight));
+
+	glLineWidth(2);
+	glBindVertexArray(xVAO);
+	glDrawArrays(GL_LINES, 0, 4);
+	glBindVertexArray(0);
+	glCheckError();
+}
+
+void Render::RenderGui(RenderState &state) {
 	OPTICK_EVENT();
     ImGui_ImplSdlGL3_NewFrame(window);
 
@@ -685,9 +742,6 @@ void Render::RenderGui() {
             break;
 
         case State::Playing: {
-            ImGui::SetNextWindowPosCenter();
-            ImGui::Begin("",0,windowFlags);
-            ImGui::End();
             break;
         }
     }

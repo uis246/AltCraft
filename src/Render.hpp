@@ -62,7 +62,8 @@ class Render {
 
     void UpdateKeyboard();
 
-    void RenderGui();
+	void RenderXhair(RenderState &state);
+	void RenderGui(RenderState &state);
 
 	void InitEvents();
 

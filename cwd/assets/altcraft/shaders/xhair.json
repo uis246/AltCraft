@@ -1,0 +1,8 @@
+{
+  "vert": "/altcraft/shaders/vert/xhair",
+  "frag": "/altcraft/shaders/frag/xhair",
+  "uniforms": [
+    "ratio",
+    "inputTexture"
+  ]
+} 
