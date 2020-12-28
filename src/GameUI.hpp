@@ -17,6 +17,11 @@ namespace GameUI {
 		void renderUpdate(struct RenderBuffer *buf, void *custom) noexcept;
 	}
 
+	namespace PauseMenu {
+		void onEvent(struct IOState *state, void *custom) noexcept;
+		void renderUpdate(struct RenderBuffer *buf, void *custom) noexcept;
+	}
+
 	namespace Inventory {
 		void onEvent(struct IOState *state, void *custom) noexcept;
 		void renderUpdate(struct RenderBuffer *buf, void *custom) noexcept;

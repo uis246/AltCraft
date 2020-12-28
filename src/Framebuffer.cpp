@@ -6,6 +6,7 @@
 
 const GLuint magic = 316784;
 GLuint quadVao = magic, quadVbo = magic, Framebuffer::activeFBO = magic;
+static GLuint currentWidth = 0, currentHeight = 0;
 
 Framebuffer::Framebuffer(unsigned int width, unsigned int height, bool createDepthStencilBuffer) : width(width), height(height) {
 	OPTICK_EVENT();
@@ -77,10 +78,11 @@ Framebuffer::~Framebuffer() {
 void Framebuffer::Activate() {
 	OPTICK_EVENT();
 	if (activeFBO != fbo || activeFBO == magic) {
-		glViewport(0, 0, width, height);
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		activeFBO = fbo;
 	}
+	if (currentWidth != width || currentHeight != height)
+		glViewport(0, 0, width, height);
 }
 
 void Framebuffer::RenderTo(Framebuffer &target) {
@@ -114,8 +116,8 @@ Framebuffer &Framebuffer::GetDefault() {
 	if (fboDefault == nullptr) {
 		fboDefault = reinterpret_cast<Framebuffer*>(fboDefaultData);
 		fboDefault->fbo = 0;
-		fboDefault->width = 1;
-		fboDefault->height = 1;
+		fboDefault->width = 900;
+		fboDefault->height = 480;
 		fboDefault->texColor = 0;
 		fboDefault->rboDepthStencil = 0;
 	}

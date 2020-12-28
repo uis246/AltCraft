@@ -256,7 +256,7 @@ void Render::RenderFrame() {
 	}
 
 
-//	ui->Render();
+	ui->Render();
 	RenderGui(renderState);
 
 	if (world) {

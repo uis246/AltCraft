@@ -135,16 +135,25 @@ GLuint RendererUI::getVAO() noexcept {
 
 
 
-static TextureCoord tc;
+static TextureCoord white;
+
+static uint8_t *glyphs;
+static TextureCoord font[1];
 
 UIHelper::UIHelper(struct RenderBuffer *buf) noexcept {
 	buffer = buf;
-	element = buf->buffer.size();
+	element = buf->buffer.size() / 9;
 }
 
 void UIHelper::InitHelper() noexcept {
 	//Get white rect for colored render
-	tc = AssetManager::GetTexture("/altcraft/textures/gui/white");
+	white = AssetManager::GetTexture("/altcraft/textures/gui/white");
+
+	//Get sizes of charecters in texture
+	AssetTreeNode *glyph_sizes = AssetManager::GetAssetByAssetName("/minecraft/font/glyph_sizes");
+	glyphs = glyph_sizes->data.data();
+
+	font[0] = AssetManager::GetTexture("/minecraft/textures/font/unicode_page_00");
 }
 
 struct Vertex {
@@ -171,23 +180,35 @@ struct Vertex {
 	}
 };
 
-void UIHelper::AddColoredRect(Vector2F from, Vector2F to, Vector3<float> color) {
-	Vector3<float> uv((tc.x + tc.w)/2, (tc.y + tc.h)/2, tc.layer);
+void UIHelper::AddColoredRect(Vector2F from, Vector2F to, const Vector3<float> color) {
+	Vector2<float> uv((white.x + white.w)/2, (white.y + white.h)/2);
 
+	Mat2x2F pos = {from, to};
+	Mat2x2F UV = {uv, uv};
+
+	AddRect(pos, UV, white.layer, color);
+}
+
+void UIHelper::AddRect(Mat2x2F position, Mat2x2F uv, unsigned int layer, const Vector3<float> color) {
 	//Top-left
-	struct Vertex vtx = {from, uv, color.x, color.y, color.z, 1};
+	struct Vertex vtx = {position[0],
+				Vector3(uv[0].x, uv[0].z, (float)layer),
+				color.x, color.y, color.z, .8};
 	vtx.push(&buffer->buffer);
 
 	//Bottom-left
-	vtx.pos = Vector2F(to.x, from.z);
+	vtx.pos = Vector2F(position[1].x, position[0].z);
+	vtx.uv.x = uv[1].x;
 	vtx.push(&buffer->buffer);
 
 	//Top-right
-	vtx.pos = Vector2F(from.x, to.z);
+	vtx.pos = Vector2F(position[0].x, position[1].z);
+	vtx.uv = Vector3(uv[0].x, uv[1].z, (float)layer);
 	vtx.push(&buffer->buffer);
 
 	//Bottom-right
-	vtx.pos = to;
+	vtx.pos = position[1];
+	vtx.uv.x = uv[1].x;
 	vtx.push(&buffer->buffer);
 
 
@@ -199,4 +220,36 @@ void UIHelper::AddColoredRect(Vector2F from, Vector2F to, Vector3<float> color) 
 	buffer->index.push_back(element+3);
 
 	element+=4;
+}
+
+void UIHelper::GetTextSize(std::u16string &string, Mat2x2F *returnSize) noexcept {
+
+}
+void UIHelper::AddText(Vector2F position, std::u16string &string, const Vector3<float> color) {
+	Vector2F offset(0);
+	for(uint16_t chr : string) {
+		uint8_t page = 0;//chr>>8
+		uint8_t pos = chr&0xFF;
+
+		uint8_t width = glyphs[chr];
+		//line = pos/16
+		//colomn = pos%16
+		uint8_t line = pos / 16, colomn = pos % 16;
+
+		Vector2F fp(font[page].x, font[page].y);
+		Vector2F fs(font[page].w, font[page].h);
+
+		Vector2F start = Vector2F(colomn, line)*16;
+		Vector2F end = start + Vector2F(width, 15);
+
+		start = (start * fs) + fp;
+		end = (end * fs) + fp;
+
+		Mat2x2F uv = {start, end};
+		Mat2x2F positn = {position + offset, position + offset + Vector2F(width, 15)};
+
+		AddRect(positn, uv, font[page].layer, color);
+
+		offset.x += width;
+	}
 }
