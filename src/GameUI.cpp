@@ -14,6 +14,7 @@ namespace GameUI {
 	void MainScreen::renderUpdate(struct RenderBuffer *buf, void*) noexcept {
 		UIHelper helper(buf);
 		helper.AddColoredRect(Vector2F(-0.9, -0.9), Vector2F(0.9, 0.9), Vector3<float>(0.9, 0.9, 0));
+		helper.AddText(Vector2F(0), UIHelper::ASCIIToU16(" "), Vector3<float>(1, 1, 1));
 	}
 
 

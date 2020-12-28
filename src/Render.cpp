@@ -256,7 +256,7 @@ void Render::RenderFrame() {
 	}
 
 
-	ui->Render();
+	ui->Render(renderState);
 	RenderGui(renderState);
 
 	if (world) {
@@ -290,6 +290,7 @@ void Render::HandleEvents() {
                         renderState.WindowHeight = height;
 						framebuffer->Resize(width * fieldResolutionScale, height * fieldResolutionScale);
 						Framebuffer::GetDefault().Resize(width, height);
+						ui->Redraw();
                         break;
                     }
 

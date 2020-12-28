@@ -2,10 +2,11 @@
 
 #include "Platform.hpp"
 
-//#include <string>
 #include <vector>
 
 #include <GL/glew.h>
+
+class RenderState;
 
 enum MouseButtons {
 	LEFT = 0,
@@ -36,6 +37,7 @@ struct AC_API IOState {
 };
 
 struct AC_API RenderBuffer {//TODO
+	const RenderState *renderState;
 	std::vector<GLushort> index;
 	std::vector<GLfloat> buffer;
 	//vec2 - position
@@ -88,7 +90,7 @@ public:
 	AC_API void PopLayer() noexcept;
 	//Mark geometry ditry
 	AC_API void Redraw() noexcept;
-	AC_INTERNAL void Render() noexcept;
-	AC_INTERNAL void PrepareRender() noexcept;
+	AC_INTERNAL void Render(RenderState &state) noexcept;
+	AC_INTERNAL void PrepareRender(RenderState &state) noexcept;
 	AC_INTERNAL GLuint getVAO() noexcept;
 };

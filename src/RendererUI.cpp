@@ -3,6 +3,7 @@
 
 #include "AssetManager.hpp"
 #include "Utility.hpp"
+#include "Renderer.hpp"
 
 RendererUI::RendererUI() {
 	glGenVertexArrays(1, &VAO);
@@ -22,7 +23,7 @@ RendererUI::RendererUI() {
 	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (GLvoid*)(5*sizeof(GLfloat)));
 
 	glBindVertexArray(0);
-	glBindBuffer(GL_VERTEX_ARRAY, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 RendererUI::~RendererUI() {
@@ -30,12 +31,13 @@ RendererUI::~RendererUI() {
 	glDeleteBuffers(BUFCOUNT, VBOs);
 }
 
-void RendererUI::PrepareRender() noexcept {
+void RendererUI::PrepareRender(RenderState &state) noexcept {
 	struct LayerStore *layer;
 	layer = layers.data();
 
 	//Generate geometry
 	struct RenderBuffer rbuf;
+	rbuf.renderState = &state;
 	for(size_t i = min; i < max; i++) {
 		layer[i].info.renderUpdate(&rbuf, layer[i].argument);
 	}
@@ -46,16 +48,19 @@ void RendererUI::PrepareRender() noexcept {
 	glBindBuffer(GL_ARRAY_BUFFER, VBOs[BUFVERTS]);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBOs[BUFELEMENTS]);
 	//TODO: buffer re-specification
+	//Assume that data will be updated every frame
 	glBufferData(GL_ARRAY_BUFFER, rbuf.buffer.size() * sizeof(float), rbuf.buffer.data(), GL_STREAM_DRAW);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements * sizeof(GLushort), rbuf.index.data(), GL_STREAM_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glCheckError();
+
+	dirtry = false;
 }
 
-void RendererUI::Render() noexcept {
+void RendererUI::Render(RenderState &state) noexcept {
 	if(dirtry || permanentDirty)
-		PrepareRender();//Update geometry if outdated
+		PrepareRender(state);//Update geometry if outdated
 
 	glBindVertexArray(VAO);
 	glDisable(GL_DEPTH_TEST);
@@ -222,34 +227,50 @@ void UIHelper::AddRect(Mat2x2F position, Mat2x2F uv, unsigned int layer, const V
 	element+=4;
 }
 
-void UIHelper::GetTextSize(std::u16string &string, Mat2x2F *returnSize) noexcept {
+const std::u16string UIHelper::ASCIIToU16(std::string str) noexcept {
+	std::u16string result;
+	size_t cnt = str.length();
+	result.resize(cnt);
+	const char *chars = str.c_str();
+	for(size_t i = 0; i < cnt; i++) {
+		result[i] = (uint16_t)chars[i];
+	}
+
+	return result;
+}
+
+void UIHelper::GetTextSize(const std::u16string &string, Mat2x2F *returnSize) noexcept {
 
 }
-void UIHelper::AddText(Vector2F position, std::u16string &string, const Vector3<float> color) {
-	Vector2F offset(0);
+void UIHelper::AddText(Vector2F position, const std::u16string &string, const Vector3<float> color) {
+	Vector2F offset;
 	for(uint16_t chr : string) {
 		uint8_t page = 0;//chr>>8
 		uint8_t pos = chr&0xFF;
 
-		uint8_t width = glyphs[chr];
-		//line = pos/16
-		//colomn = pos%16
+		uint8_t width = ((glyphs[chr/2] >> (4*chr%2)) & 0xF) + 1;
 		uint8_t line = pos / 16, colomn = pos % 16;
 
-		Vector2F fp(font[page].x, font[page].y);
-		Vector2F fs(font[page].w, font[page].h);
+		Vector2F texpos(font[page].x, font[page].y);
+		Vector2F texsize(font[page].w, font[page].h);
 
-		Vector2F start = Vector2F(colomn, line)*16;
-		Vector2F end = start + Vector2F(width, 15);
+		Vector2F start = Vector2F(colomn, line) * (16.f / 255);
+		Vector2F end = start + (Vector2F(width, 15) * (1.f / 255));
 
-		start = (start * fs) + fp;
-		end = (end * fs) + fp;
+		float a = 1 - start.z;
+		float b = 1 - end.z;
+		start.z = b;
+		end.z = a;
+
+		start = (start * texsize) + texpos;
+		end = (end * texsize) + texpos;
 
 		Mat2x2F uv = {start, end};
-		Mat2x2F positn = {position + offset, position + offset + Vector2F(width, 15)};
+		Vector2F psz = Vector2F(width, 16) / Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight) * 8;
+		Mat2x2F positn = {position + offset, position + offset + psz};
 
 		AddRect(positn, uv, font[page].layer, color);
 
-		offset.x += width;
+		offset.x += psz.x;
 	}
 }
