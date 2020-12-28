@@ -245,28 +245,33 @@ void UIHelper::GetTextSize(const std::u16string &string, Mat2x2F *returnSize) no
 void UIHelper::AddText(Vector2F position, const std::u16string &string, const Vector3<float> color) {
 	Vector2F offset;
 	for(uint16_t chr : string) {
-		uint8_t page = 0;//chr>>8
-		uint8_t pos = chr&0xFF;
+		uint8_t page = chr >> 8;
+		uint8_t subchr = chr & 0xFF;
 
-		uint8_t width = ((glyphs[chr/2] >> (4*chr%2)) & 0xF) + 1;
-		uint8_t line = pos / 16, colomn = pos % 16;
+		uint8_t endPixel, startPixel;
+		{
+			uint8_t glyphsz = glyphs[subchr];
+			endPixel = glyphsz & 0x0F;
+			endPixel++;
+			startPixel = glyphsz >> 4;
+		}
+		uint8_t line = subchr / 16, colomn = subchr % 16;
+		line = 15 - line;//Texture is flipped
 
 		Vector2F texpos(font[page].x, font[page].y);
 		Vector2F texsize(font[page].w, font[page].h);
 
-		Vector2F start = Vector2F(colomn, line) * (16.f / 255);
-		Vector2F end = start + (Vector2F(width, 15) * (1.f / 255));
+		Vector2F charBox(endPixel - startPixel, 16);
 
-		float a = 1 - start.z;
-		float b = 1 - end.z;
-		start.z = b;
-		end.z = a;
+		Vector2F start = (Vector2F(colomn, line) * 16.f + Vector2F(startPixel, 0)) * (1.f / 256);
+		Vector2F end = start + (charBox * (1.f / 256));
 
+		//Convert to texture atlas coordinates
 		start = (start * texsize) + texpos;
 		end = (end * texsize) + texpos;
 
 		Mat2x2F uv = {start, end};
-		Vector2F psz = Vector2F(width, 16) / Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight) * 8;
+		Vector2F psz = charBox * 8 / Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight);
 		Mat2x2F positn = {position + offset, position + offset + psz};
 
 		AddRect(positn, uv, font[page].layer, color);
