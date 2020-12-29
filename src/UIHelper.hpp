@@ -32,7 +32,11 @@ public:
 	enum origin {
 		CENTER,
 		UPLEFT,
+		UPRIGHT,
+		DOWNRIGHT,
+		DOWNLEFT,
 		ORIGINS
 	};
+	//Get NDC from pixel offset
 	Vector2F GetCoord(const enum origin, Vector2F pixels) noexcept;
 };

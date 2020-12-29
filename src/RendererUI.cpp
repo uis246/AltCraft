@@ -245,7 +245,8 @@ const std::u16string UIHelper::ASCIIToU16(std::string str) noexcept {
 }
 
 Vector2F UIHelper::GetTextSize(const std::u16string &string, const float scale) noexcept {
-	Vector2F offset;
+	Vector2F offset, size;
+	bool removeSpace = false;
 	for(uint16_t chr : string) {
 		if(chr == ' ') {
 			offset.x += scale * 4;
@@ -260,20 +261,24 @@ Vector2F UIHelper::GetTextSize(const std::u16string &string, const float scale) 
 				endPixel++;
 				startPixel = glyphsz >> 4;
 			}
-			//Add horisontal glyph size to offset
-			offset.x += (endPixel - startPixel) * scale;
-
-			//Add space between glyphs
-			offset.x += scale;
+			offset.x += scale * ((endPixel - startPixel) + 1);
+			removeSpace = true;
 		}
+		if(offset.x > size.x)
+			size.x = offset.x;
+		if(offset.z > size.z)
+			size.z = offset.z;
 	}
-	return offset;
+	size.z += scale * vto;
+	if(removeSpace)
+		size.x -= scale;
+	return size;
 }
 void UIHelper::AddText(const Vector2F position, const std::u16string &string, const float scale, const Vector3<float> color) {
 	Vector2F offset;
 	for(uint16_t chr : string) {
 		if(chr == ' ') {
-			offset.x += scale * 4 / buffer->renderState->WindowWidth;
+			offset.x += scale * 8 / buffer->renderState->WindowWidth;
 		} else if (chr == '\n') {
 			offset.x = 0;
 			offset.z += scale * vto / buffer->renderState->WindowHeight;
@@ -299,12 +304,12 @@ void UIHelper::AddText(const Vector2F position, const std::u16string &string, co
 			texsize = texsize * (1.f / 256);
 
 			//Glyph size
-			Vector2F charBox(endPixel - startPixel - 0.02f, 16.f - 0.02f);
+			Vector2F charBox(endPixel - startPixel, 16.f);
 			Vector2F charBase(colomn, line);
 
 			//Coords in font texture
-			Vector2F start = (charBase + Vector2F(startPixel, -0.2));
-			Vector2F end = (charBase + Vector2F(endPixel/* + 0.1f*/, 16.f + 0.08f));
+			Vector2F start = (charBase + Vector2F(startPixel, 0));
+			Vector2F end = (charBase + Vector2F(endPixel, 16.f - 0.02f));
 
 			//Convert to texture atlas coordinates
 			start = (start * texsize) + texpos;
@@ -312,8 +317,8 @@ void UIHelper::AddText(const Vector2F position, const std::u16string &string, co
 
 			//Prepare
 			Mat2x2F uv = {start, end};
-			Vector2F psz = charBox * scale / Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight);
-			Mat2x2F positn = {position + offset / 2, position + (offset + psz) / 2};
+			Vector2F psz = charBox * 2 * scale / Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight);
+			Mat2x2F positn = {position + offset, position + (offset + psz)};
 
 			//Render
 			AddRect(positn, uv, font[page].layer, color, 1.f);
@@ -322,20 +327,31 @@ void UIHelper::AddText(const Vector2F position, const std::u16string &string, co
 			offset.x += psz.x;
 
 			//Add space between glyphs
-			offset.x += scale / buffer->renderState->WindowWidth;
+			offset.x += 2 * scale / buffer->renderState->WindowWidth;
 		}
 	}
 }
 
 Vector2F UIHelper::GetCoord(const enum origin origin, Vector2F pixels) noexcept {
 	Vector2F szHalf(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight);
-	szHalf = szHalf / 2;
+	Vector2F multiplier;
 	switch (origin) {
 		case CENTER:
-			return pixels / szHalf;
+			break;
 		case UPLEFT:
-			return (Vector2F(pixels.x, pixels.z) - szHalf) / szHalf;
+			multiplier = Vector2F(-1, 1);
+			break;
+		case UPRIGHT:
+			multiplier = Vector2F(1, 1);
+			break;
+		case DOWNRIGHT:
+			multiplier = Vector2F(1, -1);
+			break;
+		case DOWNLEFT:
+			multiplier = Vector2F(-1, -1);
+			break;
 		default:
 			return Vector2F();
 	}
+	return multiplier + pixels * 2 / szHalf;
 }
