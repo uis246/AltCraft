@@ -148,6 +148,7 @@ static TextureCoord font[1];
 UIHelper::UIHelper(struct RenderBuffer *buf) noexcept {
 	buffer = buf;
 	element = buf->buffer.size() / 9;
+	vto = 16.f;
 }
 
 void UIHelper::InitHelper() noexcept {
@@ -159,6 +160,10 @@ void UIHelper::InitHelper() noexcept {
 	glyphs = glyph_sizes->data.data();
 
 	font[0] = AssetManager::GetTexture("/minecraft/textures/font/unicode_page_00");
+}
+
+void UIHelper::SetVerticalOffset(float offset) {
+	vto = 16.f * offset;
 }
 
 struct Vertex {
@@ -191,14 +196,14 @@ void UIHelper::AddColoredRect(Vector2F from, Vector2F to, const Vector3<float> c
 	Mat2x2F pos = {from, to};
 	Mat2x2F UV = {uv, uv};
 
-	AddRect(pos, UV, white.layer, color);
+	AddRect(pos, UV, white.layer, color, .8f);
 }
 
-void UIHelper::AddRect(Mat2x2F position, Mat2x2F uv, unsigned int layer, const Vector3<float> color) {
+void UIHelper::AddRect(Mat2x2F position, Mat2x2F uv, unsigned int layer, const Vector3<float> color, const float opacity) {
 	//Top-left
 	struct Vertex vtx = {position[0],
 				Vector3(uv[0].x, uv[0].z, (float)layer),
-				color.x, color.y, color.z, .8};
+				color.x, color.y, color.z, opacity};
 	vtx.push(&buffer->buffer);
 
 	//Bottom-left
@@ -239,48 +244,98 @@ const std::u16string UIHelper::ASCIIToU16(std::string str) noexcept {
 	return result;
 }
 
-void UIHelper::GetTextSize(const std::u16string &string, Mat2x2F *returnSize) noexcept {
-
-}
-void UIHelper::AddText(Vector2F position, const std::u16string &string, const Vector3<float> color) {
+Vector2F UIHelper::GetTextSize(const std::u16string &string, const float scale) noexcept {
 	Vector2F offset;
 	for(uint16_t chr : string) {
-		uint8_t page = chr >> 8;
-		uint8_t subchr = chr & 0xFF;
+		if(chr == ' ') {
+			offset.x += scale * 4;
+		} else if (chr == '\n') {
+			offset.x = 0;
+			offset.z += scale * vto;
+		} else {
+			uint8_t endPixel, startPixel;
+			{
+				uint8_t glyphsz = glyphs[chr];
+				endPixel = glyphsz & 0x0F;
+				endPixel++;
+				startPixel = glyphsz >> 4;
+			}
+			//Add horisontal glyph size to offset
+			offset.x += (endPixel - startPixel) * scale;
 
-		uint8_t endPixel, startPixel;
-		{
-			uint8_t glyphsz = glyphs[subchr];
-			endPixel = glyphsz & 0x0F;
-			endPixel++;
-			startPixel = glyphsz >> 4;
+			//Add space between glyphs
+			offset.x += scale;
 		}
-		uint8_t line = subchr / 16, colomn = subchr % 16;
-		line = 15 - line;//Texture is flipped
-		line *= 16;
-		colomn *= 16;
+	}
+	return offset;
+}
+void UIHelper::AddText(const Vector2F position, const std::u16string &string, const float scale, const Vector3<float> color) {
+	Vector2F offset;
+	for(uint16_t chr : string) {
+		if(chr == ' ') {
+			offset.x += scale * 4 / buffer->renderState->WindowWidth;
+		} else if (chr == '\n') {
+			offset.x = 0;
+			offset.z += scale * vto / buffer->renderState->WindowHeight;
+		} else {
+			uint8_t page = chr >> 8;
+			uint8_t subchr = chr & 0xFF;
 
-		Vector2F texpos(font[page].x, font[page].y);
-		Vector2F texsize(font[page].w, font[page].h);
-		texsize = texsize * (1.f / 256);
+			uint8_t endPixel, startPixel;
+			{
+				uint8_t glyphsz = glyphs[chr];
+				endPixel = glyphsz & 0x0F;
+				endPixel++;
+				startPixel = glyphsz >> 4;
+			}
+			uint8_t line = subchr / 16, colomn = subchr % 16;
+			line = 15 - line;//Texture is flipped
+			line *= 16;
+			colomn *= 16;
 
-		Vector2F charBox(endPixel - startPixel, 16);
-		Vector2F charBase(colomn, line);
+			//Position of texture in atlas
+			Vector2F texpos(font[page].x, font[page].y);
+			Vector2F texsize(font[page].w, font[page].h);
+			texsize = texsize * (1.f / 256);
 
-		Vector2F start = (charBase + Vector2F(startPixel, 0));
-		Vector2F end = (charBase + Vector2F(endPixel, 16.f - (1.f / 256)));
+			//Glyph size
+			Vector2F charBox(endPixel - startPixel - 0.02f, 16.f - 0.02f);
+			Vector2F charBase(colomn, line);
 
-		//Convert to texture atlas coordinates
-		start = (start * texsize) + texpos;
-		end = (end * texsize) + texpos;
+			//Coords in font texture
+			Vector2F start = (charBase + Vector2F(startPixel, -0.2));
+			Vector2F end = (charBase + Vector2F(endPixel/* + 0.1f*/, 16.f + 0.08f));
 
-		Mat2x2F uv = {start, end};
-		Vector2F psz = charBox * 8.f / Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight);
-		Mat2x2F positn = {position + offset, position + offset + psz};
+			//Convert to texture atlas coordinates
+			start = (start * texsize) + texpos;
+			end = (end * texsize) + texpos;
 
-		AddRect(positn, uv, font[page].layer, color);
+			//Prepare
+			Mat2x2F uv = {start, end};
+			Vector2F psz = charBox * scale / Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight);
+			Mat2x2F positn = {position + offset / 2, position + (offset + psz) / 2};
 
-		offset.x += psz.x;
-		offset.x += 8.f / buffer->renderState->WindowWidth;
+			//Render
+			AddRect(positn, uv, font[page].layer, color, 1.f);
+
+			//Add horisontal glyph size to offset
+			offset.x += psz.x;
+
+			//Add space between glyphs
+			offset.x += scale / buffer->renderState->WindowWidth;
+		}
+	}
+}
+
+Vector2F UIHelper::GetCoord(const enum origin origin, Vector2F pixels) noexcept {
+	Vector2F szHalf(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight);
+	szHalf = szHalf / 2;
+	switch (origin) {
+		case CENTER:
+			return pixels / szHalf;
+		case UPLEFT:
+			return (Vector2F(pixels.x, pixels.z) - szHalf) / szHalf;
+		default:
+			return Vector2F();
 	}
 }

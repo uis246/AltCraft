@@ -463,8 +463,6 @@ void Render::RenderGui(RenderState &state) {
                                          ImGuiWindowFlags_AlwaysAutoResize|
                                          ImGuiWindowFlags_NoSavedSettings;
 
-    //ImGui::ShowTestWindow();
-
     ImGui::SetNextWindowPos(ImVec2(10, 10));
     ImGui::Begin("DebugInfo", 0, ImVec2(0, 0), 0.4f, windowFlags);
     ImGui::Text("Debug Info:");
