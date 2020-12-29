@@ -257,25 +257,30 @@ void UIHelper::AddText(Vector2F position, const std::u16string &string, const Ve
 		}
 		uint8_t line = subchr / 16, colomn = subchr % 16;
 		line = 15 - line;//Texture is flipped
+		line *= 16;
+		colomn *= 16;
 
 		Vector2F texpos(font[page].x, font[page].y);
 		Vector2F texsize(font[page].w, font[page].h);
+		texsize = texsize * (1.f / 256);
 
 		Vector2F charBox(endPixel - startPixel, 16);
+		Vector2F charBase(colomn, line);
 
-		Vector2F start = (Vector2F(colomn, line) * 16.f + Vector2F(startPixel, 0)) * (1.f / 256);
-		Vector2F end = start + (charBox * (1.f / 256));
+		Vector2F start = (charBase + Vector2F(startPixel, 0));
+		Vector2F end = (charBase + Vector2F(endPixel, 16.f - (1.f / 256)));
 
 		//Convert to texture atlas coordinates
 		start = (start * texsize) + texpos;
 		end = (end * texsize) + texpos;
 
 		Mat2x2F uv = {start, end};
-		Vector2F psz = charBox * 8 / Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight);
+		Vector2F psz = charBox * 8.f / Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight);
 		Mat2x2F positn = {position + offset, position + offset + psz};
 
 		AddRect(positn, uv, font[page].layer, color);
 
 		offset.x += psz.x;
+		offset.x += 8.f / buffer->renderState->WindowWidth;
 	}
 }
