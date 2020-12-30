@@ -269,7 +269,7 @@ Vector2F UIHelper::GetTextSize(const std::u16string &string, const float scale) 
 		if(offset.z > size.z)
 			size.z = offset.z;
 	}
-	size.z += scale * vto;
+	size.z += scale * 16;
 	if(removeSpace)
 		size.x -= scale;
 	return size;
@@ -318,7 +318,7 @@ void UIHelper::AddText(const Vector2F position, const std::u16string &string, co
 			//Prepare
 			Mat2x2F uv = {start, end};
 			Vector2F psz = charBox * 2 * scale / Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight);
-			Mat2x2F positn = {position + offset, position + (offset + psz)};
+			Mat2x2F positn = {position + offset, position + offset + psz};
 
 			//Render
 			AddRect(positn, uv, font[page].layer, color, 1.f);

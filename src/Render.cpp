@@ -541,6 +541,7 @@ void Render::RenderGui(RenderState &state) {
 
     switch (GetState()) {
         case State::MainMenu: {
+		    break;
             ImGui::SetNextWindowPosCenter();
             ImGui::Begin("Menu", 0, windowFlags);
             if (ImGui::Button("Connect")) {
