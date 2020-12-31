@@ -162,7 +162,7 @@ void UIHelper::InitHelper() noexcept {
 	font[0] = AssetManager::GetTexture("/minecraft/textures/font/unicode_page_00");
 }
 
-void UIHelper::SetVerticalOffset(float offset) {
+void UIHelper::SetVerticalOffset(float offset) noexcept {
 	vto = 16.f * offset;
 }
 
@@ -190,7 +190,7 @@ struct Vertex {
 	}
 };
 
-void UIHelper::AddColoredRect(Vector2F from, Vector2F to, const Vector3<float> color) {
+void UIHelper::AddColoredRect(Vector2F from, Vector2F to, const Vector3<float> color) noexcept {
 	Vector2<float> uv((white.x + white.w)/2, (white.y + white.h)/2);
 
 	Mat2x2F pos = {from, to};
@@ -199,7 +199,7 @@ void UIHelper::AddColoredRect(Vector2F from, Vector2F to, const Vector3<float> c
 	AddRect(pos, UV, white.layer, color, .8f);
 }
 
-void UIHelper::AddRect(Mat2x2F position, Mat2x2F uv, unsigned int layer, const Vector3<float> color, const float opacity) {
+void UIHelper::AddRect(Mat2x2F position, Mat2x2F uv, unsigned int layer, const Vector3<float> color, const float opacity) noexcept {
 	//Top-left
 	struct Vertex vtx = {position[0],
 				Vector3(uv[0].x, uv[0].z, (float)layer),
@@ -274,14 +274,20 @@ Vector2F UIHelper::GetTextSize(const std::u16string &string, const float scale) 
 		size.x -= scale;
 	return size;
 }
-void UIHelper::AddText(const Vector2F position, const std::u16string &string, const float scale, const Vector3<float> color) {
+void UIHelper::AddText(const Vector2F position, const std::u16string &string, const float scale, const Vector3<float> color) noexcept {
 	Vector2F offset;
+	bool removeSpace = false;
 	for(uint16_t chr : string) {
 		if(chr == ' ') {
-			offset.x += scale * 8 / buffer->renderState->WindowWidth;
+			if(removeSpace) {
+				offset.x += scale * 6 / buffer->renderState->WindowWidth;
+				removeSpace = false;
+			} else
+				offset.x += scale * 8 / buffer->renderState->WindowWidth;
 		} else if (chr == '\n') {
 			offset.x = 0;
 			offset.z += scale * vto / buffer->renderState->WindowHeight;
+			removeSpace = false;
 		} else {
 			uint8_t page = chr >> 8;
 			uint8_t subchr = chr & 0xFF;
@@ -328,8 +334,50 @@ void UIHelper::AddText(const Vector2F position, const std::u16string &string, co
 
 			//Add space between glyphs
 			offset.x += 2 * scale / buffer->renderState->WindowWidth;
+
+			removeSpace = true;
 		}
 	}
+}
+
+void UIHelper::AddTextBox(const Vector2F from, const Vector2F pixelSize, const std::u16string &string, const float scale, const Vector3<float> backgroundColor, const Vector3<float> textColor) noexcept {
+	AddColoredRect(from, from + (pixelSize * 2 * scale / (Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight))), backgroundColor);
+
+	size_t idx;
+	float width = 0;
+	float maxWidth = pixelSize.x * scale - 4;
+	bool removeSpace = false;
+
+	for(size_t i = string.length(); i > 0; i--) {
+		idx = i - 1;
+
+		uint16_t chr = string[idx];
+		if(chr == ' ')
+			if(removeSpace) {
+				width += 3 * scale;
+				removeSpace = false;
+			} else
+				width += 4 * scale;
+		else if(chr == '\n')
+			break;
+		else {
+			uint8_t endPixel, startPixel;
+			{
+				uint8_t glyphsz = glyphs[chr];
+				endPixel = glyphsz & 0x0F;
+				endPixel++;
+				startPixel = glyphsz >> 4;
+			}
+			width += scale * ((endPixel - startPixel) + 1);
+			removeSpace = true;
+		}
+
+		if(width > maxWidth) {
+			idx = i;
+			break;
+		}
+	}
+	AddText(from + (Vector2F(2.f * 2 / buffer->renderState->WindowWidth)), string.substr(idx, string.length() - idx), scale, textColor);
 }
 
 Vector2F UIHelper::GetCoord(const enum origin origin, Vector2F pixels) noexcept {

@@ -53,6 +53,13 @@ namespace GameUI {
 			helper.AddText(helper.GetCoord(UIHelper::CENTER, Vector2F(total.x - (8 + (maxx + connectSize.x)/2), connectSize.z * -0.5f)), connectText, 1, Vector3<float>(.74f, .9f, .83f));
 			helper.AddText(helper.GetCoord(UIHelper::CENTER, Vector2F(8 + (maxx - exitSize.x)/2 - total.x, exitSize.z * -0.5f)), exitText, 1, Vector3<float>(.74f, .9f, .83f));
 		}
+
+		{//Input box
+			//Username
+			helper.AddTextBox(helper.GetCoord(UIHelper::CENTER, Vector2F(4 - total.x, total.z - (4 + nameSize.z))), Vector2F(16 * 16, nameSize.z), UIHelper::ASCIIToU16("Very, very, VEEEERY LOOOOOONG STRING! LONGER THAN LONG CAT!"), 1, Vector3<float>(.1f, .1f, .1f));
+			//Address
+			helper.AddTextBox(helper.GetCoord(UIHelper::CENTER, Vector2F(4, 4) - total), Vector2F(16 * 16, addrSize.z), UIHelper::ASCIIToU16("127.0.0.1"), 1, Vector3<float>(.1f, .1f, .1f));
+		}
 	}
 
 
