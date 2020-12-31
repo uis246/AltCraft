@@ -168,8 +168,8 @@ static GLuint xVAO = 0, xVBO;
 void Render::PrepareToRendering() {
 	if (xVAO == 0) {
 		//Upload crosshair buffer
-		glCreateVertexArrays(1, &xVAO);
-		glCreateBuffers(1, &xVBO);
+		glGenVertexArrays(1, &xVAO);
+		glGenBuffers(1, &xVBO);
 
 		glBindVertexArray(xVAO);
 		glBindBuffer(GL_ARRAY_BUFFER, xVBO);
