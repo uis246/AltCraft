@@ -191,7 +191,7 @@ struct Vertex {
 };
 
 void UIHelper::AddColoredRect(Vector2F from, Vector2F to, const Vector3<float> color) noexcept {
-	Vector2<float> uv((white.x + white.w)/2, (white.y + white.h)/2);
+	Vector2<float> uv(white.x + white.w/2, white.y + white.h/2);
 
 	Mat2x2F pos = {from, to};
 	Mat2x2F UV = {uv, uv};
