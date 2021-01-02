@@ -5,6 +5,8 @@
 #include "Utility.hpp"
 #include "Renderer.hpp"
 
+#include <SDL.h>
+
 RendererUI::RendererUI() {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(BUFCOUNT, VBOs);
@@ -49,7 +51,7 @@ void RendererUI::PrepareRender(RenderState &state) noexcept {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBOs[BUFELEMENTS]);
 	//TODO: buffer re-specification
 	//Assume that data will be updated every frame
-	glBufferData(GL_ARRAY_BUFFER, rbuf.buffer.size() * sizeof(float), rbuf.buffer.data(), GL_STREAM_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, rbuf.buffer.size() * sizeof(GLfloat), rbuf.buffer.data(), GL_STREAM_DRAW);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements * sizeof(GLushort), rbuf.index.data(), GL_STREAM_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -232,7 +234,7 @@ void UIHelper::AddRect(Mat2x2F position, Mat2x2F uv, unsigned int layer, const V
 	element+=4;
 }
 
-const std::u16string UIHelper::ASCIIToU16(std::string str) noexcept {
+const std::u16string UIHelper::ASCIIToU16(const std::string &str) noexcept {
 	std::u16string result;
 	size_t cnt = str.length();
 	result.resize(cnt);
@@ -242,6 +244,11 @@ const std::u16string UIHelper::ASCIIToU16(std::string str) noexcept {
 	}
 
 	return result;
+}
+
+const std::u16string UIHelper::UnicodeToU16(const std::string &str) noexcept {
+	//FIXME: implement real unicode to u16 converter
+	return ASCIIToU16(str);
 }
 
 Vector2F UIHelper::GetTextSize(const std::u16string &string, const float scale) noexcept {
@@ -402,4 +409,15 @@ Vector2F UIHelper::GetCoord(const enum origin origin, Vector2F pixels) noexcept 
 			return Vector2F();
 	}
 	return multiplier + pixels * 2 / szHalf;
+}
+
+
+int UIHelper::TextInput = 0;
+void UIHelper::StartTextEdit() noexcept {
+	SDL_StartTextInput();
+	TextInput = 1;
+}
+void UIHelper::StopTextEdit() noexcept {
+	SDL_StopTextInput();
+	TextInput = 0;
 }

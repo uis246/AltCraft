@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 struct IOState;
 struct RenderBuffer;
 
@@ -7,6 +9,10 @@ struct RenderBuffer;
 namespace GameUI {
 	//Screen after start
 	namespace MainScreen {
+		struct context {
+			std::string address;
+			std::string username;
+		};
 		void onEvent(struct IOState *state, void *custom) noexcept;
 		void renderUpdate(struct RenderBuffer *buf, void *custom) noexcept;
 	}

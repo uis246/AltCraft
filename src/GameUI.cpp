@@ -2,17 +2,17 @@
 
 #include "UIHelper.hpp"
 
+static const std::u16string addrText = UIHelper::ASCIIToU16("Address");
+static const std::u16string nameText = UIHelper::ASCIIToU16("Username");
+static const std::u16string connectText = UIHelper::ASCIIToU16("Connect");
+static const std::u16string exitText = UIHelper::ASCIIToU16("Exit");
+
 namespace GameUI {
 	void MainScreen::onEvent(struct IOState *state, void*) noexcept {
 	}
-	void MainScreen::renderUpdate(struct RenderBuffer *buf, void*) noexcept {
+	void MainScreen::renderUpdate(struct RenderBuffer *buf, void *contextPtr) noexcept {
 		UIHelper helper(buf);
-//		helper.SetVerticalOffset(1.5);
-
-		std::u16string addrText = UIHelper::ASCIIToU16("Address");
-		std::u16string nameText = UIHelper::ASCIIToU16("Username");
-		std::u16string connectText = UIHelper::ASCIIToU16("Connect");
-		std::u16string exitText = UIHelper::ASCIIToU16("Exit");
+		struct context *context = reinterpret_cast<struct context*>(contextPtr);
 
 		Vector2F addrSize = helper.GetTextSize(addrText, 1);
 		Vector2F nameSize = helper.GetTextSize(nameText, 1);
@@ -40,23 +40,23 @@ namespace GameUI {
 			helper.AddColoredRect(coord, -coord, Vector3<float>(.085f, .18f, .038f));
 		}
 
-		{//Buttons background
+		{//Buttons
+			//Background
 			Vector2F A = helper.GetCoord(UIHelper::CENTER, Vector2F(total.x - 4, connectSize.z * 0.5f));
 			Vector2F B = helper.GetCoord(UIHelper::CENTER, Vector2F(total.x - (4 + 8 + maxx), connectSize.z * -0.5f));
 			//Connect
 			helper.AddColoredRect(A, B, Vector3<float>(.33f, .35f, .33f));
 			//Exit
 			helper.AddColoredRect(-A, -B, Vector3<float>(.33f, .35f, .33f));
-		}
 
-		{//Text
-			helper.AddText(helper.GetCoord(UIHelper::CENTER, Vector2F(total.x - (8 + (maxx + connectSize.x)/2), connectSize.z * -0.5f)), connectText, 1, Vector3<float>(.74f, .9f, .83f));
-			helper.AddText(helper.GetCoord(UIHelper::CENTER, Vector2F(8 + (maxx - exitSize.x)/2 - total.x, exitSize.z * -0.5f)), exitText, 1, Vector3<float>(.74f, .9f, .83f));
+			//Text
+			helper.AddText(helper.GetCoord(UIHelper::CENTER, Vector2F(total.x - (8 + (maxx + connectSize.x)/2), connectSize.z * -0.5f)), connectText, 1, Vector3<float>(.8f, .8f, .8f));
+			helper.AddText(helper.GetCoord(UIHelper::CENTER, Vector2F(8 + (maxx - exitSize.x)/2 - total.x, exitSize.z * -0.5f)), exitText, 1, Vector3<float>(.8f, .8f, .8f));
 		}
 
 		{//Input box
 			//Username
-			helper.AddTextBox(helper.GetCoord(UIHelper::CENTER, Vector2F(4 - total.x, total.z - (4 + nameSize.z))), Vector2F(16 * 16, nameSize.z), UIHelper::ASCIIToU16("Very, very, VEEEERY LOOOOOONG STRING! LONGER THAN LONG CAT!"), 1, Vector3<float>(.1f, .1f, .1f));
+			helper.AddTextBox(helper.GetCoord(UIHelper::CENTER, Vector2F(4 - total.x, total.z - (4 + nameSize.z))), Vector2F(16 * 16, nameSize.z), UIHelper::UnicodeToU16("Very, very, VEEEERY LOOOOOONG STRING! LONGER THAN LONG CAT"), 1, Vector3<float>(.1f, .1f, .1f));
 			//Address
 			helper.AddTextBox(helper.GetCoord(UIHelper::CENTER, Vector2F(4, 4) - total), Vector2F(16 * 16, addrSize.z), UIHelper::ASCIIToU16("127.0.0.1"), 1, Vector3<float>(.1f, .1f, .1f));
 		}

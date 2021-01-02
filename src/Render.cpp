@@ -269,17 +269,26 @@ void Render::RenderFrame() {
 }
 
 void Render::HandleEvents() {
-    SDL_PumpEvents();
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        ImGui_ImplSdlGL3_ProcessEvent(&event);
+	SDL_PumpEvents();
+	SDL_Event event;
+	SDL_StartTextInput();
+	while (SDL_PollEvent(&event)) {
+		ImGui_ImplSdlGL3_ProcessEvent(&event);
 
-        switch (event.type) {
-            case SDL_QUIT: {
-                LOG(INFO) << "Received close event by window closing";
-                PUSH_EVENT("Exit",0);
-                break;
-            }
+		switch (event.type) {
+			case SDL_QUIT:
+				LOG(INFO) << "Received close event by window closing";
+				PUSH_EVENT("Exit",0);
+				break;
+
+			case SDL_TEXTINPUT:
+				LOG(INFO) << "Input: " << event.text.text;
+				break;
+
+			case SDL_TEXTEDITING:
+				LOG(FATAL) << "SDL_TEXTEDITING";
+				break;
+
 
             case SDL_WINDOWEVENT: {
                 switch (event.window.event) {
