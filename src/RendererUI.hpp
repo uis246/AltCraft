@@ -23,15 +23,32 @@ enum ModKeysMask {
 	ALT = 0x08,
 };
 enum Layer {
-	GLOBAL_OVERLAY = 0,//Render alwaya
-	WORLD_OVERLAY,//Render over world
+	GLOBAL_OVERLAY = 0,
+	//Render always
+
+	WORLD_OVERLAY,//Render over world. Will not rendered when MENU_O* presented
+	//For HUD
+
 	MENU_WORLD,//Same as WORLD_OVERLAY, but with mouse ungrab
-	MENU_ONLY,//Stops world rendering, skips lower layer of menu
-	MENU_OVERLAY//Stops world rendering, doesn't skip lower layer of menu
+	//For menu with current world on backgound
+
+	MENU_OVERLAY,//Stops world rendering, doesn't skip lower layer of menu
+	//For menu without world rendering
+
+	//NOTE: rename or merge with WORLD_OVERLAY to just OVERLAY
+	MENU_ONLY//Stops world rendering, skips lower layer of menu
+
 	//TODO: skip MENU_OVERLAY when no MENU_ONLY or MENU_WORLD
 };
 
 struct AC_API IOState {
+	size_t pointercnt;
+	struct
+	{
+		float x, y;
+		float relativeX, relativeY;
+		float pressure;
+	} *pointers;
 	bool mouse[BUTTONCOUNT];
 	uint8_t modifierKeys;
 };
@@ -49,6 +66,7 @@ struct AC_API RenderBuffer {//TODO
 struct AC_API LayerInfo {
 	//Handle buttons, gamepad, other iteraction with player
 	void (*onEvent)(struct IOState *state, void *custom);
+	void (*onTextInput)(char *string, size_t stringlen, void *custom);
 	//Update geometry
 	void (*renderUpdate)(struct RenderBuffer *buf, void *custom);
 	enum Layer layer;
