@@ -7,6 +7,18 @@
 
 typedef Vector2F Mat2x2F[2];
 
+struct TextInput {
+	const Vector3<float> background, foreground;
+	const Vector2F drawPos, endPos;
+	uint16_t *text;
+	// Offset of visible text
+	size_t windowOffset;
+	// Input offset
+	size_t cursorPosition;
+	float scale, bgOpacity, fgOpacity;
+	//if bgOpacity == 0 then don't draw bg
+};
+
 class AC_API UIHelper final {
 	struct RenderBuffer *buffer;
 	size_t element;
@@ -28,6 +40,7 @@ public:
 	void AddText(const Vector2F position, const std::u16string &string, const float scale, const Vector3<float> color) noexcept;
 	void AddTextBox(const Vector2F from, const Vector2F pixelSize, const std::u16string &string, const float scale, const Vector3<float> backgroundColor, const Vector3<float> textColor = Vector3<float>(1.f, 1.f, 1.f)) noexcept;
 	void SetVerticalOffset(float offset) noexcept;
+	voif AddTextInput(struct TextInput *ti) noexcept;
 
 	//Text IO
 	static void StartTextEdit() noexcept;
