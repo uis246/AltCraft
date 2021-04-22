@@ -65,10 +65,11 @@ struct AC_API RenderBuffer {//TODO
 
 struct AC_API LayerInfo {
 	//Handle buttons, gamepad, other iteraction with player
-	void (*onEvent)(struct IOState *state, void *custom);
+	bool (*onEvent)(struct IOState *state, void *custom);//true to stop handling
 	void (*onTextInput)(char *string, size_t stringlen, void *custom);
 	//Update geometry
 	void (*renderUpdate)(struct RenderBuffer *buf, void *custom);
+	size_t (*countIndicies)(void *custom);//Count indicies to be drawn
 	enum Layer layer;
 };
 
