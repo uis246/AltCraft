@@ -7,12 +7,9 @@ class LoopExecutionTimeController;
 
 enum class State {
 	InitialLoading,
-	MainMenu,
-	Loading,
+	Menu,
 	Playing,
 	Paused,
-	Inventory,
-	Chat,
 };
 
 void RunGame();

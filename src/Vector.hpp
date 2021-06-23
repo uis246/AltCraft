@@ -11,13 +11,13 @@ template<class T>
 struct AC_API Vector3 {
     T x, y, z;
 
-    Vector3(T X = 0, T Y = 0, T Z = 0) : x(X), y(Y), z(Z) {}
+    constexpr Vector3(T X = 0, T Y = 0, T Z = 0) : x(X), y(Y), z(Z) {}
 
     Vector3(const Vector3 &rhs) : x(rhs.x), y(rhs.y), z(rhs.z) {}
 
     ~Vector3() = default;
 
-    double GetLength() const { return std::sqrt(std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2)); }
+    constexpr double GetLength() const { return std::sqrt(std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2)); }
 
     operator glm::vec3() const {
         return glm::vec3(x, y, z);
@@ -51,12 +51,12 @@ struct AC_API Vector3 {
         );
     }
 
-    Vector3 &operator=(Vector3 rhs) noexcept {
+    constexpr Vector3 &operator=(Vector3 rhs) noexcept {
         rhs.swap(*this);
         return *this;
     }
 
-    Vector3 operator*(T rhs) const {
+    constexpr Vector3 operator*(T rhs) const {
         return Vector3<T>(
                 x * rhs,
                 y * rhs,
@@ -64,7 +64,7 @@ struct AC_API Vector3 {
         );
     }
 
-    Vector3 operator/(T rhs) const {
+    constexpr Vector3 operator/(T rhs) const {
         return Vector3<T>(
                 x / rhs,
                 y / rhs,
@@ -72,7 +72,7 @@ struct AC_API Vector3 {
         );
     }
 
-    Vector3 operator+(const Vector3 &rhs) const {
+    constexpr Vector3 operator+(const Vector3 &rhs) const {
         return Vector3<T>(
                 x + rhs.x,
                 y + rhs.y,
@@ -80,7 +80,7 @@ struct AC_API Vector3 {
         );
     }
 
-    Vector3 operator-(const Vector3 &rhs) const {
+    constexpr Vector3 operator-(const Vector3 &rhs) const {
         return Vector3<T>(
                 x - rhs.x,
                 y - rhs.y,
@@ -88,7 +88,7 @@ struct AC_API Vector3 {
         );
     }
 
-    Vector3 operator-() const {
+    constexpr Vector3 operator-() const {
         return Vector3<T> (
                 -x,
                 -y,
@@ -96,7 +96,7 @@ struct AC_API Vector3 {
         );
     }
 
-    Vector3 operator*(const Vector3 &rhs) const {
+    constexpr Vector3 operator*(const Vector3 &rhs) const {
         return Vector3<T>(
                 x * rhs.x,
                 y * rhs.y,
@@ -104,7 +104,7 @@ struct AC_API Vector3 {
         );
     }
 
-    Vector3 operator/(const Vector3 &rhs) const {
+    constexpr Vector3 operator/(const Vector3 &rhs) const {
         return Vector3<T>(
                 x / rhs.x,
                 y / rhs.y,
@@ -112,15 +112,15 @@ struct AC_API Vector3 {
         );
     }
 
-    bool operator==(const Vector3 &rhs) const {
+    constexpr bool operator==(const Vector3 &rhs) const {
         return (x == rhs.x && y == rhs.y && z == rhs.z);
     }
 
-    bool operator!=(const Vector3 &rhs) const {
+    constexpr bool operator!=(const Vector3 &rhs) const {
         return !(*this == rhs);
     }
 
-    bool operator<(const Vector3 &rhs) const {
+    constexpr bool operator<(const Vector3 &rhs) const {
         if (x < rhs.x)
             return true;
         if (rhs.x < x)
@@ -143,7 +143,7 @@ template<class T>
 struct AC_API Vector2 {
 	T x, z;
 
-	Vector2(T X = 0, T Z = 0) : x(X), z(Z) {}
+	constexpr Vector2(T X = 0, T Z = 0) : x(X), z(Z) {}
 
 	Vector2(const Vector2 &rhs) : x(rhs.x), z(rhs.z) {}
 
@@ -239,12 +239,12 @@ struct AC_API Vector2 {
 		return !(*this == rhs);
 	}
 
-	bool operator<(const Vector2 &rhs) const {
-		if (x < rhs.x)
-			return true;
-		if (rhs.x < x)
-			return false;
-		return z < rhs.z;
+	constexpr bool operator<(const Vector2 &rhs) const {
+		return x < rhs.x && z < rhs.z;
+	}
+
+	constexpr bool operator>(const Vector2 &rhs) const {
+		return x > rhs.x && z > rhs.z;
 	}
 
 

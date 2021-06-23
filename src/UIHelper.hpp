@@ -20,13 +20,15 @@ struct TextInput {
 
 class AC_API UIHelper final {
 	struct RenderBuffer *buffer;
+	const struct RenderState *state;
 	size_t element;
-	float vto;
+	float vto;//Vertical Text Offset
 public:
 	AC_INTERNAL static int TextInput;
 	AC_INTERNAL static void InitHelper() noexcept;
 
 	UIHelper(struct RenderBuffer *buffer) noexcept;
+	UIHelper(const struct RenderState *rs) noexcept;
 
 	//Add rectangle filled with color
 	void AddColoredRect(Vector2F from, Vector2F to, const Vector3<float> color) noexcept;
@@ -56,4 +58,36 @@ public:
 	};
 	//Get NDC from pixel offset
 	Vector2F GetCoord(const enum origin, Vector2F pixels) noexcept;
+};
+
+
+struct UIButton final {
+	Vector3<float> background, foreground;
+	Vector2F startPosBG, endPosBG, textPos;
+	std::u16string text;
+
+	float scale = 1;
+
+	bool selected = false;
+
+public:
+	inline bool checkMouse(Vector2F pos) {
+		bool newsel;
+		if(!(pos < startPosBG || pos > endPosBG))
+			newsel = true;
+		else
+			newsel = false;
+
+		return newsel != selected;
+	}
+
+	inline void render(UIHelper &helper) {
+		if(selected) {
+			helper.AddColoredRect(startPosBG, endPosBG, foreground);
+			helper.AddText(textPos, text, scale, background);
+		} else {
+			helper.AddColoredRect(startPosBG, endPosBG, background);
+			helper.AddText(textPos, text, scale, foreground);
+		}
+	}
 };

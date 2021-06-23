@@ -16,7 +16,6 @@ class RendererWorld;
 class Framebuffer;
 
 class Render {
-	RendererUI *ui;
 	SDL_GLContext glContext;
 	SDL_Window *window;
 
@@ -68,6 +67,8 @@ class Render {
 	void InitEvents();
 
 public:
+	RendererUI *ui;
+
 	Render(unsigned int windowWidth, unsigned int windowHeight, std::string windowTitle);
 	~Render();
 

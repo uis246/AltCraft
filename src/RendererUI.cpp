@@ -41,7 +41,7 @@ void RendererUI::PrepareRender(RenderState &state) noexcept {
 	struct RenderBuffer rbuf;
 	rbuf.renderState = &state;
 	for(size_t i = min; i < max; i++) {
-		layer[i].info.renderUpdate(&rbuf, layer[i].argument);
+		layer[i].menu->renderUpdate(&rbuf);
 	}
 	elementType = GL_UNSIGNED_SHORT;
 	elements = rbuf.index.size();
@@ -106,7 +106,7 @@ void RendererUI::UpdateRenderInfo() noexcept {
 	max = count;
 	for(size_t i = count - 1;; i--) {
 		min = i;
-		currentLayer = layer[i].info.layer;
+		currentLayer = layer[i].type;
 		permanentDirty |= layer[i].permadirt;
 		if(currentLayer == MENU_ONLY)
 			break;
@@ -121,12 +121,12 @@ void RendererUI::PopLayer() noexcept {
 	UpdateRenderInfo();
 }
 
-void RendererUI::PushLayer(struct LayerInfo &layer, void *customArg, bool alwaysUpdate) {
+AC_API void RendererUI::PushLayer(std::shared_ptr<Menu> menu, Layer type, bool alwaysUpdate) {
 	struct LayerStore newLayer;
-	newLayer.info = layer;
-	newLayer.argument = customArg;
+	newLayer.menu = std::move(menu);
+	newLayer.type = type;
 	newLayer.permadirt = alwaysUpdate;
-	layers.push_back(newLayer);
+	layers.push_back(std::move(newLayer));
 
 	UpdateRenderInfo();
 }
@@ -147,9 +147,13 @@ static TextureCoord white;
 static uint8_t *glyphs;
 static TextureCoord font[1];
 
-UIHelper::UIHelper(struct RenderBuffer *buf) noexcept {
+UIHelper::UIHelper(struct RenderBuffer *buf) noexcept : buffer(buf), state(buf->renderState) {
 	buffer = buf;
 	element = buf->buffer.size() / 9;
+	vto = 16.f;
+}
+
+UIHelper::UIHelper(const struct RenderState *rs) noexcept : state(rs) {
 	vto = 16.f;
 }
 
@@ -388,7 +392,7 @@ void UIHelper::AddTextBox(const Vector2F from, const Vector2F pixelSize, const s
 }
 
 Vector2F UIHelper::GetCoord(const enum origin origin, Vector2F pixels) noexcept {
-	Vector2F szHalf(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight);
+	Vector2F szHalf(state->WindowWidth, state->WindowHeight);
 	Vector2F multiplier;
 	switch (origin) {
 		case CENTER:

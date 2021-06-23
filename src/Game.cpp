@@ -7,6 +7,7 @@
 #include "NetworkClient.hpp"
 #include "Plugin.hpp"
 #include "Audio.hpp"
+#include "GameUI.hpp"
 
 bool isRunning = true;
 bool isMoving[5] = { 0,0,0,0,0 };
@@ -203,6 +204,8 @@ void InitEvents() {
 		});
 }
 
+std::shared_ptr<GameUI::MainMenu> menu;
+
 void RunGame() {
 	InitEvents();
 
@@ -212,7 +215,9 @@ void RunGame() {
 
 	connThread = std::thread(ConnectionThreadExec);
 
-	SetState(State::MainMenu);	
+	SetState(State::Menu);
+	menu = std::make_shared<GameUI::MainMenu>();
+	render->ui->PushLayer(menu, MENU_ONLY);
 
 	AC_THREAD_SET_NAME("Main");
 	while (isRunning) {

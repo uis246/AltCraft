@@ -199,11 +199,8 @@ void Render::PrepareToRendering() {
 	ui = new RendererUI();
 
 	//Add start menu
-	struct LayerInfo info;
-	info.layer = GLOBAL_OVERLAY;
-	info.onEvent = GameUI::MainScreen::onEvent;
-	info.renderUpdate = GameUI::MainScreen::renderUpdate;
-	ui->PushLayer(info);
+//	GameUI::MainMenu menu;
+//	ui->PushLayer(menu, MENU_ONLY);
 
 	ImGui_ImplSdlGL3_Init(window);
 
@@ -310,9 +307,7 @@ void Render::HandleEvents() {
                     case SDL_WINDOWEVENT_FOCUS_LOST: {
                         HasFocus = false;
                         State state = GetState();
-                        if (state == State::Inventory ||
-                            state == State::Playing ||
-                            state == State::Chat) {
+			if (state == State::Playing) {
                             SetState(State::Paused);
                         }
                         break;
@@ -327,25 +322,24 @@ void Render::HandleEvents() {
                     case SDL_SCANCODE_ESCAPE: {
                         auto state = GetState();
                         if (state == State::Playing) {
-                            SetState(State::Paused);
-                        } else if (state == State::Paused ||
-                                   state == State::Inventory ||
-                                   state == State::Chat) {
+			    SetState(State::Paused);//FIXME: open pause menu
+			} else if (state == State::Paused) {
                             SetState(State::Playing);
-                        } else if (state == State::MainMenu) {
-                            LOG(INFO) << "Received close event by esc";
-                            PUSH_EVENT("Exit", 0);
-                        }
+//                        } else if (state == State::MainMenu) {
+//                            LOG(INFO) << "Received close event by esc";
+//                            PUSH_EVENT("Exit", 0);
+			}//FIXME: esc shoud close all menus
 
                         break;
                     }
 
                     case SDL_SCANCODE_E: {
                         auto state = GetState();
+			//FIXME: open inventory menu
                         if (state == State::Playing) {
-                            SetState(State::Inventory);
-                        } else if (state == State::Inventory) {
-                            SetState(State::Playing);
+//                            SetState(State::Inventory);
+//                        } else if (state == State::Inventory) {
+//                            SetState(State::Playing);
                         }
 
                         break;
@@ -353,13 +347,14 @@ void Render::HandleEvents() {
 
                     case SDL_SCANCODE_SLASH:
                     case SDL_SCANCODE_T: {
+				//FIXME: open chat menu
                         if (!ImGui::GetIO().WantCaptureKeyboard) {
                             auto state = GetState();
-                            if (state == State::Playing) {
-                                SetState(State::Chat);
-                            } else if (state == State::Chat) {
-                                SetState(State::Playing);
-                            }
+//                            if (state == State::Playing) {
+//                                SetState(State::Chat);
+//                            } else if (state == State::Chat) {
+//                                SetState(State::Playing);
+//                            }
                         }
 
                         break;
@@ -379,7 +374,10 @@ void Render::HandleEvents() {
                     deltaX *= sensetivity;
                     deltaY *= sensetivity * -1;
                     PUSH_EVENT("MouseMove", std::make_tuple(deltaX, deltaY));
-                }
+		} else {
+			Vector2F ndc = (Vector2F(event.motion.x, event.motion.y) / Vector2F(renderState.WindowWidth, renderState.WindowHeight) - Vector2F(0.5f, 0.5f)) * Vector2F(2.f, 2.f);
+
+		}
 
                 break;
             }
@@ -549,7 +547,7 @@ void Render::RenderGui(RenderState &state) {
 
 
     switch (GetState()) {
-        case State::MainMenu: {
+	case State::Menu: {
 		    break;
             ImGui::SetNextWindowPosCenter();
             ImGui::Begin("Menu", 0, windowFlags);
@@ -576,11 +574,8 @@ void Render::RenderGui(RenderState &state) {
             ImGui::End();
             break;
         }
-
-        case State::Loading:
-            break;
             
-        case State::Chat: {
+/*        case State::Chat: {
             ImGui::SetNextWindowPosCenter();
             ImGui::Begin("Chat", 0, windowFlags);
             for (const auto& msg : chatMessages) {
@@ -596,7 +591,7 @@ void Render::RenderGui(RenderState &state) {
             }
             ImGui::End();
             break;
-        }
+	}
 
         case State::Inventory: {
             auto renderSlot = [](const SlotDataType &slot, int i) -> bool {
@@ -688,7 +683,7 @@ void Render::RenderGui(RenderState &state) {
 
             break;
         }
-
+*/
         case State::Paused: {
             ImGui::SetNextWindowPosCenter();
             ImGui::Begin("Pause Menu", 0, windowFlags);
@@ -783,21 +778,22 @@ void Render::InitEvents() {
         stateString = "Connection failed: " + eventData.get <std::string>();
         renderWorld = false;
         world.reset();
-        SetState(State::MainMenu);
-		glClearColor(0.8, 0.8, 0.8, 1.0f);
+//        SetState(State::MainMenu);
+		glClearColor(0.8, 0.8, 0.8, 1.0f);//NOTE: dark theme?
     });
 
     listener.RegisterHandler("Disconnected", [this](const Event& eventData) {
         stateString = "Disconnected: " + eventData.get<std::string>();
         renderWorld = false;
         world.reset();
-        SetState(State::MainMenu);
+//        SetState(State::MainMenu);
 		glClearColor(0.8, 0.8, 0.8, 1.0f);
     });
 
     listener.RegisterHandler("Connecting", [this](const Event&) {
         stateString = "Connecting to the server...";
-        SetState(State::Loading);
+	//FIXME: open... Yes, loading menu
+//        SetState(State::Loading);
     });
 
     listener.RegisterHandler("ChatMessageReceived", [this](const Event& eventData) {
@@ -807,7 +803,7 @@ void Render::InitEvents() {
     });
 
     listener.RegisterHandler("StateUpdated", [this](const Event&) {
-        switch (GetState()) {
+	switch (GetState()) {//FIXME
             case State::Playing:
                 SetMouseCapture(true);
 				PluginSystem::CallOnChangeState("Playing");
@@ -816,26 +812,14 @@ void Render::InitEvents() {
 				PluginSystem::CallOnChangeState("InitialLoading");
 				SetMouseCapture(false);
 				break;
-            case State::MainMenu:
-				PluginSystem::CallOnChangeState("MainMenu");
-				SetMouseCapture(false);
-				break;
-            case State::Loading:
-				PluginSystem::CallOnChangeState("Loading");
-				SetMouseCapture(false);
-				break;
+//            case State::Menu:
+//				PluginSystem::CallOnChangeState("Menu");
+//				SetMouseCapture(false);
+//				break;
             case State::Paused:
 				PluginSystem::CallOnChangeState("Paused");
 				SetMouseCapture(false);
 				break;
-            case State::Inventory:
-				PluginSystem::CallOnChangeState("Inventory");
-				SetMouseCapture(false);
-				break;
-            case State::Chat:
-				PluginSystem::CallOnChangeState("Chat");
-                SetMouseCapture(false);
-                break;
         }
     });
 }

@@ -2,20 +2,23 @@
 
 #include <string>
 
-struct IOState;
-struct RenderBuffer;
+#include "UIHelper.hpp"
+#include "UI.hpp"
 
 //Implementation of in-game ui
 namespace GameUI {
 	//Screen after start
-	namespace MainScreen {
-		struct context {
-			std::string address;
-			std::string username;
-		};
-		void onEvent(struct IOState *state, void *custom) noexcept;
-		void renderUpdate(struct RenderBuffer *buf, void *custom) noexcept;
-	}
+	class MainMenu : public Menu {
+		std::string address;
+		std::string username;
+
+		struct UIButton connect/*, close*/;
+	public:
+		MainMenu();
+
+		bool onEvent(struct IOEvent state) noexcept override;
+		void renderUpdate(struct RenderBuffer *buf) noexcept override;
+	};
 
 	//HP, selected item, etc
 	namespace GameOverlay {
@@ -32,4 +35,6 @@ namespace GameUI {
 		void onEvent(struct IOState *state, void *custom) noexcept;
 		void renderUpdate(struct RenderBuffer *buf, void *custom) noexcept;
 	}
+
+	void initLocalization() noexcept;
 }

@@ -1,21 +1,14 @@
 #pragma once
 
-#include "Platform.hpp"
+#include "UI.hpp"
 
 #include <vector>
+#include <memory>
 
 #include <GL/glew.h>
 
 class RenderState;
 
-enum MouseButtons {
-	LEFT = 0,
-	RIGHT,
-	MIDDLE,
-	AUX1,
-	AUX2,
-	BUTTONCOUNT
-};
 enum ModKeysMask {
 	SHIFT = 0x01,
 	META = 0x02,
@@ -23,22 +16,14 @@ enum ModKeysMask {
 	ALT = 0x08,
 };
 enum Layer {
-	GLOBAL_OVERLAY = 0,
-	//Render always
+	GLOBAL_OVERLAY = 0,//Render always
 
-	WORLD_OVERLAY,//Render over world. Will not rendered when MENU_O* presented
-	//For HUD
+	WORLD_HUD,//Render over world. Will not rendered when MENU_O* presented
 
 	MENU_WORLD,//Same as WORLD_OVERLAY, but with mouse ungrab
-	//For menu with current world on backgound
+	//For menu with current world on backgound. E.g. chat input
 
-	MENU_OVERLAY,//Stops world rendering, doesn't skip lower layer of menu
-	//For menu without world rendering
-
-	//NOTE: rename or merge with WORLD_OVERLAY to just OVERLAY
 	MENU_ONLY//Stops world rendering, skips lower layer of menu
-
-	//TODO: skip MENU_OVERLAY when no MENU_ONLY or MENU_WORLD
 };
 
 struct AC_API IOState {
@@ -63,16 +48,6 @@ struct AC_API RenderBuffer {//TODO
 	//9 floats = 36 bytes
 };
 
-struct AC_API LayerInfo {
-	//Handle buttons, gamepad, other iteraction with player
-	bool (*onEvent)(struct IOState *state, void *custom);//true to stop handling
-	void (*onTextInput)(char *string, size_t stringlen, void *custom);
-	//Update geometry
-	void (*renderUpdate)(struct RenderBuffer *buf, void *custom);
-	size_t (*countIndicies)(void *custom);//Count indicies to be drawn
-	enum Layer layer;
-};
-
 class RendererUI final {
 	enum buffers {
 		BUFVERTS = 0,
@@ -80,8 +55,8 @@ class RendererUI final {
 		BUFCOUNT
 	};
 	struct LayerStore final {
-		struct LayerInfo info;
-		void *argument;
+		std::shared_ptr<Menu> menu;
+		Layer type;
 		bool permadirt;
 	};
 	//Some GL info
@@ -104,11 +79,13 @@ public:
 	~RendererUI();
 
 	//Add UI layer
-	AC_API void PushLayer(struct LayerInfo &layer, void *customArg = nullptr, bool alwaysUpdate = false);
+	AC_API void PushLayer(std::shared_ptr<Menu> menu, Layer type, bool alwaysUpdate = false);
 	//Remove UI layer
 	AC_API void PopLayer() noexcept;
 	//Mark geometry ditry
 	AC_API void Redraw() noexcept;
+
+	AC_INTERNAL void PushEvent(IOEvent ev) noexcept;
 	AC_INTERNAL void Render(RenderState &state) noexcept;
 	AC_INTERNAL void PrepareRender(RenderState &state) noexcept;
 	AC_INTERNAL GLuint getVAO() noexcept;

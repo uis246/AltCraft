@@ -1,18 +1,27 @@
 #include "GameUI.hpp"
 
-#include "UIHelper.hpp"
-
 static const std::u16string addrText = UIHelper::ASCIIToU16("Address");
 static const std::u16string nameText = UIHelper::ASCIIToU16("Username");
 static const std::u16string connectText = UIHelper::ASCIIToU16("Connect");
 static const std::u16string exitText = UIHelper::ASCIIToU16("Exit");
 
+static constexpr Vector3<float> a(.33f, .35f, .33f);
+
 namespace GameUI {
-	void MainScreen::onEvent(struct IOState *state, void*) noexcept {
+	MainMenu::MainMenu() {
+		connect.background = a;
+		connect.foreground = Vector3<float>(.8f, .8f, .8f);
+		connect.text = connectText;
 	}
-	void MainScreen::renderUpdate(struct RenderBuffer *buf, void *contextPtr) noexcept {
+	bool MainMenu::onEvent(struct IOEvent ev) noexcept {
+		if(ev.type == IOEvent::MouseMoved) {
+			MouseEvent *mev = reinterpret_cast<MouseEvent*>(ev.data);
+			return connect.checkMouse(mev->pos);
+		}
+		return true;
+	}
+	void MainMenu::renderUpdate(struct RenderBuffer *buf) noexcept {
 		UIHelper helper(buf);
-		struct context *context = reinterpret_cast<struct context*>(contextPtr);
 
 		Vector2F addrSize = helper.GetTextSize(addrText, 1);
 		Vector2F nameSize = helper.GetTextSize(nameText, 1);
@@ -44,14 +53,17 @@ namespace GameUI {
 			//Background
 			Vector2F A = helper.GetCoord(UIHelper::CENTER, Vector2F(total.x - 4, connectSize.z * 0.5f));
 			Vector2F B = helper.GetCoord(UIHelper::CENTER, Vector2F(total.x - (4 + 8 + maxx), connectSize.z * -0.5f));
-			//Connect
-			helper.AddColoredRect(A, B, Vector3<float>(.33f, .35f, .33f));
 			//Exit
 			helper.AddColoredRect(-A, -B, Vector3<float>(.33f, .35f, .33f));
 
 			//Text
-			helper.AddText(helper.GetCoord(UIHelper::CENTER, Vector2F(total.x - (8 + (maxx + connectSize.x)/2), connectSize.z * -0.5f)), connectText, 1, Vector3<float>(.8f, .8f, .8f));
 			helper.AddText(helper.GetCoord(UIHelper::CENTER, Vector2F(8 + (maxx - exitSize.x)/2 - total.x, exitSize.z * -0.5f)), exitText, 1, Vector3<float>(.8f, .8f, .8f));
+
+			connect.startPosBG = A;
+			connect.endPosBG = B;
+			connect.textPos = helper.GetCoord(UIHelper::CENTER, Vector2F(total.x - (8 + (maxx + connectSize.x)/2), connectSize.z * -0.5f));
+
+			connect.render(helper);
 		}
 
 		{//Input box
@@ -61,7 +73,6 @@ namespace GameUI {
 			helper.AddTextBox(helper.GetCoord(UIHelper::CENTER, Vector2F(4, 4) - total), Vector2F(16 * 16, addrSize.z), UIHelper::ASCIIToU16("127.0.0.1"), 1, Vector3<float>(.1f, .1f, .1f));
 		}
 	}
-
 
 
 	void GameOverlay::onEvent(struct IOState *state, void*) noexcept {
