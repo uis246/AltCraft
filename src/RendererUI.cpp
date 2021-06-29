@@ -121,7 +121,7 @@ void RendererUI::PopLayer() noexcept {
 	UpdateRenderInfo();
 }
 
-AC_API void RendererUI::PushLayer(std::shared_ptr<Menu> menu, Layer type, bool alwaysUpdate) {
+void RendererUI::PushLayer(std::shared_ptr<Menu> menu, Layer type, bool alwaysUpdate) {
 	struct LayerStore newLayer;
 	newLayer.menu = std::move(menu);
 	newLayer.type = type;
@@ -129,6 +129,13 @@ AC_API void RendererUI::PushLayer(std::shared_ptr<Menu> menu, Layer type, bool a
 	layers.push_back(std::move(newLayer));
 
 	UpdateRenderInfo();
+}
+
+void RendererUI::PushEvent(IOEvent ev) noexcept {
+	for(size_t i = min; i < max; i++) {
+		if(layers[i].menu->onEvent(ev))
+			dirtry = true;
+	}
 }
 
 void RendererUI::Redraw() noexcept {
@@ -351,7 +358,7 @@ void UIHelper::AddText(const Vector2F position, const std::u16string &string, co
 	}
 }
 
-void UIHelper::AddTextBox(const Vector2F from, const Vector2F pixelSize, const std::u16string &string, const float scale, const Vector3<float> backgroundColor, const Vector3<float> textColor) noexcept {
+void UIHelper::AddTextBox(const Vector2F from, const float selectedFrom, const float selectedTo, const std::u16string &string, const float scale, const Vector3<float> color) noexcept {
 	AddColoredRect(from, from + (pixelSize * 2 * scale / (Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight))), backgroundColor);
 
 	size_t idx;
@@ -424,4 +431,112 @@ void UIHelper::StartTextEdit() noexcept {
 void UIHelper::StopTextEdit() noexcept {
 	SDL_StopTextInput();
 	TextInput = 0;
+}
+
+void UITextInput::render(UIHelper &helper) {
+	helper.AddColoredRect(startPosBG, endPosBG, background);
+
+	size_t idx, strlength;
+	float width = 0;
+	float maxWidth = pixelSize.x * scale - 4;
+
+	std::u16string str = text.substr(windowOffset, text.length() - windowOffset);
+	strlength = str.length();
+
+	Vector2F offset;
+	bool removeSpace = false;
+
+	for(size_t i = 0; i < strlength; i++) {
+		idx = i;
+
+		uint16_t chr = str[idx];
+		if(chr == ' ')
+			if(removeSpace) {
+				width += 3 * scale;
+				removeSpace = false;
+			} else
+				width += 4 * scale;
+		else if(chr == '\n')
+			break;
+		else {
+			uint8_t endPixel, startPixel;
+			{
+				uint8_t glyphsz = glyphs[chr];
+				endPixel = glyphsz & 0x0F;
+				endPixel++;
+				startPixel = glyphsz >> 4;
+			}
+			width += scale * ((endPixel - startPixel) + 1);
+			removeSpace = true;
+		}
+
+		if(width > maxWidth) {
+			idx = i - 1;
+			break;
+		}
+	}
+
+	for(uint16_t chr : str) {
+		if(chr == ' ') {
+			if(removeSpace) {
+				offset.x += scale * 6 / buffer->renderState->WindowWidth;
+				removeSpace = false;
+			} else
+				offset.x += scale * 8 / buffer->renderState->WindowWidth;
+		} else if (chr == '\n') {
+			offset.x = 0;
+			offset.z += scale * vto / buffer->renderState->WindowHeight;
+			removeSpace = false;
+		} else {
+			uint8_t page = chr >> 8;
+			uint8_t subchr = chr & 0xFF;
+
+			uint8_t endPixel, startPixel;
+			{
+				uint8_t glyphsz = glyphs[chr];
+				endPixel = glyphsz & 0x0F;
+				endPixel++;
+				startPixel = glyphsz >> 4;
+			}
+			uint8_t line = subchr / 16, colomn = subchr % 16;
+			line = 15 - line;//Texture is flipped
+			line *= 16;
+			colomn *= 16;
+
+			//Position of texture in atlas
+			Vector2F texpos(font[page].x, font[page].y);
+			Vector2F texsize(font[page].w, font[page].h);
+			texsize = texsize * (1.f / 256);
+
+			//Glyph size
+			Vector2F charBox(endPixel - startPixel, 16.f);
+			Vector2F charBase(colomn, line);
+
+			//Coords in font texture
+			Vector2F start = (charBase + Vector2F(startPixel, 0));
+			Vector2F end = (charBase + Vector2F(endPixel, 16.f - 0.02f));
+
+			//Convert to texture atlas coordinates
+			start = (start * texsize) + texpos;
+			end = (end * texsize) + texpos;
+
+			//Prepare
+			Mat2x2F uv = {start, end};
+			Vector2F psz = charBox * 2 * scale / Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight);
+			Mat2x2F positn = {position + offset, position + offset + psz};
+
+			//Render
+			AddRect(positn, uv, font[page].layer, color, 1.f);
+
+			//Add horisontal glyph size to offset
+			offset.x += psz.x;
+
+			//Add space between glyphs
+			offset.x += 2 * scale / buffer->renderState->WindowWidth;
+
+			removeSpace = true;
+		}
+	}
+
+	helper.AddText(from + (Vector2F(2.f * 2 / buffer->renderState->WindowWidth)), , scale, textColor);
 }

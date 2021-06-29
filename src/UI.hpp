@@ -8,8 +8,8 @@ struct RenderBuffer;
 
 enum MouseButtons {
 	LEFT = 0,
-	RIGHT,
 	MIDDLE,
+	RIGHT,
 	AUX1,
 	AUX2,
 	BUTTONCOUNT
@@ -26,8 +26,7 @@ struct AC_API IOEvent {
 };
 
 struct AC_API MouseEvent {//For MouseMoved, MouseClicked, MouseReleased
-	Vector2F pos;
-	float relativeX, relativeY;
+	Vector2F pos, relative;
 	enum MouseButtons button;//on click/release
 };
 

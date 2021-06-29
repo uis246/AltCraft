@@ -375,8 +375,13 @@ void Render::HandleEvents() {
                     deltaY *= sensetivity * -1;
                     PUSH_EVENT("MouseMove", std::make_tuple(deltaX, deltaY));
 		} else {
-			Vector2F ndc = (Vector2F(event.motion.x, event.motion.y) / Vector2F(renderState.WindowWidth, renderState.WindowHeight) - Vector2F(0.5f, 0.5f)) * Vector2F(2.f, 2.f);
-
+			Vector2F ndc = (Vector2F(event.motion.x, event.motion.y) / Vector2F(renderState.WindowWidth, renderState.WindowHeight) - Vector2F(0.5f, 0.5f)) * Vector2F(2.f, -2.f);
+			IOEvent ioe;
+			MouseEvent mouse;
+			ioe.type = IOEvent::MouseMoved;
+			ioe.data = &mouse;
+			mouse.pos = ndc;
+			ui->PushEvent(ioe);
 		}
 
                 break;
@@ -388,7 +393,18 @@ void Render::HandleEvents() {
                         PUSH_EVENT("LmbPressed", 0);
                     else if (event.button.button == SDL_BUTTON_RIGHT)
                         PUSH_EVENT("RmbPressed", 0);
-                }
+		} else {
+			if (event.button.button <= 5) {
+				Vector2F ndc = (Vector2F(event.button.x, event.button.y) / Vector2F(renderState.WindowWidth, renderState.WindowHeight) - Vector2F(0.5f, 0.5f)) * Vector2F(2.f, -2.f);
+				IOEvent ioe;
+				MouseEvent mouse;
+				ioe.type = IOEvent::MouseClicked;
+				ioe.data = &mouse;
+				mouse.pos = ndc;
+				mouse.button = (enum MouseButtons)(event.button.button - 1);
+				ui->PushEvent(ioe);
+			}
+		}
 
                 break;
             }

@@ -71,14 +71,19 @@ struct UIButton final {
 	bool selected = false;
 
 public:
-	inline bool checkMouse(Vector2F pos) {
-		bool newsel;
-		if(!(pos < startPosBG || pos > endPosBG))
-			newsel = true;
+	inline bool onClick(Vector2F pos) {
+		if(pos > startPosBG && pos < endPosBG)
+			selected = true;
 		else
-			newsel = false;
+			selected = false;
+		return selected;
+	}
 
-		return newsel != selected;
+	inline bool onMove(Vector2F pos) {
+		bool oldsel = selected;
+		onClick(pos);
+
+		return selected != oldsel;
 	}
 
 	inline void render(UIHelper &helper) {
@@ -90,4 +95,28 @@ public:
 			helper.AddText(textPos, text, scale, foreground);
 		}
 	}
+};
+
+struct UITextInput final {
+	Vector3<float> background, foreground;
+	Vector2F startPosBG, endPosBG, textPos;
+	Vector2I32 pixelSize;
+	std::u16string text;
+
+	float scale = 1;
+
+	size_t windowOffset = 0, cursorOffset = 0;
+
+	bool selected = false;
+
+public:
+	inline bool onClick(Vector2F pos) {
+		if(pos > startPosBG && pos < endPosBG)
+			selected = true;
+		else
+			selected = false;
+		return selected;
+	}
+
+	void render(UIHelper &helper);
 };

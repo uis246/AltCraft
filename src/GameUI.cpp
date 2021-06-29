@@ -1,37 +1,55 @@
 #include "GameUI.hpp"
 
+#include "Event.hpp"
+
 static const std::u16string addrText = UIHelper::ASCIIToU16("Address");
 static const std::u16string nameText = UIHelper::ASCIIToU16("Username");
 static const std::u16string connectText = UIHelper::ASCIIToU16("Connect");
 static const std::u16string exitText = UIHelper::ASCIIToU16("Exit");
 
-static constexpr Vector3<float> a(.33f, .35f, .33f);
+static constexpr Vector3<float> buttonBG(.33f, .35f, .33f);
+static constexpr Vector3<float> buttonFG(.8f, .8f, .8f);
 
 namespace GameUI {
 	MainMenu::MainMenu() {
-		connect.background = a;
-		connect.foreground = Vector3<float>(.8f, .8f, .8f);
+		connect.background = buttonBG;
+		connect.foreground = buttonFG;
 		connect.text = connectText;
+		connect.scale = scale;
+
+		exit.background = buttonBG;
+		exit.foreground = buttonFG;
+		exit.text = exitText;
+		exit.scale = scale;
 	}
 	bool MainMenu::onEvent(struct IOEvent ev) noexcept {
 		if(ev.type == IOEvent::MouseMoved) {
 			MouseEvent *mev = reinterpret_cast<MouseEvent*>(ev.data);
-			return connect.checkMouse(mev->pos);
+			return connect.onMove(mev->pos) || exit.onMove(mev->pos);
+		} else if(ev.type == IOEvent::MouseClicked) {
+			MouseEvent *mev = reinterpret_cast<MouseEvent*>(ev.data);
+			if(exit.onClick(mev->pos)) {
+				PUSH_EVENT("Exit", 0);
+			} else if(connect.onClick(mev->pos)) {
+			} else
+				return false;
+			return true;
 		}
 		return true;
 	}
 	void MainMenu::renderUpdate(struct RenderBuffer *buf) noexcept {
 		UIHelper helper(buf);
 
-		Vector2F addrSize = helper.GetTextSize(addrText, 1);
-		Vector2F nameSize = helper.GetTextSize(nameText, 1);
-		Vector2F connectSize = helper.GetTextSize(connectText, 1);
-		Vector2F exitSize = helper.GetTextSize(exitText, 1);
+		Vector2F addrSize = helper.GetTextSize(addrText, scale);
+		Vector2F nameSize = helper.GetTextSize(nameText, scale);
+		Vector2F connectSize = helper.GetTextSize(connectText, scale);
+		Vector2F exitSize = helper.GetTextSize(exitText, scale);
 
+		//FIXME: scaling
 		float maxx = std::fmaxf(std::fmaxf(addrSize.x, nameSize.x), connectSize.x);
 		Vector2F total;
 		//4|input|4|name |4
-		total.x = 4 + 16 * 16 + 8 + maxx + 4 + 4;
+		total.x = (4 + 16 * 16 + 8 + maxx + 4 + 4) * scale;
 		total.z = 4 + addrSize.z + 4 + connectSize.z + 4 + nameSize.z + 4;
 		total = total * 0.5f;
 
@@ -50,20 +68,19 @@ namespace GameUI {
 		}
 
 		{//Buttons
-			//Background
 			Vector2F A = helper.GetCoord(UIHelper::CENTER, Vector2F(total.x - 4, connectSize.z * 0.5f));
 			Vector2F B = helper.GetCoord(UIHelper::CENTER, Vector2F(total.x - (4 + 8 + maxx), connectSize.z * -0.5f));
-			//Exit
-			helper.AddColoredRect(-A, -B, Vector3<float>(.33f, .35f, .33f));
 
-			//Text
-			helper.AddText(helper.GetCoord(UIHelper::CENTER, Vector2F(8 + (maxx - exitSize.x)/2 - total.x, exitSize.z * -0.5f)), exitText, 1, Vector3<float>(.8f, .8f, .8f));
+			connect.startPosBG = B;
+			connect.endPosBG = A;
+			exit.startPosBG = -A;
+			exit.endPosBG = -B;
 
-			connect.startPosBG = A;
-			connect.endPosBG = B;
 			connect.textPos = helper.GetCoord(UIHelper::CENTER, Vector2F(total.x - (8 + (maxx + connectSize.x)/2), connectSize.z * -0.5f));
+			exit.textPos = helper.GetCoord(UIHelper::CENTER, Vector2F(8 + (maxx - exitSize.x)/2 - total.x, exitSize.z * -0.5f));
 
 			connect.render(helper);
+			exit.render(helper);
 		}
 
 		{//Input box
