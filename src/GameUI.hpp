@@ -10,12 +10,10 @@ namespace GameUI {
 	//Screen after start
 	class MainMenu : public Menu {
 		struct UIButton connect, exit;
-
-		std::string address;
-		std::string username;
+		struct UITextInput username, address;
 
 		//FIXME: interface scaling
-		float scale = 2;
+		float scale = 1;
 	public:
 		MainMenu();
 

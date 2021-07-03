@@ -21,6 +21,11 @@ namespace GameUI {
 		exit.foreground = buttonFG;
 		exit.text = exitText;
 		exit.scale = scale;
+
+		username.background = Vector3<float>(.1f, .1f, .1f);
+		username.foreground = buttonFG;
+		username.text = UIHelper::ASCIIToU16("test");
+		username.selectionOffset = 4;
 	}
 	bool MainMenu::onEvent(struct IOEvent ev) noexcept {
 		if(ev.type == IOEvent::MouseMoved) {
@@ -84,10 +89,14 @@ namespace GameUI {
 		}
 
 		{//Input box
+			username.startPosBG = helper.GetCoord(UIHelper::CENTER, Vector2F(4 - total.x, total.z - (4 + nameSize.z)));
+			username.pixelSize = Vector2I32(16 * 16, nameSize.z) * scale;
 			//Username
-			helper.AddTextBox(helper.GetCoord(UIHelper::CENTER, Vector2F(4 - total.x, total.z - (4 + nameSize.z))), Vector2F(16 * 16, nameSize.z), UIHelper::UnicodeToU16("Very, very, VEEEERY LOOOOOONG STRING! LONGER THAN LONG CAT"), 1, Vector3<float>(.1f, .1f, .1f));
+//			helper.AddTextBox(helper.GetCoord(UIHelper::CENTER, Vector2F(4 - total.x, total.z - (4 + nameSize.z))), Vector2F(16 * 16, nameSize.z), UIHelper::UnicodeToU16("Very, very, VEEEERY LOOOOOONG STRING! LONGER THAN LONG CAT"), 1, Vector3<float>(.1f, .1f, .1f));
 			//Address
-			helper.AddTextBox(helper.GetCoord(UIHelper::CENTER, Vector2F(4, 4) - total), Vector2F(16 * 16, addrSize.z), UIHelper::ASCIIToU16("127.0.0.1"), 1, Vector3<float>(.1f, .1f, .1f));
+//			helper.AddTextBox(helper.GetCoord(UIHelper::CENTER, Vector2F(4, 4) - total), Vector2F(16 * 16, addrSize.z), UIHelper::ASCIIToU16("127.0.0.1"), 1, Vector3<float>(.1f, .1f, .1f));
+
+			username.render(helper);
 		}
 	}
 

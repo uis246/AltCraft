@@ -292,6 +292,77 @@ Vector2F UIHelper::GetTextSize(const std::u16string &string, const float scale) 
 		size.x -= scale;
 	return size;
 }
+
+unsigned int UIHelper::GetTextWidth(const std::u16string &string) noexcept {
+	size_t multiWidth = 0, width = 0;
+
+	bool removeSpace = false;
+	for(uint16_t chr : string) {
+		if(chr == ' ')
+			if(removeSpace) {
+				width += 3;
+				removeSpace = false;
+			} else
+				width += 4;
+		else if(chr == '\n') {
+			if(width > multiWidth)
+				multiWidth = width;
+			width = 0;
+		} else {
+			uint8_t endPixel, startPixel;
+			{
+				uint8_t glyphsz = glyphs[chr];
+				endPixel = glyphsz & 0x0F;
+				endPixel++;
+				startPixel = glyphsz >> 4;
+			}
+			width += (endPixel - startPixel) + 1;
+			removeSpace = true;
+		}
+	}
+
+	if(width > multiWidth)
+		multiWidth = width;
+
+	return multiWidth - 1;
+}
+
+//BUG: one char less than expected
+size_t UIHelper::GetMaxFitChars(const std::u16string &string, const size_t first, const unsigned int width) noexcept {
+	size_t len = string.length(), count = 0, currentWidth = 0;
+
+	bool removeSpace = false;
+	for(size_t i = first; i < len; i++) {
+		count++;
+
+		uint16_t chr = string[i];
+		if(chr == ' ')
+			if(removeSpace) {
+				currentWidth += 3;
+				removeSpace = false;
+			} else
+				currentWidth += 4;
+		else if(chr == '\n')
+			break;
+		else {
+			uint8_t endPixel, startPixel;
+			{
+				uint8_t glyphsz = glyphs[chr];
+				endPixel = glyphsz & 0x0F;
+				endPixel++;
+				startPixel = glyphsz >> 4;
+			}
+			currentWidth += (endPixel - startPixel) + 1;
+			removeSpace = true;
+		}
+
+		if(currentWidth > width)
+			break;
+	}
+
+	return count - 1;
+}
+
 void UIHelper::AddText(const Vector2F position, const std::u16string &string, const float scale, const Vector3<float> color) noexcept {
 	Vector2F offset;
 	bool removeSpace = false;
@@ -358,12 +429,12 @@ void UIHelper::AddText(const Vector2F position, const std::u16string &string, co
 	}
 }
 
-void UIHelper::AddTextBox(const Vector2F from, const float selectedFrom, const float selectedTo, const std::u16string &string, const float scale, const Vector3<float> color) noexcept {
-	AddColoredRect(from, from + (pixelSize * 2 * scale / (Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight))), backgroundColor);
+void AddTextBox(const Vector2F from, const float selectedFrom, const float selectedTo, const std::u16string &string, const float scale, const Vector3<float> color) noexcept {
+//	AddColoredRect(from, from + (pixelSize * 2 * scale / (Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight))), backgroundColor);
 
 	size_t idx;
 	float width = 0;
-	float maxWidth = pixelSize.x * scale - 4;
+//	float maxWidth = pixelSize.x * scale - 4;
 	bool removeSpace = false;
 
 	for(size_t i = string.length(); i > 0; i--) {
@@ -390,12 +461,12 @@ void UIHelper::AddTextBox(const Vector2F from, const float selectedFrom, const f
 			removeSpace = true;
 		}
 
-		if(width > maxWidth) {
-			idx = i;
-			break;
-		}
+//		if(width > maxWidth) {
+//			idx = i;
+//			break;
+//		}
 	}
-	AddText(from + (Vector2F(2.f * 2 / buffer->renderState->WindowWidth)), string.substr(idx, string.length() - idx), scale, textColor);
+//	AddText(from + (Vector2F(2.f * 2 / buffer->renderState->WindowWidth)), string.substr(idx, string.length() - idx), scale, textColor);
 }
 
 Vector2F UIHelper::GetCoord(const enum origin origin, Vector2F pixels) noexcept {
@@ -434,109 +505,42 @@ void UIHelper::StopTextEdit() noexcept {
 }
 
 void UITextInput::render(UIHelper &helper) {
-	helper.AddColoredRect(startPosBG, endPosBG, background);
+	endPosBG = startPosBG + (Vector2F(pixelSize.x, pixelSize.z) * 2 * scale / (Vector2F(helper.state->WindowWidth, helper.state->WindowHeight)));
 
-	size_t idx, strlength;
-	float width = 0;
-	float maxWidth = pixelSize.x * scale - 4;
+	helper.AddColoredRect(startPosBG,
+			      endPosBG,
+			      background);
 
-	std::u16string str = text.substr(windowOffset, text.length() - windowOffset);
-	strlength = str.length();
+	if(pixelSize.x < 4)
+		return;
 
-	Vector2F offset;
-	bool removeSpace = false;
+//	size_t textlength = text.length();
+	unsigned int maxWidth = pixelSize.x * scale - 8;
 
-	for(size_t i = 0; i < strlength; i++) {
-		idx = i;
+	size_t min = cursorOffset + selectionOffset, max = cursorOffset;
+	if(min > max)
+		std::swap(min, max);
 
-		uint16_t chr = str[idx];
-		if(chr == ' ')
-			if(removeSpace) {
-				width += 3 * scale;
-				removeSpace = false;
-			} else
-				width += 4 * scale;
-		else if(chr == '\n')
-			break;
-		else {
-			uint8_t endPixel, startPixel;
-			{
-				uint8_t glyphsz = glyphs[chr];
-				endPixel = glyphsz & 0x0F;
-				endPixel++;
-				startPixel = glyphsz >> 4;
-			}
-			width += scale * ((endPixel - startPixel) + 1);
-			removeSpace = true;
+//	std::u16string str = text.substr(windowOffset, text.length() - windowOffset);
+
+	size_t count = helper.GetMaxFitChars(text, windowOffset, maxWidth);
+	if(selectionOffset == 0/* || windowOffset >= max || windowOffset + count < min*/) {//No selection should be rendered
+		helper.AddText(startPosBG + Vector2F(4.f / helper.state->WindowWidth, 0), text.substr(windowOffset, count), scale, foreground);
+	} else if(windowOffset >= min && windowOffset + count <= max) {//Everything is selected
+		Vector2F off(2.f / helper.state->WindowWidth, 0);
+		std::u16string substring = text.substr(windowOffset, count);
+		Vector2F pixeledOffset(2 + helper.GetTextWidth(substring) + 1, pixelSize.z);
+		helper.AddColoredRect(startPosBG + off, startPosBG + pixeledOffset * 2 * scale / Vector2F(helper.state->WindowWidth, helper.state->WindowHeight), foreground);
+		helper.AddText(startPosBG + (off * 2), substring, scale, background);
+	} else {//Selection inside
+		size_t selected = max - min;
+		if(selected > count)
+			selected = count;
+
+		if(windowOffset != min) {//Draw normal
+
 		}
-
-		if(width > maxWidth) {
-			idx = i - 1;
-			break;
-		}
+		std::u16string sel = text.substr(min, text.length() - windowOffset);
+		helper.AddText(startPosBG + Vector2F(4.f / helper.state->WindowWidth, 0), text.substr(windowOffset, count), scale, foreground);
 	}
-
-	for(uint16_t chr : str) {
-		if(chr == ' ') {
-			if(removeSpace) {
-				offset.x += scale * 6 / buffer->renderState->WindowWidth;
-				removeSpace = false;
-			} else
-				offset.x += scale * 8 / buffer->renderState->WindowWidth;
-		} else if (chr == '\n') {
-			offset.x = 0;
-			offset.z += scale * vto / buffer->renderState->WindowHeight;
-			removeSpace = false;
-		} else {
-			uint8_t page = chr >> 8;
-			uint8_t subchr = chr & 0xFF;
-
-			uint8_t endPixel, startPixel;
-			{
-				uint8_t glyphsz = glyphs[chr];
-				endPixel = glyphsz & 0x0F;
-				endPixel++;
-				startPixel = glyphsz >> 4;
-			}
-			uint8_t line = subchr / 16, colomn = subchr % 16;
-			line = 15 - line;//Texture is flipped
-			line *= 16;
-			colomn *= 16;
-
-			//Position of texture in atlas
-			Vector2F texpos(font[page].x, font[page].y);
-			Vector2F texsize(font[page].w, font[page].h);
-			texsize = texsize * (1.f / 256);
-
-			//Glyph size
-			Vector2F charBox(endPixel - startPixel, 16.f);
-			Vector2F charBase(colomn, line);
-
-			//Coords in font texture
-			Vector2F start = (charBase + Vector2F(startPixel, 0));
-			Vector2F end = (charBase + Vector2F(endPixel, 16.f - 0.02f));
-
-			//Convert to texture atlas coordinates
-			start = (start * texsize) + texpos;
-			end = (end * texsize) + texpos;
-
-			//Prepare
-			Mat2x2F uv = {start, end};
-			Vector2F psz = charBox * 2 * scale / Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight);
-			Mat2x2F positn = {position + offset, position + offset + psz};
-
-			//Render
-			AddRect(positn, uv, font[page].layer, color, 1.f);
-
-			//Add horisontal glyph size to offset
-			offset.x += psz.x;
-
-			//Add space between glyphs
-			offset.x += 2 * scale / buffer->renderState->WindowWidth;
-
-			removeSpace = true;
-		}
-	}
-
-	helper.AddText(from + (Vector2F(2.f * 2 / buffer->renderState->WindowWidth)), , scale, textColor);
 }

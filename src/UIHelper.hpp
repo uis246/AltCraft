@@ -20,10 +20,12 @@ struct TextInput {
 
 class AC_API UIHelper final {
 	struct RenderBuffer *buffer;
-	const struct RenderState *state;
 	size_t element;
 	float vto;//Vertical Text Offset
 public:
+	const struct RenderState *state;
+	const Vector2F windowSize;//Float but in pixels
+
 	AC_INTERNAL static int TextInput;
 	AC_INTERNAL static void InitHelper() noexcept;
 
@@ -38,8 +40,9 @@ public:
 	static const std::u16string ASCIIToU16(const std::string &str) noexcept;
 	static const std::u16string UnicodeToU16(const std::string &str) noexcept;
 	Vector2F GetTextSize(const std::u16string &string, const float scale) noexcept;
+	unsigned int GetTextWidth(const std::u16string &string) noexcept;// Support multiline
+	size_t GetMaxFitChars(const std::u16string &string, const size_t first, const unsigned int width) noexcept;
 	void AddText(const Vector2F position, const std::u16string &string, const float scale, const Vector3<float> color) noexcept;
-	void AddTextBox(const Vector2F from, const Vector2F pixelSize, const std::u16string &string, const float scale, const Vector3<float> backgroundColor, const Vector3<float> textColor = Vector3<float>(1.f, 1.f, 1.f)) noexcept;
 	void SetVerticalOffset(float offset) noexcept;
 	void AddTextInput(struct TextInput *ti) noexcept;
 
@@ -61,7 +64,7 @@ public:
 };
 
 
-struct UIButton final {
+struct AC_API UIButton final {
 	Vector3<float> background, foreground;
 	Vector2F startPosBG, endPosBG, textPos;
 	std::u16string text;
@@ -97,15 +100,18 @@ public:
 	}
 };
 
-struct UITextInput final {
-	Vector3<float> background, foreground;
-	Vector2F startPosBG, endPosBG, textPos;
+struct AC_API UITextInput final {
+	Vector3<float> background, foreground;//Colors
+	Vector2F startPosBG, endPosBG;
 	Vector2I32 pixelSize;
 	std::u16string text;
 
+	//     view start pos(abs) cursor pos(rel to windowOffset)
+	size_t windowOffset = 0,   cursorOffset = 0;
+
 	float scale = 1;
 
-	size_t windowOffset = 0, cursorOffset = 0;
+	int selectionOffset = 0; //relative to cursor pos; Selection for copying/replacing
 
 	bool selected = false;
 
