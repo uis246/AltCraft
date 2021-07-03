@@ -327,14 +327,11 @@ unsigned int UIHelper::GetTextWidth(const std::u16string &string) noexcept {
 	return multiWidth - 1;
 }
 
-//BUG: one char less than expected
 size_t UIHelper::GetMaxFitChars(const std::u16string &string, const size_t first, const unsigned int width) noexcept {
 	size_t len = string.length(), count = 0, currentWidth = 0;
 
 	bool removeSpace = false;
 	for(size_t i = first; i < len; i++) {
-		count++;
-
 		uint16_t chr = string[i];
 		if(chr == ' ')
 			if(removeSpace) {
@@ -358,9 +355,11 @@ size_t UIHelper::GetMaxFitChars(const std::u16string &string, const size_t first
 
 		if(currentWidth > width)
 			break;
+
+		count++;
 	}
 
-	return count - 1;
+	return count;
 }
 
 void UIHelper::AddText(const Vector2F position, const std::u16string &string, const float scale, const Vector3<float> color) noexcept {
