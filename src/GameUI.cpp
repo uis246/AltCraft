@@ -25,20 +25,23 @@ namespace GameUI {
 		username.background = Vector3<float>(.1f, .1f, .1f);
 		username.foreground = buttonFG;
 		username.text = UIHelper::ASCIIToU16("test");
-		username.selectionOffset = 4;
+		username.cursorOffset = 4;
+		username.selectionOffset = 1;
 	}
 	bool MainMenu::onEvent(struct IOEvent ev) noexcept {
 		if(ev.type == IOEvent::MouseMoved) {
 			MouseEvent *mev = reinterpret_cast<MouseEvent*>(ev.data);
-			return connect.onMove(mev->pos) || exit.onMove(mev->pos);
+			return connect.onMove(mev->NDCpos) || exit.onMove(mev->NDCpos) || username.onMove(mev->NDCpos);
 		} else if(ev.type == IOEvent::MouseClicked) {
 			MouseEvent *mev = reinterpret_cast<MouseEvent*>(ev.data);
-			if(exit.onClick(mev->pos)) {
+			if(exit.onClick(mev->NDCpos)) {
 				PUSH_EVENT("Exit", 0);
-			} else if(connect.onClick(mev->pos)) {
+			} else if(connect.onClick(mev->NDCpos)) {
 			} else
-				return false;
+				return username.onClick(mev->NDCpos);
 			return true;
+		} else if(ev.type == IOEvent::MouseReleased) {
+			username.onRelease();
 		}
 		return true;
 	}
@@ -90,7 +93,7 @@ namespace GameUI {
 
 		{//Input box
 			username.startPosBG = helper.GetCoord(UIHelper::CENTER, Vector2F(4 - total.x, total.z - (4 + nameSize.z)));
-			username.pixelSize = Vector2I32(16 * 16, nameSize.z) * scale;
+			username.pixelSize = Vector2I32(16 * 16, 16);//FIXME: scaling. again.
 			//Username
 //			helper.AddTextBox(helper.GetCoord(UIHelper::CENTER, Vector2F(4 - total.x, total.z - (4 + nameSize.z))), Vector2F(16 * 16, nameSize.z), UIHelper::UnicodeToU16("Very, very, VEEEERY LOOOOOONG STRING! LONGER THAN LONG CAT"), 1, Vector3<float>(.1f, .1f, .1f));
 			//Address

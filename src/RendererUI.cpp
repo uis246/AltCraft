@@ -428,49 +428,9 @@ void UIHelper::AddText(const Vector2F position, const std::u16string &string, co
 	}
 }
 
-void AddTextBox(const Vector2F from, const float selectedFrom, const float selectedTo, const std::u16string &string, const float scale, const Vector3<float> color) noexcept {
-//	AddColoredRect(from, from + (pixelSize * 2 * scale / (Vector2F(buffer->renderState->WindowWidth, buffer->renderState->WindowHeight))), backgroundColor);
-
-	size_t idx;
-	float width = 0;
-//	float maxWidth = pixelSize.x * scale - 4;
-	bool removeSpace = false;
-
-	for(size_t i = string.length(); i > 0; i--) {
-		idx = i - 1;
-
-		uint16_t chr = string[idx];
-		if(chr == ' ')
-			if(removeSpace) {
-				width += 3 * scale;
-				removeSpace = false;
-			} else
-				width += 4 * scale;
-		else if(chr == '\n')
-			break;
-		else {
-			uint8_t endPixel, startPixel;
-			{
-				uint8_t glyphsz = glyphs[chr];
-				endPixel = glyphsz & 0x0F;
-				endPixel++;
-				startPixel = glyphsz >> 4;
-			}
-			width += scale * ((endPixel - startPixel) + 1);
-			removeSpace = true;
-		}
-
-//		if(width > maxWidth) {
-//			idx = i;
-//			break;
-//		}
-	}
-//	AddText(from + (Vector2F(2.f * 2 / buffer->renderState->WindowWidth)), string.substr(idx, string.length() - idx), scale, textColor);
-}
-
 Vector2F UIHelper::GetCoord(const enum origin origin, Vector2F pixels) noexcept {
 	Vector2F szHalf(state->WindowWidth, state->WindowHeight);
-	Vector2F multiplier;
+	Vector2F multiplier(0);
 	switch (origin) {
 		case CENTER:
 			break;
@@ -487,20 +447,20 @@ Vector2F UIHelper::GetCoord(const enum origin origin, Vector2F pixels) noexcept 
 			multiplier = Vector2F(-1, -1);
 			break;
 		default:
-			return Vector2F();
+			return Vector2F(0);
 	}
 	return multiplier + pixels * 2 / szHalf;
 }
 
 
-int UIHelper::TextInput = 0;
+bool UIHelper::TextInput = false;
 void UIHelper::StartTextEdit() noexcept {
 	SDL_StartTextInput();
-	TextInput = 1;
+	TextInput = true;
 }
 void UIHelper::StopTextEdit() noexcept {
 	SDL_StopTextInput();
-	TextInput = 0;
+	TextInput = false;
 }
 
 void UITextInput::render(UIHelper &helper) {
@@ -513,16 +473,12 @@ void UITextInput::render(UIHelper &helper) {
 	if(pixelSize.x < 4)
 		return;
 
-//	size_t textlength = text.length();
-	unsigned int maxWidth = pixelSize.x * scale - 8;
-
 	size_t min = cursorOffset + selectionOffset, max = cursorOffset;
 	if(min > max)
 		std::swap(min, max);
 
-//	std::u16string str = text.substr(windowOffset, text.length() - windowOffset);
+	count = helper.GetMaxFitChars(text, windowOffset, pixelSize.x * scale - 4);//2 borders 2 pixels each
 
-	size_t count = helper.GetMaxFitChars(text, windowOffset, maxWidth);
 	if(selectionOffset == 0/* || windowOffset >= max || windowOffset + count < min*/) {//No selection should be rendered
 		helper.AddText(startPosBG + Vector2F(4.f / helper.state->WindowWidth, 0), text.substr(windowOffset, count), scale, foreground);
 	} else if(windowOffset >= min && windowOffset + count <= max) {//Everything is selected
@@ -532,14 +488,31 @@ void UITextInput::render(UIHelper &helper) {
 		helper.AddColoredRect(startPosBG + off, startPosBG + pixeledOffset * 2 * scale / Vector2F(helper.state->WindowWidth, helper.state->WindowHeight), foreground);
 		helper.AddText(startPosBG + (off * 2), substring, scale, background);
 	} else {//Selection inside
-		size_t selected = max - min;
-		if(selected > count)
-			selected = count;
+		if(windowOffset > min)
+			min = windowOffset;
+		if(windowOffset + count < max)
+			max = windowOffset + count;
+		size_t selected = max - min;//abs(selectionOffset)
 
-		if(windowOffset != min) {//Draw normal
-
+		unsigned int soffset = 1;
+		if(windowOffset < min) {//Draw normal before selected
+			std::u16string substring = text.substr(windowOffset, min - windowOffset);
+			helper.AddText(startPosBG + Vector2F(4.f / helper.state->WindowWidth, 0), substring, scale, foreground);
+			soffset = 2 + helper.GetTextWidth(substring);
 		}
-		std::u16string sel = text.substr(min, text.length() - windowOffset);
-		helper.AddText(startPosBG + Vector2F(4.f / helper.state->WindowWidth, 0), text.substr(windowOffset, count), scale, foreground);
+		{//Draw selected
+			std::u16string substring = text.substr(min, selected);
+			unsigned int wid = helper.GetTextWidth(substring);
+			Vector2F pixeledOffset(2 + soffset + wid, pixelSize.z);
+			helper.AddColoredRect(startPosBG + (Vector2F((float)soffset / helper.state->WindowWidth, 0) * 2), startPosBG + pixeledOffset * 2 * scale / Vector2F(helper.state->WindowWidth, helper.state->WindowHeight), foreground);
+			helper.AddText(startPosBG + Vector2F((1.f + soffset) * 2 / helper.state->WindowWidth, 0), substring, scale, background);
+			soffset += 1 + wid;
+		}
+		if(windowOffset + count > max) {//Draw normal after selected
+			std::u16string substring = text.substr(max, windowOffset + count - max);
+			helper.AddText(startPosBG + Vector2F((soffset + 1.f) * 2 / helper.state->WindowWidth, 0), substring, scale, foreground);
+		}
+
+//		helper.AddText(startPosBG + Vector2F(4.f / helper.state->WindowWidth, 0), text.substr(windowOffset, count), scale, foreground);
 	}
 }

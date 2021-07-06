@@ -26,7 +26,7 @@ public:
 	const struct RenderState *state;
 	const Vector2F windowSize;//Float but in pixels
 
-	AC_INTERNAL static int TextInput;
+	AC_INTERNAL static bool TextInput;
 	AC_INTERNAL static void InitHelper() noexcept;
 
 	UIHelper(struct RenderBuffer *buffer) noexcept;
@@ -40,8 +40,8 @@ public:
 	static const std::u16string ASCIIToU16(const std::string &str) noexcept;
 	static const std::u16string UnicodeToU16(const std::string &str) noexcept;
 	Vector2F GetTextSize(const std::u16string &string, const float scale) noexcept;
-	unsigned int GetTextWidth(const std::u16string &string) noexcept;// Support multiline
-	size_t GetMaxFitChars(const std::u16string &string, const size_t first, const unsigned int width) noexcept;
+	static unsigned int GetTextWidth(const std::u16string &string) noexcept;// Support multiline
+	static size_t GetMaxFitChars(const std::u16string &string, const size_t first, const unsigned int width) noexcept;
 	void AddText(const Vector2F position, const std::u16string &string, const float scale, const Vector3<float> color) noexcept;
 	void SetVerticalOffset(float offset) noexcept;
 	void AddTextInput(struct TextInput *ti) noexcept;
@@ -71,26 +71,26 @@ struct AC_API UIButton final {
 
 	float scale = 1;
 
-	bool selected = false;
+	bool hovered = false;
 
 public:
 	inline bool onClick(Vector2F pos) {
 		if(pos > startPosBG && pos < endPosBG)
-			selected = true;
+			hovered = true;
 		else
-			selected = false;
-		return selected;
+			hovered = false;
+		return hovered;
 	}
 
 	inline bool onMove(Vector2F pos) {
-		bool oldsel = selected;
+		bool oldsel = hovered;
 		onClick(pos);
 
-		return selected != oldsel;
+		return hovered != oldsel;
 	}
 
 	inline void render(UIHelper &helper) {
-		if(selected) {
+		if(hovered) {
 			helper.AddColoredRect(startPosBG, endPosBG, foreground);
 			helper.AddText(textPos, text, scale, background);
 		} else {
@@ -103,25 +103,72 @@ public:
 struct AC_API UITextInput final {
 	Vector3<float> background, foreground;//Colors
 	Vector2F startPosBG, endPosBG;
-	Vector2I32 pixelSize;
+	Vector2I32 pixelSize;//Not scaled
 	std::u16string text;
 
-	//     view start pos(abs) cursor pos(rel to windowOffset)
-	size_t windowOffset = 0,   cursorOffset = 0;
+	//view start pos(abs), cursor pos(rel to windowOffset), count of visible characters
+	size_t windowOffset = 0, cursorOffset = 0, count = 0;
 
 	float scale = 1;
 
 	int selectionOffset = 0; //relative to cursor pos; Selection for copying/replacing
 
-	bool selected = false;
+	bool clicked = false, active = false;
+
+	inline size_t getSelected(float posx) {
+		unsigned int xoffset = (posx - startPosBG.x) * (pixelSize.x * scale) / (endPosBG.x - startPosBG.x);
+		size_t numclicked;
+		if(xoffset < 2)
+			numclicked = 0;
+		else {
+			numclicked = UIHelper::GetMaxFitChars(text, windowOffset, xoffset - 2);
+			if(numclicked > count)
+				numclicked = count;
+		}
+		return numclicked;
+	}
 
 public:
 	inline bool onClick(Vector2F pos) {
-		if(pos > startPosBG && pos < endPosBG)
-			selected = true;
-		else
-			selected = false;
-		return selected;
+		if(pos > startPosBG and pos < endPosBG) {
+			active = clicked = true;
+		} else {
+			return active = clicked = false;
+		}
+
+		cursorOffset = getSelected(pos.x);
+		selectionOffset = 0;
+
+		return true;
+	}
+
+	inline bool onRelease() {
+		clicked = false;
+		return false;
+	}
+
+	inline bool onMove(Vector2F pos) {
+		if(!clicked)
+			return false;
+		else {
+			unsigned int xoffset = (pos.x - startPosBG.x) * (pixelSize.x * scale) / (endPosBG.x - startPosBG.x);
+			size_t numclicked;
+			if(xoffset < 2)
+				numclicked = 0;
+			else {
+				numclicked = UIHelper::GetMaxFitChars(text, windowOffset, xoffset - 2);
+				if(numclicked > count)
+					numclicked = count;
+
+			}
+			if(numclicked - selectionOffset != 0) {
+				selectionOffset += ((int)cursorOffset) - ((int)numclicked);
+				cursorOffset = numclicked;
+
+				return true;
+			} else
+				return false;
+		}
 	}
 
 	void render(UIHelper &helper);

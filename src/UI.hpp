@@ -22,20 +22,21 @@ struct AC_API IOEvent {
 		MouseMoved,
 		MouseClicked,
 		MouseReleased,
+//		Resize,
+		KeyPressed,
+		KeyReleased,
 	} type;
 };
 
 struct AC_API MouseEvent {//For MouseMoved, MouseClicked, MouseReleased
-	Vector2F pos, relative;
+	Vector2F NDCpos, NDCrelative;
+//	Vector2I32 ABSpos;//Right-handed. As in vulkan. With origin in center.
 	enum MouseButtons button;//on click/release
 };
 
 class AC_API Menu {
 public:
-//	virtual void initLocalization() noexcept;
-//	Menu() = delete;
-//	Menu() {}
-//	virtual ~Menu() {};
+//	virtual void reinitLocalization() noexcept;
 
 	//Handle buttons, gamepad, other iteraction with player
 	virtual bool onEvent(struct IOEvent event) noexcept = 0;

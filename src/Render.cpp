@@ -380,7 +380,7 @@ void Render::HandleEvents() {
 			MouseEvent mouse;
 			ioe.type = IOEvent::MouseMoved;
 			ioe.data = &mouse;
-			mouse.pos = ndc;
+			mouse.NDCpos = ndc;
 			ui->PushEvent(ioe);
 		}
 
@@ -400,7 +400,7 @@ void Render::HandleEvents() {
 				MouseEvent mouse;
 				ioe.type = IOEvent::MouseClicked;
 				ioe.data = &mouse;
-				mouse.pos = ndc;
+				mouse.NDCpos = ndc;
 				mouse.button = (enum MouseButtons)(event.button.button - 1);
 				ui->PushEvent(ioe);
 			}
@@ -415,7 +415,18 @@ void Render::HandleEvents() {
                         PUSH_EVENT("LmbReleased", 0);
                     else if (event.button.button == SDL_BUTTON_RIGHT)
                         PUSH_EVENT("RmbReleased", 0);
-                }
+		} else {
+			if (event.button.button <= 5) {
+				Vector2F ndc = (Vector2F(event.button.x, event.button.y) / Vector2F(renderState.WindowWidth, renderState.WindowHeight) - Vector2F(0.5f, 0.5f)) * Vector2F(2.f, -2.f);
+				IOEvent ioe;
+				MouseEvent mouse;
+				ioe.type = IOEvent::MouseReleased;
+				ioe.data = &mouse;
+				mouse.NDCpos = ndc;
+				mouse.button = (enum MouseButtons)(event.button.button - 1);
+				ui->PushEvent(ioe);
+			}
+		}
                 break;
             }
 
