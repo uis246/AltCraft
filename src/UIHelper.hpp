@@ -3,6 +3,8 @@
 #include "Platform.hpp"
 #include "Vector.hpp"
 
+#include <string>
+
 //UI helper
 
 typedef Vector2F Mat2x2F[2];
@@ -26,14 +28,14 @@ public:
 	const struct RenderState *state;
 	const Vector2F windowSize;//Float but in pixels
 
-	AC_INTERNAL static bool TextInput;
+	AC_INTERNAL static unsigned int TextInput;
 	AC_INTERNAL static void InitHelper() noexcept;
 
 	UIHelper(struct RenderBuffer *buffer) noexcept;
 	UIHelper(const struct RenderState *rs) noexcept;
 
 	//Add rectangle filled with color
-	void AddColoredRect(Vector2F from, Vector2F to, const Vector3<float> color) noexcept;
+	void AddColoredRect(Vector2F from, Vector2F to, const Vector3<float> color, const float opacity) noexcept;
 	void AddRect(Mat2x2F position, Mat2x2F uv, unsigned int layer, const Vector3<float> color, const float opacity) noexcept;
 
 	//Text
@@ -42,13 +44,14 @@ public:
 	Vector2F GetTextSize(const std::u16string &string, const float scale) noexcept;
 	static unsigned int GetTextWidth(const std::u16string &string) noexcept;// Support multiline
 	static size_t GetMaxFitChars(const std::u16string &string, const size_t first, const unsigned int width) noexcept;
+	static size_t GetRevMaxFitChars(const std::u16string &string, const size_t last, const unsigned int width) noexcept;
 	void AddText(const Vector2F position, const std::u16string &string, const float scale, const Vector3<float> color) noexcept;
 	void SetVerticalOffset(float offset) noexcept;
 	void AddTextInput(struct TextInput *ti) noexcept;
 
 	//Text IO
-	static void StartTextEdit() noexcept;
-	static void StopTextEdit() noexcept;
+	static void StartTextInput() noexcept;
+	static void StopTextInput() noexcept;
 
 	//Screen space converter
 	enum origin {
@@ -91,10 +94,10 @@ public:
 
 	inline void render(UIHelper &helper) {
 		if(hovered) {
-			helper.AddColoredRect(startPosBG, endPosBG, foreground);
+			helper.AddColoredRect(startPosBG, endPosBG, foreground, .8f);
 			helper.AddText(textPos, text, scale, background);
 		} else {
-			helper.AddColoredRect(startPosBG, endPosBG, background);
+			helper.AddColoredRect(startPosBG, endPosBG, background, .8f);
 			helper.AddText(textPos, text, scale, foreground);
 		}
 	}
@@ -128,11 +131,32 @@ struct AC_API UITextInput final {
 		return numclicked;
 	}
 
+	inline void rightRecalc() {
+		if(cursorOffset < count)
+			return;
+		else {
+			size_t idx = windowOffset + cursorOffset;
+			size_t tnuoc = UIHelper::GetRevMaxFitChars(text, idx, pixelSize.x * scale - 4);
+			windowOffset = idx - tnuoc;
+			cursorOffset = idx - windowOffset;
+		}
+	}
+
+	inline void append(std::u16string &ins) {
+		text.insert(windowOffset + cursorOffset, ins);
+		cursorOffset += ins.length();
+		rightRecalc();
+	}
+
 public:
 	inline bool onClick(Vector2F pos) {
 		if(pos > startPosBG and pos < endPosBG) {
+			if(!active)
+				UIHelper::StartTextInput();
 			active = clicked = true;
 		} else {
+			if(active)
+				UIHelper::StopTextInput();
 			return active = clicked = false;
 		}
 
@@ -145,6 +169,19 @@ public:
 	inline bool onRelease() {
 		clicked = false;
 		return false;
+	}
+
+	bool onKeyPressed(uint16_t scancode, bool repeat, uint16_t modifiers);
+	inline bool onInput(char *input) {
+		if(not active)
+			return false;
+		//FIXME: use real converter
+		size_t len = strlen(input);
+		std::u16string ins;
+		for(size_t i = 0; i < len; i++) {
+			ins.push_back(input[i]);
+		}
+		append(ins);
 	}
 
 	inline bool onMove(Vector2F pos) {

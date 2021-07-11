@@ -43,6 +43,9 @@ void RendererUI::PrepareRender(RenderState &state) noexcept {
 	for(size_t i = min; i < max; i++) {
 		layer[i].menu->renderUpdate(&rbuf);
 	}
+	for(struct LayerStore &st : globalOverlays) {
+		st.menu->renderUpdate(&rbuf);
+	}
 	elementType = GL_UNSIGNED_SHORT;
 	elements = rbuf.index.size();
 
@@ -126,7 +129,10 @@ void RendererUI::PushLayer(std::shared_ptr<Menu> menu, Layer type, bool alwaysUp
 	newLayer.menu = std::move(menu);
 	newLayer.type = type;
 	newLayer.permadirt = alwaysUpdate;
-	layers.push_back(std::move(newLayer));
+	if (type == GLOBAL_OVERLAY) {
+		globalOverlays.push_back(std::move(newLayer));
+	} else
+		layers.push_back(std::move(newLayer));
 
 	UpdateRenderInfo();
 }
@@ -203,13 +209,13 @@ struct Vertex {
 	}
 };
 
-void UIHelper::AddColoredRect(Vector2F from, Vector2F to, const Vector3<float> color) noexcept {
+void UIHelper::AddColoredRect(Vector2F from, Vector2F to, const Vector3<float> color, const float opacity) noexcept {
 	Vector2<float> uv(white.x + white.w/2, white.y + white.h/2);
 
 	Mat2x2F pos = {from, to};
 	Mat2x2F UV = {uv, uv};
 
-	AddRect(pos, UV, white.layer, color, .8f);
+	AddRect(pos, UV, white.layer, color, opacity);
 }
 
 void UIHelper::AddRect(Mat2x2F position, Mat2x2F uv, unsigned int layer, const Vector3<float> color, const float opacity) noexcept {
@@ -362,6 +368,41 @@ size_t UIHelper::GetMaxFitChars(const std::u16string &string, const size_t first
 	return count;
 }
 
+size_t UIHelper::GetRevMaxFitChars(const std::u16string &string, const size_t last, const unsigned int width) noexcept {
+	size_t count = 0, currentWidth = 0;
+
+	bool removeSpace = false;
+	for(size_t i = last; i != 0; i--) {
+		uint16_t chr = string[i];
+		if(chr == ' ')
+			if(removeSpace) {
+				currentWidth += 3;
+				removeSpace = false;
+			} else
+				currentWidth += 4;
+		else if(chr == '\n')
+			break;
+		else {
+			uint8_t endPixel, startPixel;
+			{
+				uint8_t glyphsz = glyphs[chr];
+				endPixel = glyphsz & 0x0F;
+				endPixel++;
+				startPixel = glyphsz >> 4;
+			}
+			currentWidth += (endPixel - startPixel) + 1;
+			removeSpace = true;
+		}
+
+		if(currentWidth > width)
+			break;
+
+		count++;
+	}
+
+	return count;
+}
+
 void UIHelper::AddText(const Vector2F position, const std::u16string &string, const float scale, const Vector3<float> color) noexcept {
 	Vector2F offset;
 	bool removeSpace = false;
@@ -453,14 +494,15 @@ Vector2F UIHelper::GetCoord(const enum origin origin, Vector2F pixels) noexcept 
 }
 
 
-bool UIHelper::TextInput = false;
-void UIHelper::StartTextEdit() noexcept {
+unsigned int UIHelper::TextInput = 0;
+void UIHelper::StartTextInput() noexcept {
 	SDL_StartTextInput();
-	TextInput = true;
+	TextInput++;
 }
-void UIHelper::StopTextEdit() noexcept {
-	SDL_StopTextInput();
-	TextInput = false;
+void UIHelper::StopTextInput() noexcept {
+	TextInput--;
+	if(TextInput == 0)
+		SDL_StopTextInput();
 }
 
 void UITextInput::render(UIHelper &helper) {
@@ -468,7 +510,7 @@ void UITextInput::render(UIHelper &helper) {
 
 	helper.AddColoredRect(startPosBG,
 			      endPosBG,
-			      background);
+			      background, .8f);
 
 	if(pixelSize.x < 4)
 		return;
@@ -485,7 +527,7 @@ void UITextInput::render(UIHelper &helper) {
 		Vector2F off(2.f / helper.state->WindowWidth, 0);
 		std::u16string substring = text.substr(windowOffset, count);
 		Vector2F pixeledOffset(2 + helper.GetTextWidth(substring) + 1, pixelSize.z);
-		helper.AddColoredRect(startPosBG + off, startPosBG + pixeledOffset * 2 * scale / Vector2F(helper.state->WindowWidth, helper.state->WindowHeight), foreground);
+		helper.AddColoredRect(startPosBG + off, startPosBG + pixeledOffset * 2 * scale / Vector2F(helper.state->WindowWidth, helper.state->WindowHeight), foreground, .8f);
 		helper.AddText(startPosBG + (off * 2), substring, scale, background);
 	} else {//Selection inside
 		if(windowOffset > min)
@@ -504,7 +546,7 @@ void UITextInput::render(UIHelper &helper) {
 			std::u16string substring = text.substr(min, selected);
 			unsigned int wid = helper.GetTextWidth(substring);
 			Vector2F pixeledOffset(2 + soffset + wid, pixelSize.z);
-			helper.AddColoredRect(startPosBG + (Vector2F((float)soffset / helper.state->WindowWidth, 0) * 2), startPosBG + pixeledOffset * 2 * scale / Vector2F(helper.state->WindowWidth, helper.state->WindowHeight), foreground);
+			helper.AddColoredRect(startPosBG + (Vector2F((float)soffset / helper.state->WindowWidth, 0) * 2), startPosBG + pixeledOffset * 2 * scale / Vector2F(helper.state->WindowWidth, helper.state->WindowHeight), foreground, .8f);
 			helper.AddText(startPosBG + Vector2F((1.f + soffset) * 2 / helper.state->WindowWidth, 0), substring, scale, background);
 			soffset += 1 + wid;
 		}
@@ -515,4 +557,47 @@ void UITextInput::render(UIHelper &helper) {
 
 //		helper.AddText(startPosBG + Vector2F(4.f / helper.state->WindowWidth, 0), text.substr(windowOffset, count), scale, foreground);
 	}
+}
+
+bool UITextInput::onKeyPressed(uint16_t scancode, bool, uint16_t) {
+	if(!active)
+		return false;
+	if(scancode == SDL_SCANCODE_BACKSPACE && windowOffset+cursorOffset != 0) {//Do character removal
+		if(selectionOffset == 0) {
+			text.erase(windowOffset + cursorOffset - 1, 1);
+			if(cursorOffset == 0)
+				windowOffset--;
+			else
+				cursorOffset--;
+		}/* else {
+			//FIXME: erase selected
+			size_t globalOffset = windowOffset + cursorOffset;
+			if(selectionOffset < 0) {
+				globalOffset -= -cursorOffset;
+				cursorOffset = -cursorOffset;
+			}
+			text.erase(globalOffset - 1, selectionOffset);
+			if(cursorOffset == 0)
+				windowOffset--;
+			else
+				cursorOffset--;
+		}*/
+		return true;
+	} else if(scancode == SDL_SCANCODE_LEFT && windowOffset+cursorOffset != 0) {
+		if(cursorOffset == 0)
+			windowOffset--;
+		else
+			cursorOffset--;
+		return true;
+	} else if(scancode == SDL_SCANCODE_RIGHT) {
+		if(windowOffset + cursorOffset < text.length()) {
+			cursorOffset++;
+			rightRecalc();
+			return true;
+		} else
+			return false;
+		//First: check size
+		//Second: call rightRecalc
+	} else
+		return false;
 }

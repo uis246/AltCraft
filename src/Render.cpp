@@ -114,6 +114,8 @@ void Render::InitSdl(unsigned int WinWidth, unsigned int WinHeight, std::string 
     renderState.WindowWidth = WinWidth;
     renderState.WindowHeight = WinHeight;
 
+    SDL_StopTextInput();
+
     SDL_GL_SetSwapInterval(0);
 }
 
@@ -268,9 +270,8 @@ void Render::RenderFrame() {
 void Render::HandleEvents() {
 	SDL_PumpEvents();
 	SDL_Event event;
-	SDL_StartTextInput();
 	while (SDL_PollEvent(&event)) {
-		ImGui_ImplSdlGL3_ProcessEvent(&event);
+//		ImGui_ImplSdlGL3_ProcessEvent(&event);
 
 		switch (event.type) {
 			case SDL_QUIT:
@@ -280,6 +281,10 @@ void Render::HandleEvents() {
 
 			case SDL_TEXTINPUT:
 				LOG(INFO) << "Input: " << event.text.text;
+				IOEvent ioe;
+				ioe.type = IOEvent::TextInput;
+				ioe.data = event.text.text;
+				ui->PushEvent(ioe);
 				break;
 
 			case SDL_TEXTEDITING:
@@ -287,37 +292,43 @@ void Render::HandleEvents() {
 				break;
 
 
-            case SDL_WINDOWEVENT: {
-                switch (event.window.event) {
-                    case SDL_WINDOWEVENT_RESIZED: {
-                        int width, height;
-                        SDL_GL_GetDrawableSize(window, &width, &height);
-                        renderState.WindowWidth = width;
-                        renderState.WindowHeight = height;
-						framebuffer->Resize(width * fieldResolutionScale, height * fieldResolutionScale);
-						Framebuffer::GetDefault().Resize(width, height);
-						ui->Redraw();
-                        break;
-                    }
+			case SDL_WINDOWEVENT: {
+			switch (event.window.event) {
+				case SDL_WINDOWEVENT_RESIZED: {
+				int width, height;
+				SDL_GL_GetDrawableSize(window, &width, &height);
+				renderState.WindowWidth = width;
+				renderState.WindowHeight = height;
+				framebuffer->Resize(width * fieldResolutionScale, height * fieldResolutionScale);
+				Framebuffer::GetDefault().Resize(width, height);
+				ui->Redraw();
+				break;
+				}
 
-                    case SDL_WINDOWEVENT_FOCUS_GAINED:
-                        HasFocus = true;
-                        break;
+				case SDL_WINDOWEVENT_FOCUS_GAINED:
+				HasFocus = true;
+				break;
 
-                    case SDL_WINDOWEVENT_FOCUS_LOST: {
-                        HasFocus = false;
-                        State state = GetState();
-			if (state == State::Playing) {
-                            SetState(State::Paused);
-                        }
-                        break;
-                    }
+				case SDL_WINDOWEVENT_FOCUS_LOST: {
+				HasFocus = false;
+				State state = GetState();
+				if (state == State::Playing) {
+				SetState(State::Paused);
+				}
+				break;
+				}
 
-                }
-                break;
-            }
+			}
+			break;
+			}
 
-            case SDL_KEYDOWN: {
+			case SDL_KEYDOWN: {
+				IOEvent ioe;
+				ioe.type = IOEvent::KeyPressed;
+				ioe.inlined1 = event.key.keysym.scancode;
+				ioe.inlined2 = event.key.repeat;
+				ioe.inlined3 = event.key.keysym.mod;
+				ui->PushEvent(ioe);
                 switch (event.key.keysym.scancode) {
                     case SDL_SCANCODE_ESCAPE: {
                         auto state = GetState();

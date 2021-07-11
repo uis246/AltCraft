@@ -65,6 +65,7 @@ class RendererUI final {
 	GLenum elementType;
 
 	//Layers
+	std::vector<LayerStore> globalOverlays;//Only for GLOBAL_OVERLAY
 	std::vector<LayerStore> layers;
 
 	//Redraw info

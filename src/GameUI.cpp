@@ -24,9 +24,11 @@ namespace GameUI {
 
 		username.background = Vector3<float>(.1f, .1f, .1f);
 		username.foreground = buttonFG;
-		username.text = UIHelper::ASCIIToU16("test");
-		username.cursorOffset = 4;
-		username.selectionOffset = 1;
+
+		address.background = Vector3<float>(.1f, .1f, .1f);
+		address.foreground = buttonFG;
+
+		username.text = UIHelper::ASCIIToU16("Ltest");
 	}
 	bool MainMenu::onEvent(struct IOEvent ev) noexcept {
 		if(ev.type == IOEvent::MouseMoved) {
@@ -42,6 +44,10 @@ namespace GameUI {
 			return true;
 		} else if(ev.type == IOEvent::MouseReleased) {
 			username.onRelease();
+		} else if(ev.type == IOEvent::KeyPressed) {
+			username.onKeyPressed(ev.inlined1, ev.inlined2, ev.inlined3);
+		} else if(ev.type == IOEvent::TextInput) {
+			username.onInput(reinterpret_cast<char*>(ev.data));
 		}
 		return true;
 	}
@@ -63,7 +69,7 @@ namespace GameUI {
 
 		{//Draw background
 			Vector2F coord = helper.GetCoord(UIHelper::CENTER, total);
-			helper.AddColoredRect(coord, -coord, Vector3<float>(0.4, 0.4, 0.4));
+			helper.AddColoredRect(coord, -coord, Vector3<float>(0.4, 0.4, 0.4), .8f);
 		}
 
 		helper.AddText(helper.GetCoord(UIHelper::CENTER, (total - Vector2F(8 + maxx, 4 + nameSize.z))), nameText, 1, Vector3<float>(1, 1, 1));
@@ -72,7 +78,7 @@ namespace GameUI {
 		{//Will be progress bar
 			//4/Exit /progressbar/Connect /4
 			Vector2F coord = helper.GetCoord(UIHelper::CENTER, Vector2F(total.x - (4 + 8 + 4 + maxx), connectSize.z * 0.5f));
-			helper.AddColoredRect(coord, -coord, Vector3<float>(.085f, .18f, .038f));
+			helper.AddColoredRect(coord, -coord, Vector3<float>(.085f, .18f, .038f), .8f);
 		}
 
 		{//Buttons

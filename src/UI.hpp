@@ -16,15 +16,20 @@ enum MouseButtons {
 };
 
 struct AC_API IOEvent {
-	void *data;//Depends on type
+	union {//8 byte
+		void *data;//Depends on type
+		struct { uint16_t inlined1, inlined2, inlined3, inlined4; };
+		struct { uint32_t inlined32, inlined32_2; };
+	};
 
 	enum {
-		MouseMoved,
-		MouseClicked,
-		MouseReleased,
-//		Resize,
-		KeyPressed,
-		KeyReleased,
+		MouseMoved,//Pointer to MouseEvent
+		MouseClicked,//same
+		MouseReleased,//same
+//		Resize,//Nothing?
+		KeyPressed,//USB scancode in inlined1, repeat in inlined2 and modifiers in inlined3
+		KeyReleased,//same
+		TextInput,//Pointer to null-terminated line
 	} type;
 };
 
